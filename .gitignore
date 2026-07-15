@@ -1,0 +1,17 @@
+/build/
+/out/
+/.cache/
+/.idea/
+/.vscode/
+compile_commands.json
+CMakeUserPresets.json
+*.swp
+*.swo
+*~
+
+# Runtime data belongs outside the source tree, but ignore it if a developer
+# explicitly redirects it here.
+/captures/
+/received/
+/tx-cache/
+

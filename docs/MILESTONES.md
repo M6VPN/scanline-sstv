@@ -1,0 +1,159 @@
+# Milestones
+
+Each milestone is complete only when its acceptance criteria and relevant tests pass.
+Items may be prototyped early, but compatibility claims wait for their milestone gate.
+
+## M0 — Foundation
+
+Status: **complete**
+
+- Lock language, licence, GUI, audio, DSP, image, TUI, rig, and digital-mode decisions.
+- Add Codex instructions and architecture documentation.
+- Establish CMake targets, headless preset, optional GUI preset, core API seam, diagnostic
+  CLI, and smoke test.
+- Establish real-time callback and PTT safety invariants.
+
+Acceptance:
+
+- Core and CLI compile with a C++20 compiler.
+- The smoke test runs without external libraries.
+- CMake/JSON project files pass static validation.
+- No foundation code can key a transmitter.
+
+## M1 — Verified analogue TX and image preparation
+
+- Build the data-driven mode descriptor schema.
+- Add attributed timing/specification tables and golden vectors.
+- Implement libvips load, orientation, colour, crop, resize, and template recipe model.
+- Implement offline WAV encoders for Martin M1, Scottie S1, Robot 36, and PD120.
+- Add VIS and optional FSK ID generation.
+- Add CLI image-to-WAV and WAV inspection commands.
+- Add GUI TX editor foundation and mode-aware preview.
+
+Acceptance:
+
+- Every tone, interval, scanline, VIS bit, image dimension, and total duration matches
+  independently generated or captured golden vectors within documented tolerances.
+- Round-trip tests pass through the project’s non-live analysis path.
+- Unsupported formats fail without producing partial on-air output.
+
+## M2 — Live audio and safe PTT
+
+- Integrate miniaudio.
+- Enumerate and select Linux/BSD input/output backends and individual devices.
+- Add latency/buffer controls, channel selection, level calibration, and loopback test.
+- Implement flrig XML-RPC PTT.
+- Implement rigctld PTT and optional direct libhamlib.
+- Implement the transmit state machine, watchdog, cancellation, and shutdown unkey guard.
+
+Acceptance:
+
+- Live TX uses the exact samples validated by offline WAV tests.
+- Mock flrig and rigctld fault-injection tests cover disconnect, timeout, malformed reply,
+  cancellation, underrun, normal exit, and forced shutdown.
+- USB device removal does not select another output or leave a mock PTT keyed.
+- Hardware-in-loop tests remain opt-in.
+
+## M3 — Offline high-performance analogue RX
+
+- Implement conditioning, quadrature tone estimation, VIS detection, sync correlation,
+  line-clock PLL, AFC, and pixel reconstruction.
+- Decode the M1 transmit modes from WAV/recorded audio.
+- Build the generated impairment corpus: AWGN, hum, clipping, offset, drift, dropout,
+  filtering, and multipath approximations.
+- Add raw decoder metrics and deterministic benchmark commands.
+
+Acceptance:
+
+- Clean encoder-to-decoder vectors are pixel-exact where the protocol permits.
+- Impaired-corpus results meet thresholds frozen with the corpus.
+- Decoder state and outputs are deterministic for a fixed input and configuration.
+- Offline decode is faster than real time on the documented reference machine.
+
+## M4 — Live RX and full GUI workflow
+
+- Connect capture ring buffers to the M3 decoder.
+- Add live decoded image, waterfall, spectrum, waveform, level, sync/VIS confidence, AFC,
+  and timing displays.
+- Add gallery, autosave, raw-audio recording, replay, metadata, and manual correction.
+- Finish first-run audio and rig configuration.
+
+Acceptance:
+
+- GUI stalls, resizing, and compositor throttling do not create audio overruns.
+- Native Wayland and XCB/XWayland sessions pass the UI test checklist.
+- Receive and replay paths produce identical decoder results for the same samples.
+- A complete RX/TX analogue QSO workflow is operable without opening a settings file.
+
+## M5 — TUI
+
+- Add `scanline-sstv-tui` using the same application services.
+- Render images through Kitty/Sixel/iTerm2 protocols where detected.
+- Add true-colour and reduced-colour cell fallbacks.
+- Add terminal waterfall, waveform, RX/TX controls, gallery, device, and rig screens.
+- Support keyboard-only operation and resize/SSH scenarios.
+
+Acceptance:
+
+- TUI and GUI produce identical offline decode and transmit files.
+- At least one pixel-protocol terminal and the Unicode fallback pass screenshots/tests.
+- Loss of terminal graphics capability does not lose control or decoder state.
+
+## M6 — Analogue coverage and receiver optimisation
+
+- Add Martin M2, Scottie S2/DX, Robot 72, remaining PD modes, Pasokon, and verified common
+  Wraase/monochrome modes.
+- Add confidence-ranked no-VIS mode assistance.
+- Profile filters, FFT, resampling, image updates, and memory traffic.
+- Compare the fixed corpus with current QSSTV and a reproducible MMSSTV environment.
+
+Acceptance:
+
+- Each advertised mode has TX and RX golden vectors.
+- Performance/regression report is reproducible.
+- No comparison regression is waived without a recorded reason and replacement test.
+
+## M7 — HamDRM digital SSTV
+
+- Implement OFDM acquisition and tracking, framing, QAM, interleaving, CRC/FEC, and
+  payload transport required by selected HamDRM profiles.
+- Implement image/file payload and JPEG/JPEG 2000 handling.
+- Add progressive status, robustness/profile selection, callsign/metadata, and partial
+  receive recovery.
+- Test against QSSTV and EasyPal-compatible captures/transmissions.
+
+Acceptance:
+
+- Bidirectional interoperability succeeds for every advertised profile.
+- Corrupt or hostile payloads cannot escape size/format limits.
+- Digital TX uses the same PTT safety state machine.
+
+## M8 — KG-STV
+
+- Implement compatible MSK and 4LFSK waveforms.
+- Implement text and image block framing.
+- Reconstruct 16-by-16 blocks progressively and combine valid repetitions.
+- Implement missing-block/status interactions that can be verified from protocol evidence.
+
+Acceptance:
+
+- Bidirectional interoperability with the reference KG-STV program/captures for every
+  advertised modulation.
+- Repeated transmissions improve or preserve completion and never replace a valid block
+  with a failed block.
+
+## M9 — Portability, packaging, and 1.0
+
+- CI/build verification for Arch Linux, Debian-family Linux, FreeBSD, OpenBSD, and NetBSD.
+- Arch package, Flatpak, Debian packaging, and BSD port/pkgsrc submission material.
+- Accessibility, localisation readiness, user manual, migration, crash recovery, and
+  security review.
+- Freeze configuration, CLI, and supported-mode compatibility tables.
+
+Acceptance:
+
+- Clean build/test/install/uninstall on the supported matrix.
+- Release artefacts include source, licence/attribution, reproducible test report, and
+  checksums.
+- No open critical PTT, data-loss, decoder-safety, or interoperability defects.
+

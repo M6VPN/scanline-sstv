@@ -1,0 +1,70 @@
+# Protocol and interoperability policy
+
+Radio compatibility depends on small timing and framing details. Protocol evidence is
+therefore part of the implementation, not optional background reading.
+
+## Evidence levels
+
+Every mode or control operation records one or more of:
+
+1. Published standard or original author documentation.
+2. Attributed GPL-compatible reference source.
+3. Independently captured and annotated reference-program audio.
+4. Independently generated calculation/vector.
+5. Over-the-air recording with known transmitter and mode.
+
+Memory, an unlabelled web table, or “it looks correct in the waterfall” is insufficient.
+
+Each descriptor should cite evidence in a neighbouring source comment or machine-readable
+metadata. Adapted source retains its copyright and licence notice.
+
+## Analogue SSTV descriptor
+
+A descriptor or strategy must define:
+
+- Stable mode ID and human name.
+- Family and VIS code/parity.
+- Width, height, colour space, channel order, and subsampling.
+- Leader, break, VIS, sync, porch, separator, and scan timing.
+- Tone mapping, black/white endpoints, and any gamma convention.
+- Expected nominal duration and tolerances.
+- Encoder vector, decoder vector, and provenance.
+
+Timing uses integer/rational units or a monotonic phase accumulator. Repeated floating
+point duration rounding must not accumulate line drift.
+
+## HamDRM
+
+QSSTV is an allowed GPL-3.0 reference, but compatibility is validated with external
+captures and bidirectional tests rather than assumed from code ancestry. Maintain an
+attribution record for any adapted implementation.
+
+Before advertising a HamDRM profile, record:
+
+- Robustness/occupancy and OFDM parameters.
+- FAC, SDC, MSC, interleaver, CRC, and FEC configuration.
+- QAM mapping and soft-decision convention.
+- Payload/file header and image encoding behaviour.
+- Callsign/metadata and retransmission/partial-recovery behaviour.
+- Reference sender and receiver versions used in the test.
+
+## KG-STV
+
+Treat KG-STV as a separate codec and framing family. Record exact MSK and 4LFSK symbol
+mapping, synchronisation, block numbering, compression, checksum/FEC, text framing, and
+missing-block behaviour from verified evidence.
+
+Unknown or ambiguous fields remain experimental and are not enabled for live TX by
+default.
+
+## Rig-control protocols
+
+- flrig XML-RPC uses introspection where available and the documented `rig.set_ptt` and
+  `rig.get_ptt` methods.
+- rigctld uses extended responses where practical and parses complete `RPRT` results.
+- Network endpoints default to loopback. Remote endpoints require explicit user action.
+- PTT commands have request IDs/deadlines in the application layer even when the external
+  protocol lacks them.
+
+Mock servers preserve real request/response fixtures for regression tests.
+
