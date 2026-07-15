@@ -11,7 +11,7 @@ ApplicationWindow {
   minimumWidth: 860
   minimumHeight: 560
   visible: true
-  title: qsTr("SSTV Transceiver — Foundation")
+  title: qsTr("Scanline SSTV - Foundation")
 
   header: ToolBar {
     RowLayout {
@@ -20,7 +20,7 @@ ApplicationWindow {
       anchors.rightMargin: 12
 
       Label {
-        text: qsTr("SSTV Transceiver")
+        text: qsTr("Scanline SSTV")
         font.bold: true
         font.pixelSize: 18
       }
@@ -177,4 +177,3 @@ ApplicationWindow {
     }
   }
 }
-

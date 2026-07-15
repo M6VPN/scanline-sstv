@@ -1,6 +1,6 @@
 # Scanline SSTV Transceiver base plan
 
-Status: **Approved architecture; M0 foundation**
+Status: **Approved architecture; M0.1 stabilization pending Qt 6.5+ verification**
 
 This is the authoritative base plan for Codex and human contributors. Detailed component
 rules are in `ARCHITECTURE.md` and completion gates are in `MILESTONES.md`.
@@ -195,4 +195,3 @@ Version 1.0 requires completion of M0 through M9, documented supported-mode vect
 analogue and HamDRM interoperability testing, KG-STV implementation according to its
 milestone scope, fail-safe PTT tests, usable GUI and TUI workflows, and repeatable Linux
 plus BSD builds.
-

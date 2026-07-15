@@ -3,10 +3,10 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(
-  sstv_transceiver
-  VERSION 0.1.0
-  DESCRIPTION "High-performance SSTV transceiver for Linux and BSD"
-  LANGUAGES CXX
+	scanline_sstv
+	VERSION 0.1.0
+	DESCRIPTION "Scanline SSTV transceiver for Linux and BSD"
+	LANGUAGES CXX
 )
 
 include(CTest)
@@ -42,12 +42,12 @@ add_subdirectory(src/core)
 add_subdirectory(apps/cli)
 
 if(SSTV_BUILD_GUI)
-  find_package(Qt6 6.5 QUIET COMPONENTS Core Gui Qml Quick QuickControls2)
-  if(Qt6_FOUND)
-    add_subdirectory(apps/gui)
-  else()
-    message(WARNING "Qt 6.5+ was not found; sstv-gui will not be built")
-  endif()
+	find_package(Qt6 6.5 QUIET COMPONENTS Core Gui Qml Quick QuickControls2)
+	if(Qt6_FOUND)
+		add_subdirectory(apps/gui)
+	else()
+		message(WARNING "Qt 6.5+ was not found; scanline-sstv-gui will not be built")
+	endif()
 endif()
 
 if(BUILD_TESTING)

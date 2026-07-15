@@ -20,6 +20,24 @@ Acceptance:
 - CMake/JSON project files pass static validation.
 - No foundation code can key a transmitter.
 
+## M0.1 - Foundation stabilization
+
+Status: **implementation complete; Qt 6.5+ verification pending**
+
+- Repair the Qt QML module startup path and centralise its URI.
+- Complete current Scanline SSTV application and build branding.
+- Add a noninteractive offscreen GUI startup smoke test.
+- Add initial Linux GCC, Clang, and Qt GUI continuous integration.
+
+Acceptance:
+
+- Headless configure, build, and core smoke tests pass.
+- The Qt 6.5+ GUI builds and `Main.qml` loads in smoke mode without entering the event
+  loop.
+- Current user-facing and CMake identifiers use Scanline SSTV branding.
+- CI has read-only permissions, immutable action pins, and no hardware or PTT access.
+- No signal generation, protocol timing, audio, DSP, or PTT implementation is added.
+
 ## M1 — Verified analogue TX and image preparation
 
 - Build the data-driven mode descriptor schema.
@@ -156,4 +174,3 @@ Acceptance:
 - Release artefacts include source, licence/attribution, reproducible test report, and
   checksums.
 - No open critical PTT, data-loss, decoder-safety, or interoperability defects.
-

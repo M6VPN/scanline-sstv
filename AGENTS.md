@@ -69,8 +69,7 @@ performance claims require the reproducible benchmark and impairment corpus desc
 
 ## Scope discipline
 
-The current milestone is M0. M0 supplies architecture, build structure, a core API seam,
-a diagnostic CLI, and an optional GUI shell. It does not produce or decode on-air audio.
-Complete milestone acceptance criteria in order unless the user explicitly changes
-priority.
-
+The current milestone is M0.1. M0.1 stabilises the foundation build, GUI startup, and
+initial CI without producing or decoding on-air audio. M1 must not begin until the M0.1
+Qt 6.5+ GUI smoke test passes. Complete milestone acceptance criteria in order unless the
+user explicitly changes priority.
