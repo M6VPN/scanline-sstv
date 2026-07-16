@@ -69,7 +69,8 @@ performance claims require the reproducible benchmark and impairment corpus desc
 
 ## Scope discipline
 
-The current milestone is M0.1. M0.1 stabilises the foundation build, GUI startup, and
-initial CI without producing or decoding on-air audio. M1 must not begin until the M0.1
-Qt 6.5+ GUI smoke test passes. Complete milestone acceptance criteria in order unless the
-user explicitly changes priority.
+The current milestone is M1. M0.1 completed foundation build, GUI startup, and initial CI
+stabilization without producing or decoding on-air audio. M1 supplies verified analogue
+TX and image preparation under the existing offline-first and protocol-evidence gates.
+Complete milestone acceptance criteria in order unless the user explicitly changes
+priority.

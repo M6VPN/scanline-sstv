@@ -1,6 +1,6 @@
 # Scanline SSTV Transceiver base plan
 
-Status: **Approved architecture; M0.1 stabilization pending Qt 6.5+ verification**
+Status: **Approved architecture; M0.1 complete; M1 current**
 
 This is the authoritative base plan for Codex and human contributors. Detailed component
 rules are in `ARCHITECTURE.md` and completion gates are in `MILESTONES.md`.

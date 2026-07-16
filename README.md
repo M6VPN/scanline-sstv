@@ -7,10 +7,11 @@ through flrig or Hamlib.
 
 ## Status
 
-The project is at **M0.1: foundation stabilization**. The architecture, safety boundaries,
-milestone plan, core API seam, diagnostic CLI, smoke tests, and optional Qt GUI shell
-exist. Qt 6.5+ GUI verification remains before M1 becomes current. The project cannot yet
-generate, transmit, receive, or decode an SSTV signal.
+The project is at **M1: verified analogue TX and image preparation** after completing
+M0.1 foundation stabilization. The architecture, safety boundaries, milestone plan, core
+API seam, diagnostic CLI, smoke tests, and optional Qt GUI shell exist. No M1 signal
+generation work is included yet, so the project cannot generate, transmit, receive, or
+decode an SSTV signal.
 
 Do not connect this foundation build to a transmitter expecting functional PTT or audio.
 
@@ -37,8 +38,9 @@ Required:
 - Ninja.
 - A C++20 compiler.
 
-Qt 6.5 or newer with Core, Gui, Qml, Quick, and QuickControls2 is optional at M0.1. If Qt is
-not found, CMake builds the core, CLI, and tests and reports that the GUI was skipped.
+Qt 6.5 or newer with Core, Gui, Qml, Quick, and QuickControls2 remains optional for
+headless builds. If Qt is not found, CMake builds the core, CLI, and tests and reports that
+the GUI was skipped.
 
     cmake --preset dev
     cmake --build --preset dev
@@ -55,8 +57,8 @@ Current diagnostic commands:
     ./build/headless/apps/cli/scanline-sstv-cli --version
     ./build/headless/apps/cli/scanline-sstv-cli --list-modes
 
-The mode list is intentionally empty at M0.1. Verified mode descriptors and vectors are an
-M1 deliverable.
+The mode list remains intentionally empty until verified M1 mode descriptors and vectors
+are added.
 
 ## Repository map
 

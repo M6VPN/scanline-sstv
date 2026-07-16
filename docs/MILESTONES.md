@@ -22,7 +22,7 @@ Acceptance:
 
 ## M0.1 - Foundation stabilization
 
-Status: **implementation complete; Qt 6.5+ verification pending**
+Status: **complete**
 
 - Repair the Qt QML module startup path and centralise its URI.
 - Complete current Scanline SSTV application and build branding.
