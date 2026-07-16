@@ -1,6 +1,6 @@
 # Martin M1 protocol evidence
 
-Status: **accepted for offline diagnostic transmission only**
+Status: **accepted for offline diagnostic-pattern and prepared-image transmission only**
 
 This record freezes the evidence used by the M1a Martin M1 test-pattern encoder. It does
 not establish receive interoperability, arbitrary-image support, live audio, or live
@@ -111,6 +111,10 @@ resolved implementation divergence, not an inferred average between conflicting 
 ## Project waveform policy
 
 The offline diagnostic renderer uses an explicit amplitude of `0.8` for every event. This
+
+M1B does not revise this evidence or any waveform constant. Arbitrary raster inputs are
+prepared into the same immutable 320 by 256 RGB8 frame contract and passed to the frozen
+M1a encoder. Live TX and receive remain unsupported.
 is a project output-level choice, not an on-air protocol constant. Samples are not
 normalised, limited, dithered, or automatically played. PCM16 conversion rejects
 non-finite samples, clips only outside `[-1, 1]`, maps `-1` to `-32768` and `+1` to

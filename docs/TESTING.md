@@ -43,6 +43,31 @@ The compact vector under `tests/vectors/analogue/martin-m1` is generated with pi
 PySSTV source and contains no large WAV. Portable sample tests use numerical tolerances;
 integer schedules and RIFF fields are exact.
 
+### M1B safe raster preparation
+
+The M1B tests use small project-generated fixtures with frozen SHA-256 hashes and unique
+temporary directories. They cover:
+
+- Exact RGB PNG round trip and equality between direct diagnostic-frame and prepared-image
+  Martin M1 event streams.
+- Landscape, portrait, square, tiny, and odd dimensions; contain bars; centered cover;
+  crop bounds and overflow; and all eight EXIF orientations.
+- Grayscale expansion, deterministic 16-bit to 8-bit conversion, premultiplied-alpha
+  resizing and compositing, valid embedded sRGB profiles, corrupt profiles, and rejected
+  unprofiled CMYK.
+- Content-based JPEG/PNG loader selection, extension spoofing, truncated and malformed
+  input, valid oversized headers, APNG, SVG, PDF, URLs, directories, FIFOs, and configured
+  byte, dimension, pixel, page, and output limits.
+- Deterministic repeated output, stripped atomic PNG publication, overwrite refusal,
+  forced replacement, temporary-file cleanup, CLI parsing, exit codes, and offline WAV
+  metadata. JPEG pixel checks use a documented tolerance of 100 for the compact 5 by 3
+  high-quality fixture; lossless fixtures use exact or narrowly bounded checks.
+
+Run `minimal` to verify the core-only boundary, `headless` for all non-Qt M1B tests, and
+`dev` for the same suite plus the offscreen QML smoke test. Image tests also run under
+ASan and UBSan where the compiler supports them. None of these tests plays audio, accesses
+a radio, or keys PTT.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:
@@ -118,3 +143,7 @@ Planned required jobs:
 - NetBSD Clang/GCC as supported by pkgsrc.
 
 All CI uses mock PTT. Integration jobs bind test servers to loopback only.
+
+Current hosted CI runs Linux GCC and Clang with libvips, a separate image-disabled minimal
+build, and Qt with offscreen software rendering. Native FreeBSD, OpenBSD, and NetBSD jobs
+remain later focused portability work; Linux containers are not treated as BSD coverage.

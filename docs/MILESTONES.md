@@ -67,15 +67,39 @@ Acceptance:
   input, RIFF overflow, and failed-publish cleanup.
 - Headless and Qt development test presets pass without audio, radio, or PTT access.
 
-M1 remains incomplete. Arbitrary image preparation, the remaining analogue modes, FSK ID,
+### M1B - Safe raster image preparation and offline image TX
+
+Status: **complete**
+
+- Add a dedicated `sstv_image` boundary that is the only target linked to system
+  `vips-cpp`, with typed results and dependency-free public recipe values.
+- Enforce bounded local regular-file input, native JPEG/PNG loader selection, header-first
+  limits, single-frame input, EXIF orientation, oriented crop, ICC-to-sRGB conversion,
+  premultiplied-alpha Lanczos resizing, contain/cover fit, and explicit background.
+- Materialize only immutable exact-mode RGB8 and publish stripped prepared PNG files
+  atomically.
+- Add `prepare-image` and `encode-image`; both arbitrary-image and diagnostic paths call
+  the frozen M1a `encodeMartinM1` implementation and WAV writer.
+- Replace mode capability booleans with an extensible typed bitmask. Martin M1 advertises
+  offline test-pattern TX and offline image TX, but neither live TX nor receive.
+
+Acceptance:
+
+- JPEG and PNG success paths and all required malformed, special-file, loader, metadata,
+  colour, orientation, crop, geometry, resource-limit, publication, and CLI cases pass.
+- The exact M1a diagnostic PNG round trip is pixel-identical and produces the same Martin
+  M1 event stream as the direct frame path.
+- Minimal, headless, Qt 6.11.1, ASan, and UBSan verification passes without playback,
+  radio access, or PTT.
+
+M1 remains incomplete. The remaining analogue modes, FSK ID,
 GUI TX editing, live paths, and encode/decode round-trip gates remain later work.
 
 - Build the data-driven mode descriptor schema.
 - Add attributed timing/specification tables and golden vectors.
-- Implement libvips load, orientation, colour, crop, resize, and template recipe model.
 - Implement offline WAV encoders for Martin M1, Scottie S1, Robot 36, and PD120.
 - Add VIS and optional FSK ID generation.
-- Add CLI image-to-WAV and WAV inspection commands.
+- Add WAV inspection commands.
 - Add GUI TX editor foundation and mode-aware preview.
 
 Acceptance:

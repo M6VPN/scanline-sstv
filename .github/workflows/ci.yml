@@ -39,12 +39,31 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           persist-credentials: false
+      - name: Install libvips
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends libvips-dev
       - name: Configure
         run: cmake --preset headless
       - name: Build
         run: cmake --build --preset headless
       - name: Test
         run: ctest --preset headless
+
+  minimal:
+    name: Linux minimal core-only
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Configure
+        run: cmake --preset minimal
+      - name: Build
+        run: cmake --build --preset minimal
+      - name: Test
+        run: ctest --preset minimal
 
   gui:
     name: Linux Qt GUI smoke test
@@ -63,9 +82,13 @@ jobs:
           version: '6.8.3'
           cache: false
           setup-python: false
+      - name: Install libvips
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends libvips-dev
       - name: Configure
         run: cmake --preset dev
       - name: Build
         run: cmake --build --preset dev
-      - name: Test QML startup
-        run: ctest --preset dev -R '^scanline-sstv-gui-smoke$'
+      - name: Test
+        run: ctest --preset dev

@@ -27,7 +27,7 @@ but is not required merely to share implementation between frontends.
 | `dsp` | Filters, NCO, PLL, resampling, correlation, FFT wrappers | UI and rig control |
 | `analog` | VIS, FSK ID, analogue encoders and decoders | UI |
 | `digital` | HamDRM and KG-STV framing/modems | UI |
-| `image` | libvips recipes, templates, colour conversion | Radio control |
+| `image` | Bounded libvips raster recipes and immutable RGB8 output | Radio control, Qt, audio, protocol constants |
 | `audio` | miniaudio contexts, devices, streams, ring buffers | UI widgets |
 | `rig` | flrig, rigctld, direct Hamlib, manual/VOX providers | DSP implementation |
 | `app` | Session orchestration, settings, gallery, TX state machine | Concrete GUI widgets |
@@ -68,6 +68,20 @@ on a control worker, never inside the callback.
 - Produces immutable RGBA previews and mode-sized TX frames.
 - Encodes/decodes compressed digital payload images.
 - Writes gallery files through the application service.
+
+M1B implements the offline preparation portion as `sstv_image` with alias `sstv::image`.
+It is the only target that links `vips-cpp`. Its public value types describe load limits,
+crop, fit, background, source facts, typed failures, and the final immutable `Rgb8Frame`;
+no libvips or frontend type crosses the boundary.
+
+The deterministic raster recipe resolves a local regular file, selects the actual native
+JPEG or PNG loader, validates header limits and page state, applies EXIF orientation,
+validates an oriented-source crop, converts a valid embedded ICC profile to sRGB, assumes
+unprofiled grayscale/RGB is sRGB, and rejects unprofiled CMYK. It then premultiplies
+alpha, applies Lanczos resize with contain or centered cover geometry, composites over
+the requested background, and materializes only the exact-size three-channel RGB8 frame.
+Atomic stripped PNG publication remains in the image boundary. Martin M1 encoding and
+PCM16 WAV publication continue through the existing analogue and offline-audio APIs.
 
 ### Rig worker
 

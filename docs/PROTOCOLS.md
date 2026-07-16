@@ -35,15 +35,18 @@ point duration rounding must not accumulate line drift.
 
 ## Accepted analogue records
 
-Martin M1 is accepted only for M1a offline diagnostic-pattern transmission. Its
+Martin M1 is accepted for M1a offline diagnostic-pattern transmission and M1B offline
+prepared-image transmission. Its
 [protocol evidence record](protocols/analogue/martin-m1.md) fixes the source versions,
 artifact hashes, VIS framing, GBR scan order, exact rational timings, tone mapping,
 nominal duration, and the documented QSSTV timing divergence.
 
 The production constants follow the attributable handbook values. A compact event and
 sample-boundary vector generated independently with pinned PySSTV v0.5.8 is stored under
-`tests/vectors/analogue/martin-m1`. No claim is made for live transmission, arbitrary
-images, receive interoperability, or other analogue modes.
+`tests/vectors/analogue/martin-m1`. M1B does not alter those constants or vectors: both
+offline commands pass an immutable 320 by 256 RGB8 frame to the same `encodeMartinM1`
+implementation. No claim is made for live transmission, receive interoperability, or
+other analogue modes.
 
 ## HamDRM
 

@@ -19,9 +19,7 @@ constexpr std::array<ModeDescriptor, 1> modes{{
 		320,
 		256,
 		44,
-		true,
-		false,
-		false,
+		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx,
 	},
 }};
 

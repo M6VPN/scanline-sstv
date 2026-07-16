@@ -8,6 +8,8 @@
 #include <sstv/core/version.hpp>
 #include <sstv/offline/wav_writer.hpp>
 
+#include "image_commands.hpp"
+
 #include <charconv>
 #include <cstdint>
 #include <filesystem>
@@ -41,8 +43,9 @@ printHelp()
 	       "  scanline-sstv-cli encode-test-pattern --mode martin-m1\n"
 	       "      --output OUTPUT.wav [--sample-rate RATE] [--force]\n"
 	       "\n"
-	       "encode-test-pattern creates offline diagnostic audio only. It does not\n"
+	       "Offline generation only. These commands do not\n"
 	       "play audio, access a sound card, control a radio, or key PTT.\n";
+	printImageCommandHelp();
 }
 
 void
@@ -56,8 +59,12 @@ printModes()
 	for (const auto& mode : modes) {
 		std::cout << mode.id << '\t' << mode.display_name << '\t'
 		    << mode.width << 'x' << mode.height << '\t'
-		    << (mode.has_offline_test_pattern_tx ? "offline-test-pattern-tx" : "metadata-only")
-		    << '\n';
+		    << (mode.capabilities.contains(sstv::core::ModeCapability::offlineTestPatternTx)
+		        ? "offline-test-pattern-tx" : "metadata-only");
+		if (mode.capabilities.contains(sstv::core::ModeCapability::offlineImageTx)) {
+			std::cout << ",offline-image-tx";
+		}
+		std::cout << '\n';
 	}
 }
 
@@ -175,6 +182,9 @@ main(const int argc, char* argv[])
 	const std::string_view argument{argv[1]};
 	if (argument == "encode-test-pattern") {
 		return encodeTestPattern(argc, argv);
+	}
+	if (isImageCommand(argument)) {
+		return runImageCommand(argc, argv);
 	}
 	if (argc != 2) {
 		std::cerr << "Error: unexpected extra arguments\n";

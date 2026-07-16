@@ -7,16 +7,22 @@
 
 #include <cassert>
 
-int main() {
-    static_assert(sstv::core::version_major == 0);
-    assert(!sstv::core::version_string.empty());
-
+int
+main()
+{
+	static_assert(sstv::core::version_major == 0);
+	assert(!sstv::core::version_string.empty());
 	const auto modes = sstv::core::built_in_modes();
 	assert(modes.size() == 1);
 	const auto* martin = sstv::core::find_mode("martin-m1");
 	assert(martin != nullptr);
-	assert(martin->has_offline_test_pattern_tx);
-	assert(!martin->has_live_tx);
-	assert(!martin->has_receive);
-    return 0;
+	assert(martin->capabilities.contains(sstv::core::ModeCapability::offlineTestPatternTx));
+	assert(martin->capabilities.contains(sstv::core::ModeCapability::offlineImageTx));
+	assert(!martin->capabilities.contains(sstv::core::ModeCapability::liveTx));
+	assert(!martin->capabilities.contains(sstv::core::ModeCapability::receive));
+	constexpr auto combined = sstv::core::ModeCapability::offlineTestPatternTx
+	    | sstv::core::ModeCapability::offlineImageTx
+	    | sstv::core::ModeCapability::liveTx;
+	static_assert(combined.contains(sstv::core::ModeCapability::liveTx));
+	return 0;
 }

@@ -26,6 +26,15 @@
       "cacheVariables": {
         "SSTV_BUILD_GUI": "OFF"
       }
+    },
+    {
+      "name": "minimal",
+      "displayName": "Minimal core-only development",
+      "inherits": "headless",
+      "binaryDir": "${sourceDir}/build/minimal",
+      "cacheVariables": {
+        "SSTV_BUILD_IMAGE": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -36,6 +45,10 @@
     {
       "name": "headless",
       "configurePreset": "headless"
+    },
+    {
+      "name": "minimal",
+      "configurePreset": "minimal"
     }
   ],
   "testPresets": [
@@ -49,6 +62,13 @@
     {
       "name": "headless",
       "configurePreset": "headless",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "minimal",
+      "configurePreset": "minimal",
       "output": {
         "outputOnFailure": true
       }

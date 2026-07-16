@@ -13,6 +13,7 @@ include(CTest)
 include(GNUInstallDirs)
 
 option(SSTV_BUILD_GUI "Build the Qt Quick graphical application when Qt is available" ON)
+option(SSTV_BUILD_IMAGE "Build libvips raster image preparation support" ON)
 option(SSTV_ENABLE_WERROR "Treat compiler warnings as errors" OFF)
 
 add_library(sstv_project_options INTERFACE)
@@ -39,6 +40,20 @@ if(SSTV_ENABLE_WERROR)
 endif()
 
 add_subdirectory(src/core)
+
+if(SSTV_BUILD_IMAGE)
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(VIPS_CPP QUIET IMPORTED_TARGET vips-cpp>=8.15)
+	if(NOT VIPS_CPP_FOUND)
+		message(FATAL_ERROR
+			"SSTV_BUILD_IMAGE is ON, but vips-cpp 8.15+ was not found. "
+			"Install the system libvips development package or configure "
+			"with -DSSTV_BUILD_IMAGE=OFF."
+		)
+	endif()
+	add_subdirectory(src/image)
+endif()
+
 add_subdirectory(apps/cli)
 
 if(SSTV_BUILD_GUI)

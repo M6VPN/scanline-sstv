@@ -1,13 +1,23 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-add_executable(scanline-sstv-cli main.cpp)
+set(SSTV_CLI_SOURCES main.cpp)
+if(SSTV_BUILD_IMAGE)
+	list(APPEND SSTV_CLI_SOURCES image_commands.cpp)
+else()
+	list(APPEND SSTV_CLI_SOURCES image_commands_stub.cpp)
+endif()
+
+add_executable(scanline-sstv-cli ${SSTV_CLI_SOURCES})
 target_link_libraries(
-  scanline-sstv-cli
-  PRIVATE
-    sstv::core
-    sstv_project_options
-    sstv_project_warnings
+	scanline-sstv-cli
+	PRIVATE
+		sstv::core
+		sstv_project_options
+		sstv_project_warnings
 )
 
-install(TARGETS scanline-sstv-cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(SSTV_BUILD_IMAGE)
+	target_link_libraries(scanline-sstv-cli PRIVATE sstv::image)
+endif()
 
+install(TARGETS scanline-sstv-cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

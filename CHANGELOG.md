@@ -8,7 +8,8 @@ stabilise.
 
 ## [Unreleased]
 
-M1a adds the first evidence-backed offline analogue waveform slice. Overall M1 remains in
+M1a adds the first evidence-backed offline analogue waveform slice. M1B adds safe offline
+raster preparation and Martin M1 image-to-WAV generation. Overall M1 remains in
 progress.
 
 ### Added
@@ -35,6 +36,17 @@ progress.
 - Atomic streaming mono PCM16 WAV output with explicit conversion and overwrite policy.
 - `encode-test-pattern` CLI support for Martin M1 at validated sample rates.
 - M1a timing, waveform, VIS, descriptor, WAV, vector, and CLI tests.
+- Dedicated `sstv_image` target using system `vips-cpp`, typed image results, reusable
+  value recipes, immutable RGB8 output, and centralized nonzero resource limits.
+- Content-selected native JPEG/PNG loading with regular-file checks, APNG rejection,
+  header-first limits, EXIF orientation, oriented crop, ICC validation and sRGB conversion,
+  grayscale/16-bit conversion, premultiplied alpha, Lanczos contain/cover fit, and explicit
+  background compositing.
+- Atomic stripped prepared-PNG publication plus `prepare-image` and `encode-image` CLI
+  commands with shared recipe parsing and overwrite policy.
+- Project-generated compact raster fixtures and M1B unit, integration, CLI, malformed-input,
+  resource-limit, atomic-cleanup, exact diagnostic round-trip, and sanitizer tests.
+- Minimal core-only CMake preset with image support disabled.
 
 ### Changed
 
@@ -42,6 +54,12 @@ progress.
 - Centralised the Qt QML module URI in the GUI build definition.
 - Updated mode capabilities and status text to distinguish offline diagnostic generation
   from live TX and RX.
+- Replaced fixed mode capability booleans with a typed bitmask and added truthful Martin M1
+  offline image TX capability without advertising live TX or receive.
+- Updated Linux GCC, Clang, and Qt CI jobs to install libvips and run M1B tests; added a
+  separate image-disabled minimal job.
+- Martin M1 arbitrary-image TX reuses the frozen M1a encoder, timing, VIS, scheduler,
+  renderer, and PCM16 writer without protocol changes.
 
 ### Fixed
 
@@ -51,3 +69,6 @@ progress.
 
 - Established real-time callback and fail-safe PTT invariants before radio-control code is
   introduced.
+- Image inputs fail closed for special files, URLs, disallowed loaders, animation,
+  contradictory metadata, corrupt ICC profiles, unprofiled CMYK, and configured resource
+  limits before any output is published.
