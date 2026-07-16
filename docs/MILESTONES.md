@@ -40,6 +40,36 @@ Acceptance:
 
 ## M1 — Verified analogue TX and image preparation
 
+Status: **in progress**
+
+### M1a - Martin M1 offline diagnostic encoder
+
+Status: **complete**
+
+- Record attributable Martin M1 and VIS evidence, exact source revisions, licences,
+  retrieval dates, locations, and artifact hashes.
+- Add normalized rational timing, cumulative sample scheduling, typed tone events, and a
+  block renderer with continuous oscillator phase.
+- Add an immutable RGB8 frame and deterministic exact-size diagnostic pattern.
+- Register Martin M1 for offline test-pattern TX only after its independent compact vector
+  passes.
+- Stream atomic mono PCM16 WAV output through the CLI with no playback or PTT.
+
+Acceptance:
+
+- Exact timing and cumulative boundaries pass at 8 kHz, 11025 Hz, 44100 Hz, 48 kHz, and
+  96 kHz with no repeated-line drift.
+- VIS, first-line events, tone mapping, full event count, frame count, and duration match
+  the pinned independent vector.
+- Rendering is block-size invariant within documented numerical tolerance and preserves
+  oscillator phase.
+- WAV and CLI tests cover finalization, overwrite refusal, forced replacement, malformed
+  input, RIFF overflow, and failed-publish cleanup.
+- Headless and Qt development test presets pass without audio, radio, or PTT access.
+
+M1 remains incomplete. Arbitrary image preparation, the remaining analogue modes, FSK ID,
+GUI TX editing, live paths, and encode/decode round-trip gates remain later work.
+
 - Build the data-driven mode descriptor schema.
 - Add attributed timing/specification tables and golden vectors.
 - Implement libvips load, orientation, colour, crop, resize, and template recipe model.

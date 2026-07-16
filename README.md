@@ -7,13 +7,13 @@ through flrig or Hamlib.
 
 ## Status
 
-The project is at **M1: verified analogue TX and image preparation** after completing
-M0.1 foundation stabilization. The architecture, safety boundaries, milestone plan, core
-API seam, diagnostic CLI, smoke tests, and optional Qt GUI shell exist. No M1 signal
-generation work is included yet, so the project cannot generate, transmit, receive, or
-decode an SSTV signal.
+The project is at **M1: verified analogue TX and image preparation**. M1a provides an
+evidence-backed offline Martin M1 diagnostic-pattern encoder, exact cumulative timing,
+continuous-phase tone rendering, and atomic mono PCM16 WAV output. It does not load
+arbitrary images, play audio, transmit, receive, decode, control a radio, or key PTT.
 
-Do not connect this foundation build to a transmitter expecting functional PTT or audio.
+Martin M1 is registered only with the `offline-test-pattern-tx` capability. Overall M1 is
+not complete.
 
 ## Locked stack
 
@@ -56,9 +56,13 @@ Current diagnostic commands:
 
     ./build/headless/apps/cli/scanline-sstv-cli --version
     ./build/headless/apps/cli/scanline-sstv-cli --list-modes
+    ./build/headless/apps/cli/scanline-sstv-cli encode-test-pattern \
+        --mode martin-m1 --output martin-m1.wav
+    ./build/headless/apps/cli/scanline-sstv-cli encode-test-pattern \
+        --mode martin-m1 --output martin-m1-44100.wav --sample-rate 44100
 
-The mode list remains intentionally empty until verified M1 mode descriptors and vectors
-are added.
+The encoder refuses to overwrite an existing output unless `--force` is supplied.
+Generation is offline only and never starts playback or PTT.
 
 ## Repository map
 

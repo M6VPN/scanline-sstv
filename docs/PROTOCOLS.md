@@ -33,6 +33,18 @@ A descriptor or strategy must define:
 Timing uses integer/rational units or a monotonic phase accumulator. Repeated floating
 point duration rounding must not accumulate line drift.
 
+## Accepted analogue records
+
+Martin M1 is accepted only for M1a offline diagnostic-pattern transmission. Its
+[protocol evidence record](protocols/analogue/martin-m1.md) fixes the source versions,
+artifact hashes, VIS framing, GBR scan order, exact rational timings, tone mapping,
+nominal duration, and the documented QSSTV timing divergence.
+
+The production constants follow the attributable handbook values. A compact event and
+sample-boundary vector generated independently with pinned PySSTV v0.5.8 is stored under
+`tests/vectors/analogue/martin-m1`. No claim is made for live transmission, arbitrary
+images, receive interoperability, or other analogue modes.
+
 ## HamDRM
 
 QSSTV is an allowed GPL-3.0 reference, but compatibility is validated with external
@@ -67,4 +79,3 @@ default.
   protocol lacks them.
 
 Mock servers preserve real request/response fixtures for regression tests.
-

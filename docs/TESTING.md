@@ -21,6 +21,28 @@ Each on-air mode includes:
 
 Lossy/reference-program WAVs use feature/timing tolerances rather than brittle byte hashes.
 
+### M1a offline Martin M1
+
+The M1a suite runs without sound-card or radio access and covers:
+
+- Rational normalization, invalid values, checked overflow, common sample rates, and a
+  long cumulative schedule with no drift.
+- Oscillator phase continuity and equivalent output for one-frame, odd, normal, and
+  whole-sequence render blocks.
+- Every valid seven-bit VIS code, LSB-first construction, even parity, complete framing,
+  and the independently frozen Martin M1 VIS vector.
+- Martin M1 dimensions, GBR ordering, exact timings, tone mapping, first-line boundaries,
+  full event count, frame counts, and exact nominal duration.
+- Immutable diagnostic-pattern corners, gradients, and line markers.
+- Finite bounded float samples, documented PCM16 conversion, RIFF fields and sizes,
+  overwrite policy, RIFF overflow, and atomic cleanup after failure.
+- CLI success, overwrite refusal, `--force`, missing values, malformed rates, unknown
+  modes, and extra arguments.
+
+The compact vector under `tests/vectors/analogue/martin-m1` is generated with pinned
+PySSTV source and contains no large WAV. Portable sample tests use numerical tolerances;
+integer schedules and RIFF fields are exact.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:
@@ -96,4 +118,3 @@ Planned required jobs:
 - NetBSD Clang/GCC as supported by pkgsrc.
 
 All CI uses mock PTT. Integration jobs bind test servers to loopback only.
-
