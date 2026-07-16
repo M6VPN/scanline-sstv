@@ -86,6 +86,13 @@ registry-backed offline TX service validates capability and frame dimensions bef
 selecting the built-in strategy. Test-pattern and image commands use that same service;
 PCM16 WAV publication remains in the existing offline-audio API.
 
+M1D keeps the image boundary output as immutable sRGB RGB8 and performs protocol colour
+conversion inside the analogue encoder boundary. Robot 36 uses immutable full-resolution
+luma plus 2 by 2 subsampled red-difference and blue-difference planes. Its fixed-point
+conversion, averaging, even/odd component selection, and alternating line descriptor are
+separate from the sequential-RGB model. The existing central offline TX service selects
+the Robot strategy without exposing protocol, libvips, or Qt types across boundaries.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.

@@ -91,6 +91,31 @@ addition to the accepted event-count, boundary, duration, frame-count, and prepa
 assertions. ASan and UBSan run the encoder, dispatch, CLI, and image integration tests.
 No test plays generated audio or accesses radio or PTT hardware.
 
+### M1D Robot 36 offline TX
+
+The M1D suite retains all M1a through M1C assertions and adds:
+
+- Independent limited-range nonlinear RGB conversion vectors for black, white, neutral
+  greys, primaries, boundary values, exact truncation, clamping, and deterministic output.
+- Horizontal and vertical 2 by 2 post-conversion chroma averages, halfway truncation,
+  alternating/checker patterns, component distinction, final line-pair bounds, invalid
+  dimensions, invalid plane storage, and checked access.
+- Robot VIS, dimensions, colour metadata, exact even/odd schedules, 1500/2300 Hz component
+  identifiers, first, second, penultimate, and final line boundaries, full event count,
+  duration, mapping, common-rate frame counts, and long no-drift scheduling.
+- Block-size-invariant continuous-phase rendering, finite bounded samples, PCM16 RIFF
+  metadata, overwrite refusal, forced replacement, and failed-publication cleanup.
+- Central dispatch consistency and typed capability/dimension failures; test-pattern,
+  native PNG/JPEG, contain, cover, crop, background, and exact-size prepared-PNG paths.
+- Pixel-identical 320 by 240 diagnostic PNG preparation followed by event-identical Robot
+  direct and prepared-frame encoding.
+
+The Martin M1 and Scottie S1 reference JSON files are not regenerated. Their accepted
+event counts, complete durations, frame counts, full existing test suites, fixture hashes,
+and direct/prepared-image equality remain regression gates. ASan and UBSan cover the
+colour conversion, subsampling, schedule, dispatch, CLI, and image integration paths.
+No test plays generated audio or accesses radio or PTT hardware.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

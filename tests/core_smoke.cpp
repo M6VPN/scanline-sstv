@@ -13,7 +13,7 @@ main()
 	static_assert(sstv::core::version_major == 0);
 	assert(!sstv::core::version_string.empty());
 	const auto modes = sstv::core::built_in_modes();
-	assert(modes.size() == 2);
+	assert(modes.size() == 3);
 	const auto* martin = sstv::core::find_mode("martin-m1");
 	assert(martin != nullptr);
 	assert(martin->capabilities.contains(sstv::core::ModeCapability::offlineTestPatternTx));
@@ -28,6 +28,15 @@ main()
 	assert(scottie->capabilities.contains(sstv::core::ModeCapability::offlineImageTx));
 	assert(!scottie->capabilities.contains(sstv::core::ModeCapability::liveTx));
 	assert(!scottie->capabilities.contains(sstv::core::ModeCapability::receive));
+	const auto* robot = sstv::core::find_mode("robot-36");
+	assert(robot != nullptr);
+	assert(robot->vis_code == 8);
+	assert(robot->colour_encoding == sstv::core::ColourEncoding::lumaColourDifference);
+	assert(robot->capabilities.contains(
+	    sstv::core::ModeCapability::offlineTestPatternTx));
+	assert(robot->capabilities.contains(sstv::core::ModeCapability::offlineImageTx));
+	assert(!robot->capabilities.contains(sstv::core::ModeCapability::liveTx));
+	assert(!robot->capabilities.contains(sstv::core::ModeCapability::receive));
 	constexpr auto combined = sstv::core::ModeCapability::offlineTestPatternTx
 	    | sstv::core::ModeCapability::offlineImageTx
 	    | sstv::core::ModeCapability::liveTx;

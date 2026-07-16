@@ -13,6 +13,10 @@ set(wav "${WORK}/image.wav")
 set(scottie_png "${WORK}/scottie-prepared.png")
 set(scottie_wav "${WORK}/scottie-image.wav")
 set(scottie_jpeg_wav "${WORK}/scottie-jpeg.wav")
+set(robot_png "${WORK}/robot-prepared.png")
+set(robot_wav "${WORK}/robot-image.wav")
+set(robot_jpeg_wav "${WORK}/robot-jpeg.wav")
+set(robot_exact_wav "${WORK}/robot-exact.wav")
 
 function(run_expect expected)
 	execute_process(
@@ -117,6 +121,64 @@ run_expect(1 encode-image --mode scottie-s1 --input "${INPUT}"
 run_expect(0 encode-image --mode scottie-s1 --input "${INPUT}"
 	--output "${scottie_wav}" --force)
 
+run_expect(0 prepare-image --mode robot-36 --input "${INPUT}"
+	--output "${robot_png}" --fit contain --background 203040)
+if(NOT EXISTS "${robot_png}")
+	message(FATAL_ERROR "Robot 36 prepare-image did not publish its PNG")
+endif()
+foreach(expected IN ITEMS
+	"Source format: PNG"
+	"Source dimensions: 5x3"
+	"Fit: contain"
+	"Prepared dimensions: 320x240")
+	string(FIND "${last_stdout}" "${expected}" found)
+	if(found EQUAL -1)
+		message(FATAL_ERROR "Missing Robot 36 prepare-image output: ${expected}")
+	endif()
+endforeach()
+
+run_expect(0 encode-image --mode robot-36 --input "${INPUT}"
+	--output "${robot_wav}" --fit cover --crop 0,0,5,3 --background 102030
+	--sample-rate 8000)
+if(NOT EXISTS "${robot_wav}")
+	message(FATAL_ERROR "Robot 36 PNG encode-image did not publish its WAV")
+endif()
+file(SIZE "${robot_wav}" robot_wav_size)
+if(NOT robot_wav_size EQUAL 590604)
+	message(FATAL_ERROR "Unexpected Robot 36 image WAV size: ${robot_wav_size}")
+endif()
+foreach(expected IN ITEMS
+	"Source format: PNG"
+	"Crop: 0,0,5,3"
+	"Fit: cover"
+	"Prepared dimensions: 320x240"
+	"Frame count: 295280"
+	"Duration: 36.910000 seconds")
+	string(FIND "${last_stdout}" "${expected}" found)
+	if(found EQUAL -1)
+		message(FATAL_ERROR "Missing Robot 36 PNG encode output: ${expected}")
+	endif()
+endforeach()
+
+run_expect(0 encode-image --mode robot-36 --input "${JPEG}"
+	--output "${robot_jpeg_wav}" --fit contain --background 102030
+	--sample-rate 8000)
+string(FIND "${last_stdout}" "Source format: JPEG" found)
+if(found EQUAL -1)
+	message(FATAL_ERROR "Robot 36 JPEG path did not report its actual loader")
+endif()
+
+run_expect(0 encode-image --mode robot-36 --input "${robot_png}"
+	--output "${robot_exact_wav}" --sample-rate 8000)
+string(FIND "${last_stdout}" "Prepared dimensions: 320x240" found)
+if(found EQUAL -1)
+	message(FATAL_ERROR "Robot 36 exact-size prepared path reported wrong dimensions")
+endif()
+run_expect(1 encode-image --mode robot-36 --input "${INPUT}"
+	--output "${robot_wav}")
+run_expect(0 encode-image --mode robot-36 --input "${INPUT}"
+	--output "${robot_wav}" --force)
+
 run_expect(1 encode-image --mode martin-m1 --input "${INPUT}" --output "${wav}")
 file(WRITE "${wav}" "replacement sentinel")
 run_expect(0 encode-image --mode martin-m1 --input "${INPUT}" --output "${wav}" --force)
@@ -146,6 +208,18 @@ file(GLOB abandoned_wav "${failed_wav}.tmp.*")
 if(abandoned_wav)
 	message(FATAL_ERROR
 		"Failed Scottie S1 WAV publish abandoned temporary files: ${abandoned_wav}")
+endif()
+
+set(failed_robot_wav "${WORK}/missing/robot.wav")
+run_expect(1 encode-image --mode robot-36 --input "${INPUT}"
+	--output "${failed_robot_wav}")
+if(EXISTS "${failed_robot_wav}")
+	message(FATAL_ERROR "Failed Robot 36 WAV publish left a destination")
+endif()
+file(GLOB abandoned_robot_wav "${failed_robot_wav}.tmp.*")
+if(abandoned_robot_wav)
+	message(FATAL_ERROR
+		"Failed Robot 36 WAV publish abandoned temporary files: ${abandoned_robot_wav}")
 endif()
 
 file(REMOVE_RECURSE "${WORK}")

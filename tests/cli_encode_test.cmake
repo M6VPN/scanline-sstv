@@ -10,6 +10,7 @@ file(REMOVE_RECURSE "${WORK}")
 file(MAKE_DIRECTORY "${WORK}")
 set(output "${WORK}/martin-m1.wav")
 set(scottie_output "${WORK}/scottie-s1.wav")
+set(robot_output "${WORK}/robot-36.wav")
 
 function(run_expect expected)
 	execute_process(
@@ -72,10 +73,36 @@ run_expect(1 encode-test-pattern --mode scottie-s1 --output "${scottie_output}"
 run_expect(0 encode-test-pattern --mode scottie-s1 --output "${scottie_output}"
 	--sample-rate 8000 --force)
 
+run_expect(0 encode-test-pattern --mode robot-36 --output "${robot_output}"
+	--sample-rate 8000)
+if(NOT EXISTS "${robot_output}")
+	message(FATAL_ERROR "Successful Robot 36 encode did not publish the WAV")
+endif()
+file(SIZE "${robot_output}" robot_size)
+if(NOT robot_size EQUAL 590604)
+	message(FATAL_ERROR "Unexpected Robot 36 8 kHz WAV size: ${robot_size}")
+endif()
+foreach(expected IN ITEMS
+	"Mode: robot-36"
+	"Dimensions: 320x240"
+	"Sample rate: 8000 Hz"
+	"Frame count: 295280"
+	"Duration: 36.910000 seconds")
+	string(FIND "${last_stdout}" "${expected}" found)
+	if(found EQUAL -1)
+		message(FATAL_ERROR "Missing Robot 36 success output: ${expected}")
+	endif()
+endforeach()
+run_expect(1 encode-test-pattern --mode robot-36 --output "${robot_output}"
+	--sample-rate 8000)
+run_expect(0 encode-test-pattern --mode robot-36 --output "${robot_output}"
+	--sample-rate 8000 --force)
+
 run_expect(0 --list-modes)
 foreach(expected IN ITEMS
 	"martin-m1\tMartin M1\t320x256\toffline-test-pattern-tx,offline-image-tx"
-	"scottie-s1\tScottie S1\t320x256\toffline-test-pattern-tx,offline-image-tx")
+	"scottie-s1\tScottie S1\t320x256\toffline-test-pattern-tx,offline-image-tx"
+	"robot-36\tRobot 36\t320x240\toffline-test-pattern-tx,offline-image-tx\tluma-red-blue-difference")
 	string(FIND "${last_stdout}" "${expected}" found)
 	if(found EQUAL -1)
 		message(FATAL_ERROR "Missing registered mode output: ${expected}")
@@ -83,7 +110,8 @@ foreach(expected IN ITEMS
 endforeach()
 
 run_expect(0 --help)
-foreach(expected IN ITEMS "--mode MODE" "--mode martin-m1" "--mode scottie-s1")
+foreach(expected IN ITEMS "--mode MODE" "--mode martin-m1" "--mode scottie-s1"
+	"--mode robot-36")
 	string(FIND "${last_stdout}" "${expected}" found)
 	if(found EQUAL -1)
 		message(FATAL_ERROR "Missing generic or accepted-mode help: ${expected}")

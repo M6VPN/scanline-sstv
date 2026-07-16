@@ -121,12 +121,41 @@ Acceptance:
 - Minimal, headless, Qt 6.11.1, ASan, and UBSan verification passes without playback,
   radio access, or PTT.
 
-M1 remains incomplete. The remaining analogue modes, FSK ID, GUI TX editing, live paths,
-receive work, and encode/decode round-trip gates remain later work.
+### M1D - Robot 36 offline TX and luma/chroma infrastructure
+
+Status: **complete**
+
+- Record attributable Robot 36 evidence with exact inspected revisions, locations,
+  licences, hashes, colour definitions, subsampling rules, timings, and resolved
+  implementation disagreements.
+- Add immutable dependency-free luma, red-difference, and blue-difference 4:2:0 storage
+  with deterministic fixed-point conversion from nonlinear sRGB RGB8.
+- Add a separate alternating luma/chroma descriptor and encoder without changing the
+  accepted sequential-RGB schedules.
+- Register Robot 36 through the central offline dispatch for diagnostic-pattern and
+  prepared-image WAV generation only.
+
+Acceptance:
+
+- Conversion, clamping, truncation, 2 by 2 post-conversion averaging, component parity,
+  first/final pair handling, and invalid storage match the independent compact vector.
+- VIS, even/odd line schedules, identifier tones, event count, duration, boundaries, tone
+  mapping, and every supported sample-rate frame count pass exactly with no line drift.
+- Rendering remains block-size invariant and continuous-phase; PCM16 RIFF publication,
+  overwrite, forced replacement, and failure cleanup pass.
+- Test-pattern, PNG, JPEG, contain, cover, crop, background, and exact prepared-image paths
+  use the same Robot encoder and central dispatch.
+- Martin M1 and Scottie S1 vectors, ordered events, durations, frame counts, and
+  direct/prepared-image equivalence remain unchanged.
+- Minimal, headless, Qt, ASan, and UBSan verification passes without playback, radio
+  access, or PTT.
+
+M1 remains incomplete. PD120, FSK ID, GUI TX editing, live paths, receive work, and
+encode/decode round-trip gates remain later work.
 
 - Build the data-driven mode descriptor schema.
 - Add attributed timing/specification tables and golden vectors.
-- Implement the remaining offline WAV encoders for Robot 36 and PD120.
+- Implement the remaining offline WAV encoder for PD120.
 - Add VIS and optional FSK ID generation.
 - Add WAV inspection commands.
 - Add GUI TX editor foundation and mode-aware preview.

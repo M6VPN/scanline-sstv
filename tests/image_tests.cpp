@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <sstv/analog/martin_m1.hpp>
+#include <sstv/analog/robot_36.hpp>
 #include <sstv/analog/scottie_s1.hpp>
 #include <sstv/core/rgb8_frame.hpp>
 #include <sstv/image/image.hpp>
@@ -165,6 +166,28 @@ testExactIntegration(const std::filesystem::path& temporary)
 		        == loadedScottie[index].frequencyHz()
 		    && directScottie[index].amplitude() == loadedScottie[index].amplitude(),
 		    "image path changed the Scottie S1 event stream");
+	}
+	const sstv::core::Rgb8Frame directRobot
+	    = sstv::core::makeDiagnosticPattern(320, 240);
+	const std::filesystem::path robotPath = temporary / "robot-diagnostic.png";
+	writeFrame(robotPath, directRobot.view());
+	const auto preparedRobot = prepare(robotPath, makeRecipe(320, 240));
+	require(equalFrames(directRobot.view(), preparedRobot.frame.view()),
+	    "exact-size Robot 36 PNG round trip changed pixels");
+	const auto directRobotEvents
+	    = sstv::analog::encodeRobot36(directRobot.view(), 0.8F);
+	const auto loadedRobotEvents
+	    = sstv::analog::encodeRobot36(preparedRobot.frame.view(), 0.8F);
+	require(directRobotEvents.size() == loadedRobotEvents.size(),
+	    "Robot 36 event count changed through exact-size PNG preparation");
+	for (std::size_t index = 0; index < directRobotEvents.size(); ++index) {
+		require(directRobotEvents[index].duration()
+		        == loadedRobotEvents[index].duration()
+		    && directRobotEvents[index].frequencyHz()
+		        == loadedRobotEvents[index].frequencyHz()
+		    && directRobotEvents[index].amplitude()
+		        == loadedRobotEvents[index].amplitude(),
+		    "image path changed the Robot 36 event stream");
 	}
 }
 

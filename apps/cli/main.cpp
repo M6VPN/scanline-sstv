@@ -50,10 +50,30 @@ printHelp()
 	       "      --output martin-m1.wav\n"
 	       "  scanline-sstv-cli encode-test-pattern --mode scottie-s1\n"
 	       "      --output scottie-s1.wav\n"
+	       "  scanline-sstv-cli encode-test-pattern --mode robot-36\n"
+	       "      --output robot-36.wav\n"
+	       "  scanline-sstv-cli encode-image --mode robot-36 --input source.png\n"
+	       "      --output robot-36.wav\n"
 	       "\n"
 	       "Offline generation only. These commands do not\n"
 	       "play audio, access a sound card, control a radio, or key PTT.\n";
 	printImageCommandHelp();
+}
+
+[[nodiscard]] std::string_view
+colourEncodingName(const sstv::core::ColourEncoding encoding)
+{
+	switch (encoding) {
+	case sstv::core::ColourEncoding::monochrome:
+		return "monochrome";
+	case sstv::core::ColourEncoding::rgb:
+		return "rgb";
+	case sstv::core::ColourEncoding::lumaColourDifference:
+		return "luma-red-blue-difference";
+	case sstv::core::ColourEncoding::digital_payload:
+		return "digital-payload";
+	}
+	throw std::logic_error("invalid colour encoding");
 }
 
 void
@@ -72,7 +92,7 @@ printModes()
 		if (mode.capabilities.contains(sstv::core::ModeCapability::offlineImageTx)) {
 			std::cout << ",offline-image-tx";
 		}
-		std::cout << '\n';
+		std::cout << '\t' << colourEncodingName(mode.colour_encoding) << '\n';
 	}
 }
 

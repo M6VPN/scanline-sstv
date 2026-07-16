@@ -11,7 +11,9 @@ stabilise.
 M1a adds the first evidence-backed offline analogue waveform slice. M1B adds safe offline
 raster preparation and Martin M1 image-to-WAV generation. M1C adds evidence-backed
 Scottie S1 offline test-pattern and image-to-WAV generation through shared analogue
-services. Overall M1 remains in progress.
+services. M1D adds evidence-backed Robot 36 offline test-pattern and image-to-WAV
+generation with deterministic luma and colour-difference subsampling. Overall M1 remains
+in progress.
 
 ### Added
 
@@ -56,6 +58,16 @@ services. Overall M1 remains in progress.
 - Registry-backed typed offline TX dispatch used by test-pattern and image WAV commands.
 - Scottie S1 offline test-pattern, native JPEG/PNG image, atomic WAV, compact vector,
   timing, renderer, dispatch, CLI, image integration, and sanitizer tests.
+- Robot 36 protocol and colour evidence with pinned sources, inspected locations, artifact
+  hashes, exact VIS and line schedule, and resolved handbook, QSSTV, and PySSTV
+  disagreements.
+- Immutable dependency-free full-resolution luma and 2 by 2 subsampled red-difference and
+  blue-difference storage with checked dimensions, plane sizes, and access.
+- Deterministic fixed-point nonlinear RGB conversion, post-conversion chroma averaging,
+  explicit even/odd component selection, and a separate alternating-component descriptor.
+- Robot 36 offline test-pattern, native JPEG/PNG image, atomic WAV, independent compact
+  vector, colour, subsampling, timing, renderer, dispatch, CLI, image integration, and
+  sanitizer tests.
 
 ### Changed
 
@@ -74,6 +86,8 @@ services. Overall M1 remains in progress.
 - Refactored Martin M1 onto the shared sequential RGB encoder while preserving its exact
   ordered event stream, event count, duration, frame counts, compact vector, and prepared
   image equivalence.
+- Registered Robot 36 with offline test-pattern and image TX capabilities only and routed
+  both commands through the existing central offline TX service and frozen WAV writer.
 
 ### Fixed
 

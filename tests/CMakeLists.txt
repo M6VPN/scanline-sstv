@@ -37,6 +37,18 @@ target_link_libraries(
 add_test(NAME scanline-sstv-m1c-tests COMMAND scanline-sstv-m1c-tests)
 set_tests_properties(scanline-sstv-m1c-tests PROPERTIES TIMEOUT 30)
 
+add_executable(scanline-sstv-m1d-tests m1d_tests.cpp)
+target_link_libraries(
+	scanline-sstv-m1d-tests
+	PRIVATE
+		sstv::core
+		sstv_project_options
+		sstv_project_warnings
+)
+
+add_test(NAME scanline-sstv-m1d-tests COMMAND scanline-sstv-m1d-tests)
+set_tests_properties(scanline-sstv-m1d-tests PROPERTIES TIMEOUT 30)
+
 add_test(
 	NAME scanline-sstv-cli-encode-test
 	COMMAND

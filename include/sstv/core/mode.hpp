@@ -20,7 +20,7 @@ enum class ModeFamily : std::uint8_t {
 enum class ColourEncoding : std::uint8_t {
 	monochrome,
 	rgb,
-	yuv,
+	lumaColourDifference,
 	digital_payload,
 };
 
@@ -35,6 +35,7 @@ enum class OfflineTxStrategy : std::uint8_t {
 	none,
 	martinM1,
 	scottieS1,
+	robot36,
 };
 
 class ModeCapabilities {

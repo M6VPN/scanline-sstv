@@ -62,6 +62,20 @@ different first-line placement. Production follows the handbook's explicit sched
 does not average those values. Scottie S1 advertises offline test-pattern and image TX
 only; live TX, receive, and other Scottie modes remain unsupported.
 
+Robot 36 is accepted for M1D offline diagnostic-pattern and prepared-image transmission.
+Its [protocol evidence record](protocols/analogue/robot-36.md) fixes VIS code 8, 320 by
+240 dimensions, the limited-range nonlinear-RGB luma/red-difference/blue-difference
+conversion, post-conversion 2 by 2 chroma averaging, even R-Y and odd B-Y placement,
+exact 150 ms line schedule, and 36.910 s complete duration. The independent compact
+vector under `tests/vectors/analogue/robot-36` imports no production code.
+
+Production follows the internally consistent Dayton proposal and SSTV Encoder 2.13
+definition. QSSTV's full-range matrix, full horizontal chroma resolution, and adjusted
+timings are retained only as an interoperability comparison. PySSTV's line-local Pillow
+conversion and reversed component identifiers are also documented and not mixed into the
+selected values. Robot 36 advertises offline test-pattern and image TX only; live TX,
+receive, and other Robot modes remain unsupported.
+
 ## HamDRM
 
 QSSTV is an allowed GPL-3.0 reference, but compatibility is validated with external

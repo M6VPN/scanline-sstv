@@ -4,10 +4,12 @@
 
 add_library(
 	sstv_core STATIC
+	luma_chroma.cpp
 	martin_m1.cpp
 	mode_registry.cpp
 	offline_tx.cpp
 	rgb8_frame.cpp
+	robot_36.cpp
 	scottie_s1.cpp
 	sequential_rgb.cpp
 	timing.cpp
