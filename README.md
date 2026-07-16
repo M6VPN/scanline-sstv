@@ -10,11 +10,13 @@ through flrig or Hamlib.
 The project is at **M1: verified analogue TX and image preparation**. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
-PNG export, and offline Martin M1 image-to-WAV generation. It does not play audio,
-transmit, receive, decode, control a radio, or key PTT.
+PNG export, and offline Martin M1 image-to-WAV generation. M1C adds evidence-backed
+Scottie S1 test-pattern and prepared-image WAV generation through a shared sequential RGB
+encoder and central offline TX dispatch. It does not play audio, transmit, receive,
+decode, control a radio, or key PTT.
 
-Martin M1 advertises only `offline-test-pattern-tx` and `offline-image-tx`. Overall M1 is
-not complete.
+Martin M1 and Scottie S1 advertise only `offline-test-pattern-tx` and
+`offline-image-tx`. Overall M1 is not complete.
 
 ## Locked stack
 
@@ -69,11 +71,19 @@ Current offline commands:
         --mode martin-m1 --output martin-m1.wav
     ./build/headless/apps/cli/scanline-sstv-cli encode-test-pattern \
         --mode martin-m1 --output martin-m1-44100.wav --sample-rate 44100
+    ./build/headless/apps/cli/scanline-sstv-cli encode-test-pattern \
+        --mode scottie-s1 --output scottie-s1.wav
     ./build/headless/apps/cli/scanline-sstv-cli prepare-image \
         --mode martin-m1 --input source.png --output prepared.png \
         --fit contain --background 000000
+    ./build/headless/apps/cli/scanline-sstv-cli prepare-image \
+        --mode scottie-s1 --input source.png --output scottie-s1-prepared.png \
+        --fit contain --background 000000
     ./build/headless/apps/cli/scanline-sstv-cli encode-image \
         --mode martin-m1 --input source.jpg --output martin-m1-image.wav \
+        --fit cover --sample-rate 48000
+    ./build/headless/apps/cli/scanline-sstv-cli encode-image \
+        --mode scottie-s1 --input source.jpg --output scottie-s1-image.wav \
         --fit cover --sample-rate 48000
 
 The image and WAV commands refuse to overwrite an existing output unless `--force` is

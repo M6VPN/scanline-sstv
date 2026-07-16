@@ -92,12 +92,41 @@ Acceptance:
 - Minimal, headless, Qt 6.11.1, ASan, and UBSan verification passes without playback,
   radio access, or PTT.
 
-M1 remains incomplete. The remaining analogue modes, FSK ID,
-GUI TX editing, live paths, and encode/decode round-trip gates remain later work.
+### M1C - Scottie S1 offline TX and shared analogue dispatch
+
+Status: **complete**
+
+- Record attributable Scottie S1 evidence, exact inspected revisions, licences,
+  locations, retrieval dates, artifact hashes, resolved timings, and implementation
+  disagreements.
+- Move sequential RGB descriptors into a mode-neutral schedule of fixed tones and RGB
+  scans with explicit first-line and pre-image support.
+- Use one shared sequential RGB encoder for the frozen Martin M1 path and Scottie S1.
+- Add a central registry-backed offline TX dispatch used by both test-pattern and image
+  WAV commands.
+- Register Scottie S1 for offline test-pattern and prepared-image TX only after its
+  independent compact vector passes.
+
+Acceptance:
+
+- Scottie S1 VIS, first-line sequence, sync placement, first, second, and final-line
+  boundaries, event count, duration, mapping, and supported-rate frame counts match the
+  independent vector.
+- Scottie rendering is block-size invariant within the accepted numerical tolerance,
+  preserves phase, produces finite bounded PCM input, and accumulates no line drift.
+- PNG and JPEG image-to-WAV, preparation options, overwrite, forced replacement, invalid
+  mode, wrong dimensions, and failed-publication cleanup pass through shared services.
+- The Martin M1 reference artifact, exact event stream, event count, duration, frame
+  count, and direct/prepared-image equivalence remain unchanged.
+- Minimal, headless, Qt 6.11.1, ASan, and UBSan verification passes without playback,
+  radio access, or PTT.
+
+M1 remains incomplete. The remaining analogue modes, FSK ID, GUI TX editing, live paths,
+receive work, and encode/decode round-trip gates remain later work.
 
 - Build the data-driven mode descriptor schema.
 - Add attributed timing/specification tables and golden vectors.
-- Implement offline WAV encoders for Martin M1, Scottie S1, Robot 36, and PD120.
+- Implement the remaining offline WAV encoders for Robot 36 and PD120.
 - Add VIS and optional FSK ID generation.
 - Add WAV inspection commands.
 - Add GUI TX editor foundation and mode-aware preview.

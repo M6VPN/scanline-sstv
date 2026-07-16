@@ -46,7 +46,21 @@ sample-boundary vector generated independently with pinned PySSTV v0.5.8 is stor
 `tests/vectors/analogue/martin-m1`. M1B does not alter those constants or vectors: both
 offline commands pass an immutable 320 by 256 RGB8 frame to the same `encodeMartinM1`
 implementation. No claim is made for live transmission, receive interoperability, or
-other analogue modes.
+other Martin modes.
+
+Scottie S1 is accepted for M1C offline diagnostic-pattern and prepared-image
+transmission. Its [protocol evidence record](protocols/analogue/scottie-s1.md) fixes VIS
+code 60, 320 by 256 dimensions, GBR order, the 9.0 ms sync between blue and red, three
+1.5 ms gaps, 138.240 ms visible scans, tone mapping, first-line behavior, and exact
+duration. The independent compact vector under `tests/vectors/analogue/scottie-s1` does
+not import production code.
+
+The Scottie record documents two comparisons rather than hiding their differences.
+PySSTV v0.5.8 preserves the selected total line duration but redistributes visible-scan
+and gap boundaries. The inspected QSSTV revision uses adjusted TX subintervals and a
+different first-line placement. Production follows the handbook's explicit schedule and
+does not average those values. Scottie S1 advertises offline test-pattern and image TX
+only; live TX, receive, and other Scottie modes remain unsupported.
 
 ## HamDRM
 

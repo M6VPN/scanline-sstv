@@ -2,7 +2,7 @@
 // scanline-sstv/apps/cli/main.cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#include <sstv/analog/martin_m1.hpp>
+#include <sstv/analog/offline_tx.hpp>
 #include <sstv/core/mode.hpp>
 #include <sstv/core/rgb8_frame.hpp>
 #include <sstv/core/version.hpp>
@@ -19,6 +19,8 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
+#include <variant>
 
 namespace {
 
@@ -40,8 +42,14 @@ printHelp()
 	std::cout
 	    << "Usage:\n"
 	       "  scanline-sstv-cli [--help] [--version] [--list-modes]\n"
-	       "  scanline-sstv-cli encode-test-pattern --mode martin-m1\n"
+	       "  scanline-sstv-cli encode-test-pattern --mode MODE\n"
 	       "      --output OUTPUT.wav [--sample-rate RATE] [--force]\n"
+	       "\n"
+	       "Examples:\n"
+	       "  scanline-sstv-cli encode-test-pattern --mode martin-m1\n"
+	       "      --output martin-m1.wav\n"
+	       "  scanline-sstv-cli encode-test-pattern --mode scottie-s1\n"
+	       "      --output scottie-s1.wav\n"
 	       "\n"
 	       "Offline generation only. These commands do not\n"
 	       "play audio, access a sound card, control a radio, or key PTT.\n";
@@ -130,9 +138,6 @@ parseEncodeOptions(const int argc, char* argv[])
 	if (!options.hasMode || !options.hasOutput) {
 		throw std::invalid_argument("--mode and --output are required");
 	}
-	if (options.mode != "martin-m1") {
-		throw std::invalid_argument("unknown mode: " + options.mode);
-	}
 	if (options.output.empty()) {
 		throw std::invalid_argument("output path must not be empty");
 	}
@@ -144,18 +149,27 @@ encodeTestPattern(const int argc, char* argv[])
 {
 	try {
 		const EncodeOptions options = parseEncodeOptions(argc, argv);
-		const auto& descriptor = sstv::analog::martinM1Descriptor();
+		const sstv::core::ModeDescriptor* const mode = sstv::core::find_mode(options.mode);
+		if (mode == nullptr) {
+			throw std::invalid_argument("unknown mode: " + options.mode);
+		}
 		const sstv::core::Rgb8Frame frame
-		    = sstv::core::makeDiagnosticPattern(descriptor.width, descriptor.height);
-		const std::vector<sstv::core::ToneEvent> events
-		    = sstv::analog::encodeMartinM1(frame.view(), 0.8F);
+		    = sstv::core::makeDiagnosticPattern(mode->width, mode->height);
+		sstv::analog::OfflineTxResult result = sstv::analog::encodeOfflineTransmission(
+		    options.mode, sstv::core::ModeCapability::offlineTestPatternTx,
+		    frame.view(), 0.8F);
+		if (const auto* error = std::get_if<sstv::analog::OfflineTxError>(&result)) {
+			throw std::invalid_argument(error->message);
+		}
+		sstv::analog::OfflineTransmission transmission
+		    = std::get<sstv::analog::OfflineTransmission>(std::move(result));
 		const sstv::offline::WavMetadata metadata = sstv::offline::writePcm16WavAtomic(
-		    options.output, events, options.sampleRate, options.force);
-		const sstv::core::Duration duration = sstv::analog::martinM1TransmissionDuration();
+		    options.output, transmission.events, options.sampleRate, options.force);
+		const sstv::core::Duration duration = transmission.duration;
 		const long double seconds = static_cast<long double>(duration.numerator())
 		    / static_cast<long double>(duration.denominator());
-		std::cout << "Mode: " << descriptor.id << '\n'
-		    << "Dimensions: " << descriptor.width << 'x' << descriptor.height << '\n'
+		std::cout << "Mode: " << mode->id << '\n'
+		    << "Dimensions: " << mode->width << 'x' << mode->height << '\n'
 		    << "Sample rate: " << metadata.sampleRate << " Hz\n"
 		    << "Frame count: " << metadata.frameCount << '\n'
 		    << "Duration: " << std::fixed << std::setprecision(6)

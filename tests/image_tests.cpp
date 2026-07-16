@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <sstv/analog/martin_m1.hpp>
+#include <sstv/analog/scottie_s1.hpp>
 #include <sstv/core/rgb8_frame.hpp>
 #include <sstv/image/image.hpp>
 
@@ -152,6 +153,18 @@ testExactIntegration(const std::filesystem::path& temporary)
 		    && directEvents[index].frequencyHz() == loadedEvents[index].frequencyHz()
 		    && directEvents[index].amplitude() == loadedEvents[index].amplitude(),
 		    "image path changed the frozen Martin M1 event stream");
+	}
+	const auto directScottie = sstv::analog::encodeScottieS1(direct.view(), 0.8F);
+	const auto loadedScottie
+	    = sstv::analog::encodeScottieS1(prepared.frame.view(), 0.8F);
+	require(directScottie.size() == loadedScottie.size(),
+	    "Scottie S1 event count changed through exact-size PNG preparation");
+	for (std::size_t index = 0; index < directScottie.size(); ++index) {
+		require(directScottie[index].duration() == loadedScottie[index].duration()
+		    && directScottie[index].frequencyHz()
+		        == loadedScottie[index].frequencyHz()
+		    && directScottie[index].amplitude() == loadedScottie[index].amplitude(),
+		    "image path changed the Scottie S1 event stream");
 	}
 }
 

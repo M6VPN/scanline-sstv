@@ -12,7 +12,7 @@
 namespace sstv::analog {
 namespace {
 
-/* Evidence: docs/protocols/analogue/martin-m1.md, VIS framing sections. */
+/* Evidence: the VIS framing sections in both accepted analogue mode records. */
 constexpr double bitOneHz = 1'100.0;
 constexpr double bitZeroHz = 1'300.0;
 constexpr double leaderHz = 1'900.0;

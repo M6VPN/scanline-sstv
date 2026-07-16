@@ -9,6 +9,7 @@ endif()
 file(REMOVE_RECURSE "${WORK}")
 file(MAKE_DIRECTORY "${WORK}")
 set(output "${WORK}/martin-m1.wav")
+set(scottie_output "${WORK}/scottie-s1.wav")
 
 function(run_expect expected)
 	execute_process(
@@ -42,6 +43,50 @@ foreach(expected IN ITEMS
 	string(FIND "${last_stdout}" "${expected}" found)
 	if(found EQUAL -1)
 		message(FATAL_ERROR "Missing success output: ${expected}")
+	endif()
+endforeach()
+
+run_expect(0 encode-test-pattern --mode scottie-s1 --output "${scottie_output}"
+	--sample-rate 8000)
+if(NOT EXISTS "${scottie_output}")
+	message(FATAL_ERROR "Successful Scottie S1 encode did not publish the WAV")
+endif()
+file(SIZE "${scottie_output}" scottie_size)
+if(NOT scottie_size EQUAL 1768592)
+	message(FATAL_ERROR "Unexpected Scottie S1 8 kHz WAV size: ${scottie_size}")
+endif()
+foreach(expected IN ITEMS
+	"Mode: scottie-s1"
+	"Dimensions: 320x256"
+	"Sample rate: 8000 Hz"
+	"Frame count: 884274"
+	"Duration: 110.534320 seconds")
+	string(FIND "${last_stdout}" "${expected}" found)
+	if(found EQUAL -1)
+		message(FATAL_ERROR "Missing Scottie S1 success output: ${expected}")
+	endif()
+endforeach()
+
+run_expect(1 encode-test-pattern --mode scottie-s1 --output "${scottie_output}"
+	--sample-rate 8000)
+run_expect(0 encode-test-pattern --mode scottie-s1 --output "${scottie_output}"
+	--sample-rate 8000 --force)
+
+run_expect(0 --list-modes)
+foreach(expected IN ITEMS
+	"martin-m1\tMartin M1\t320x256\toffline-test-pattern-tx,offline-image-tx"
+	"scottie-s1\tScottie S1\t320x256\toffline-test-pattern-tx,offline-image-tx")
+	string(FIND "${last_stdout}" "${expected}" found)
+	if(found EQUAL -1)
+		message(FATAL_ERROR "Missing registered mode output: ${expected}")
+	endif()
+endforeach()
+
+run_expect(0 --help)
+foreach(expected IN ITEMS "--mode MODE" "--mode martin-m1" "--mode scottie-s1")
+	string(FIND "${last_stdout}" "${expected}" found)
+	if(found EQUAL -1)
+		message(FATAL_ERROR "Missing generic or accepted-mode help: ${expected}")
 	endif()
 endforeach()
 

@@ -6,7 +6,10 @@ add_library(
 	sstv_core STATIC
 	martin_m1.cpp
 	mode_registry.cpp
+	offline_tx.cpp
 	rgb8_frame.cpp
+	scottie_s1.cpp
+	sequential_rgb.cpp
 	timing.cpp
 	tone.cpp
 	tone_renderer.cpp

@@ -9,8 +9,9 @@ stabilise.
 ## [Unreleased]
 
 M1a adds the first evidence-backed offline analogue waveform slice. M1B adds safe offline
-raster preparation and Martin M1 image-to-WAV generation. Overall M1 remains in
-progress.
+raster preparation and Martin M1 image-to-WAV generation. M1C adds evidence-backed
+Scottie S1 offline test-pattern and image-to-WAV generation through shared analogue
+services. Overall M1 remains in progress.
 
 ### Added
 
@@ -47,6 +48,14 @@ progress.
 - Project-generated compact raster fixtures and M1B unit, integration, CLI, malformed-input,
   resource-limit, atomic-cleanup, exact diagnostic round-trip, and sanitizer tests.
 - Minimal core-only CMake preset with image support disabled.
+- Scottie S1 protocol evidence with pinned source revisions, artifact hashes, resolved
+  VIS, first-line sequence, sync placement, exact timings, tone mapping, duration, and
+  documented PySSTV and QSSTV divergences.
+- Mode-neutral sequential RGB fixed-tone and channel-scan schedules with explicit
+  pre-image and first-line behavior, plus one shared Martin M1 and Scottie S1 encoder.
+- Registry-backed typed offline TX dispatch used by test-pattern and image WAV commands.
+- Scottie S1 offline test-pattern, native JPEG/PNG image, atomic WAV, compact vector,
+  timing, renderer, dispatch, CLI, image integration, and sanitizer tests.
 
 ### Changed
 
@@ -60,6 +69,11 @@ progress.
   separate image-disabled minimal job.
 - Martin M1 arbitrary-image TX reuses the frozen M1a encoder, timing, VIS, scheduler,
   renderer, and PCM16 writer without protocol changes.
+- Registered Scottie S1 with offline test-pattern and image TX capabilities only; CLI
+  mode parsing and help now cover both accepted offline modes.
+- Refactored Martin M1 onto the shared sequential RGB encoder while preserving its exact
+  ordered event stream, event count, duration, frame counts, compact vector, and prepared
+  image equivalence.
 
 ### Fixed
 

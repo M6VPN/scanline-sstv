@@ -68,6 +68,29 @@ Run `minimal` to verify the core-only boundary, `headless` for all non-Qt M1B te
 ASan and UBSan where the compiler supports them. None of these tests plays audio, accesses
 a radio, or keys PTT.
 
+### M1C Scottie S1 offline TX
+
+The M1C suite keeps the accepted M1a and M1B assertions and adds:
+
+- An independently generated Scottie S1 VIS, event, timing, first-line, second-line,
+  final-line, duration, mapping, and common-rate frame-count vector.
+- Explicit proof that Scottie sync occurs between blue and red and that the first line has
+  no additional Robot 1200C-style leading sync.
+- Long repeated-line scheduling without drift, block sizes of one, odd, normal, and one
+  large block, continuous phase, finite bounded samples, PCM conversion, and WAV metadata.
+- Registry and central dispatch consistency for every mode advertising offline TX, plus
+  typed rejection of unknown modes, missing capabilities, and wrong dimensions.
+- Scottie test-pattern, PNG, and JPEG WAV paths; contain, cover, crop, background,
+  overwrite, force, malformed mode, and atomic-failure cleanup cases.
+- Pixel-identical exact-size PNG preparation followed by event-identical Scottie direct
+  and prepared-frame encoding.
+
+The Martin M1 reference JSON is not regenerated. A pre-refactor full-stream hash covers
+every diagnostic event duration, frequency bit pattern, amplitude, and ordering in
+addition to the accepted event-count, boundary, duration, frame-count, and prepared-PNG
+assertions. ASan and UBSan run the encoder, dispatch, CLI, and image integration tests.
+No test plays generated audio or accesses radio or PTT hardware.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

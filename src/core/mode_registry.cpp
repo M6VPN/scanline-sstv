@@ -9,8 +9,8 @@
 namespace sstv::core {
 namespace {
 
-/* Registered after the M1a evidence and independent golden-vector gate passed. */
-constexpr std::array<ModeDescriptor, 1> modes{{
+/* Each offline mode is registered only after its evidence and vector gate passes. */
+constexpr std::array<ModeDescriptor, 2> modes{{
 	{
 		"martin-m1",
 		"Martin M1",
@@ -20,6 +20,18 @@ constexpr std::array<ModeDescriptor, 1> modes{{
 		256,
 		44,
 		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx,
+		OfflineTxStrategy::martinM1,
+	},
+	{
+		"scottie-s1",
+		"Scottie S1",
+		ModeFamily::analog,
+		ColourEncoding::rgb,
+		320,
+		256,
+		60,
+		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx,
+		OfflineTxStrategy::scottieS1,
 	},
 }};
 

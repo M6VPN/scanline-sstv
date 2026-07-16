@@ -12,16 +12,16 @@
 namespace sstv::core {
 
 enum class ModeFamily : std::uint8_t {
-    analog,
-    hamdrm,
-    kgstv,
+	analog,
+	hamdrm,
+	kgstv,
 };
 
 enum class ColourEncoding : std::uint8_t {
-    monochrome,
-    rgb,
-    yuv,
-    digital_payload,
+	monochrome,
+	rgb,
+	yuv,
+	digital_payload,
 };
 
 enum class ModeCapability : std::uint32_t {
@@ -29,6 +29,12 @@ enum class ModeCapability : std::uint32_t {
 	offlineImageTx = 1U << 1U,
 	liveTx = 1U << 2U,
 	receive = 1U << 3U,
+};
+
+enum class OfflineTxStrategy : std::uint8_t {
+	none,
+	martinM1,
+	scottieS1,
 };
 
 class ModeCapabilities {
@@ -80,6 +86,7 @@ struct ModeDescriptor {
 	std::uint16_t height;
 	std::optional<std::uint8_t> vis_code;
 	ModeCapabilities capabilities;
+	OfflineTxStrategy offline_tx_strategy;
 };
 
 [[nodiscard]] std::span<const ModeDescriptor> built_in_modes() noexcept;

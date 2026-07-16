@@ -4,39 +4,12 @@
 
 #pragma once
 
-#include <sstv/core/rgb8_frame.hpp>
-#include <sstv/core/timing.hpp>
-#include <sstv/core/tone.hpp>
+#include <sstv/analog/sequential_rgb.hpp>
 
-#include <array>
 #include <cstdint>
-#include <string_view>
 #include <vector>
 
 namespace sstv::analog {
-
-enum class RgbChannel : std::uint8_t {
-	red,
-	green,
-	blue,
-};
-
-/** Descriptor data shared by line-sequential RGB encoding strategies. */
-struct SequentialRgbDescriptor {
-	std::string_view id;
-	std::string_view displayName;
-	std::uint8_t visCode;
-	std::uint16_t width;
-	std::uint16_t height;
-	std::array<RgbChannel, 3> channelOrder;
-	core::Duration lineSync;
-	core::Duration porch;
-	core::Duration separator;
-	core::Duration channelScan;
-	double syncHz;
-	double blackHz;
-	double whiteHz;
-};
 
 /** Return the immutable evidence-backed Martin M1 descriptor. */
 [[nodiscard]] const SequentialRgbDescriptor& martinM1Descriptor();

@@ -81,7 +81,10 @@ unprofiled grayscale/RGB is sRGB, and rejects unprofiled CMYK. It then premultip
 alpha, applies Lanczos resize with contain or centered cover geometry, composites over
 the requested background, and materializes only the exact-size three-channel RGB8 frame.
 Atomic stripped PNG publication remains in the image boundary. Martin M1 encoding and
-PCM16 WAV publication continue through the existing analogue and offline-audio APIs.
+Scottie S1 encoding share a mode-neutral sequential RGB schedule and encoder. A central
+registry-backed offline TX service validates capability and frame dimensions before
+selecting the built-in strategy. Test-pattern and image commands use that same service;
+PCM16 WAV publication remains in the existing offline-audio API.
 
 ### Rig worker
 
@@ -204,4 +207,3 @@ human-readable message. Frontends decide presentation. A recoverable device loss
 process abort; a violated invariant is.
 
 Logs use structured fields and monotonic timing but never run in a real-time callback.
-

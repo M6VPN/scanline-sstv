@@ -10,6 +10,7 @@
 #include <sstv/offline/wav_writer.hpp>
 
 #include <array>
+#include <bit>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -19,6 +20,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace {
@@ -41,6 +43,16 @@ requireThrows(Function function, const std::string& message)
 		return;
 	}
 	throw std::runtime_error(message);
+}
+
+void
+mixHash(std::uint64_t& hash, std::uint64_t value)
+{
+	for (unsigned int index = 0; index < 8U; ++index) {
+		hash ^= value & 0xffU;
+		hash *= 1'099'511'628'211ULL;
+		value >>= 8U;
+	}
 }
 
 [[nodiscard]] std::uint32_t
@@ -190,14 +202,40 @@ testMartinM1()
 	    "Martin M1 identity is wrong");
 	require(descriptor.width == 320 && descriptor.height == 256,
 	    "Martin M1 dimensions are wrong");
-	require(descriptor.channelOrder == std::array{
-	    sstv::analog::RgbChannel::green, sstv::analog::RgbChannel::blue,
-	    sstv::analog::RgbChannel::red}, "Martin M1 channel order is not GBR");
-	require(descriptor.lineSync == Duration::fromMicroseconds(4'862)
-	    && descriptor.porch == Duration::fromMicroseconds(572)
-	    && descriptor.separator == Duration::fromMicroseconds(572)
-	    && descriptor.channelScan == Duration::fromMicroseconds(146'432),
-	    "Martin M1 timings are wrong");
+	require(descriptor.preImageSchedule.empty()
+	    && descriptor.firstLineSchedule.size() == 8U
+	    && descriptor.firstLineSchedule.data() == descriptor.lineSchedule.data(),
+	    "Martin M1 first-line schedule is wrong");
+	const auto& sync = std::get<sstv::analog::FixedToneSegment>(
+	    descriptor.lineSchedule[0]);
+	const auto& porch = std::get<sstv::analog::FixedToneSegment>(
+	    descriptor.lineSchedule[1]);
+	const auto& green = std::get<sstv::analog::RgbScanSegment>(
+	    descriptor.lineSchedule[2]);
+	const auto& separator1 = std::get<sstv::analog::FixedToneSegment>(
+	    descriptor.lineSchedule[3]);
+	const auto& blue = std::get<sstv::analog::RgbScanSegment>(
+	    descriptor.lineSchedule[4]);
+	const auto& separator2 = std::get<sstv::analog::FixedToneSegment>(
+	    descriptor.lineSchedule[5]);
+	const auto& red = std::get<sstv::analog::RgbScanSegment>(
+	    descriptor.lineSchedule[6]);
+	const auto& separator3 = std::get<sstv::analog::FixedToneSegment>(
+	    descriptor.lineSchedule[7]);
+	require(sync.duration == Duration::fromMicroseconds(4'862)
+	    && sync.frequencyHz == 1'200.0
+	    && porch.duration == Duration::fromMicroseconds(572)
+	    && porch.frequencyHz == 1'500.0
+	    && separator1.duration == Duration::fromMicroseconds(572)
+	    && separator2.duration == Duration::fromMicroseconds(572)
+	    && separator3.duration == Duration::fromMicroseconds(572)
+	    && green.channel == sstv::analog::RgbChannel::green
+	    && blue.channel == sstv::analog::RgbChannel::blue
+	    && red.channel == sstv::analog::RgbChannel::red
+	    && green.duration == Duration::fromMicroseconds(146'432)
+	    && blue.duration == Duration::fromMicroseconds(146'432)
+	    && red.duration == Duration::fromMicroseconds(146'432),
+	    "Martin M1 schedule, channel order, or timings are wrong");
 	require(sstv::analog::martinM1TransmissionDuration()
 	    == Duration(115'200'176, 1'000'000), "nominal duration is wrong");
 	require(sstv::analog::martinM1PixelFrequency(0) == 1'500.0
@@ -218,6 +256,15 @@ testMartinM1()
 	const std::vector<sstv::core::ToneEvent> events
 	    = sstv::analog::encodeMartinM1(view, 0.8F);
 	require(events.size() == 247'053U, "event count differs from vector");
+	std::uint64_t eventHash = 1'469'598'103'934'665'603ULL;
+	for (const sstv::core::ToneEvent& event : events) {
+		mixHash(eventHash, event.duration().numerator());
+		mixHash(eventHash, event.duration().denominator());
+		mixHash(eventHash, std::bit_cast<std::uint64_t>(event.frequencyHz()));
+		mixHash(eventHash, std::bit_cast<std::uint32_t>(event.amplitude()));
+	}
+	require(eventHash == 10'679'166'461'901'389'520ULL,
+	    "Martin M1 ordered event stream changed during the shared-encoder refactor");
 	constexpr std::array<std::pair<std::size_t, std::uint64_t>, 12> boundaries{{
 		{13, 43'913}, {14, 43'940}, {15, 43'962}, {334, 50'969},
 		{335, 50'997}, {336, 51'018}, {655, 58'025}, {656, 58'053},

@@ -1,0 +1,145 @@
+{
+  "channel_order": [
+    "green",
+    "blue",
+    "red"
+  ],
+  "dimensions": [
+    320,
+    256
+  ],
+  "event_count": 246797,
+  "frame_counts": {
+    "11025": 1218640,
+    "44100": 4874563,
+    "48000": 5305647,
+    "8000": 884274,
+    "96000": 10611294
+  },
+  "full_duration_seconds": "1381679/12500",
+  "line_duration_seconds": "21411/50000",
+  "pixel_frequency_hz": {
+    "0": "1500",
+    "128": "96980/51",
+    "255": "2300"
+  },
+  "selected_event_boundaries_48000": [
+    {
+      "boundary_48000": 43752,
+      "duration_us": "1500",
+      "frequency_hz": "1500",
+      "index": 13
+    },
+    {
+      "boundary_48000": 43772,
+      "duration_us": "432",
+      "frequency_hz": "1500",
+      "index": 14
+    },
+    {
+      "boundary_48000": 50387,
+      "duration_us": "432",
+      "frequency_hz": "2300",
+      "index": 333
+    },
+    {
+      "boundary_48000": 50459,
+      "duration_us": "1500",
+      "frequency_hz": "1500",
+      "index": 334
+    },
+    {
+      "boundary_48000": 50480,
+      "duration_us": "432",
+      "frequency_hz": "1500",
+      "index": 335
+    },
+    {
+      "boundary_48000": 57095,
+      "duration_us": "432",
+      "frequency_hz": "1500",
+      "index": 654
+    },
+    {
+      "boundary_48000": 57527,
+      "duration_us": "9000",
+      "frequency_hz": "1200",
+      "index": 655
+    },
+    {
+      "boundary_48000": 57599,
+      "duration_us": "1500",
+      "frequency_hz": "1500",
+      "index": 656
+    },
+    {
+      "boundary_48000": 57619,
+      "duration_us": "432",
+      "frequency_hz": "2300",
+      "index": 657
+    },
+    {
+      "boundary_48000": 64234,
+      "duration_us": "432",
+      "frequency_hz": "1500",
+      "index": 976
+    },
+    {
+      "boundary_48000": 64306,
+      "duration_us": "1500",
+      "frequency_hz": "1500",
+      "index": 977
+    },
+    {
+      "boundary_48000": 64327,
+      "duration_us": "432",
+      "frequency_hz": "1500",
+      "index": 978
+    },
+    {
+      "boundary_48000": 78081,
+      "duration_us": "9000",
+      "frequency_hz": "1200",
+      "index": 1619
+    },
+    {
+      "boundary_48000": 5285164,
+      "duration_us": "1500",
+      "frequency_hz": "1500",
+      "index": 245833
+    },
+    {
+      "boundary_48000": 5298939,
+      "duration_us": "9000",
+      "frequency_hz": "1200",
+      "index": 246475
+    },
+    {
+      "boundary_48000": 5305647,
+      "duration_us": "432",
+      "frequency_hz": "2300",
+      "index": 246796
+    }
+  ],
+  "source": {
+    "artifact_sha256": "e244de9d5cbba525d33b25906c3751ab0ed62af2a3b373feffda44de4f13909d",
+    "project": "Image Communication on Short Waves",
+    "version": "2019-11-17"
+  },
+  "vis_code": 60,
+  "vis_frequencies_hz": [
+    1900,
+    1200,
+    1900,
+    1200,
+    1300,
+    1300,
+    1100,
+    1100,
+    1100,
+    1100,
+    1300,
+    1300,
+    1200
+  ]
+}

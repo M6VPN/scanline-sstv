@@ -4,7 +4,7 @@
 
 #include "image_commands.hpp"
 
-#include <sstv/analog/martin_m1.hpp>
+#include <sstv/analog/offline_tx.hpp>
 #include <sstv/core/mode.hpp>
 #include <sstv/image/image.hpp>
 #include <sstv/offline/wav_writer.hpp>
@@ -204,9 +204,6 @@ parseOptions(const int argc, char* argv[], const bool isEncode)
 	if (!options.hasMode || !options.hasInput || !options.hasOutput) {
 		throw std::invalid_argument("--mode, --input, and --output are required");
 	}
-	if (options.mode != "martin-m1") {
-		throw std::invalid_argument("unknown mode: " + options.mode);
-	}
 	return options;
 }
 
@@ -314,14 +311,21 @@ executeImageCommand(const int argc, char* argv[], const bool isEncode)
 			printPreparedInfo(prepared, options.output);
 			return 0;
 		}
-		const std::vector<sstv::core::ToneEvent> events
-		    = sstv::analog::encodeMartinM1(prepared.frame.view(), 0.8F);
+		sstv::analog::OfflineTxResult encodeResult
+		    = sstv::analog::encodeOfflineTransmission(options.mode,
+		        sstv::core::ModeCapability::offlineImageTx,
+		        prepared.frame.view(), 0.8F);
+		if (const auto* error
+		    = std::get_if<sstv::analog::OfflineTxError>(&encodeResult)) {
+			throw std::invalid_argument(error->message);
+		}
+		sstv::analog::OfflineTransmission transmission
+		    = std::get<sstv::analog::OfflineTransmission>(std::move(encodeResult));
 		const sstv::offline::WavMetadata metadata
 		    = sstv::offline::writePcm16WavAtomic(
-		        options.output, events, options.sampleRate, options.force);
+		        options.output, transmission.events, options.sampleRate, options.force);
 		printPreparedInfo(prepared, options.output);
-		const sstv::core::Duration duration
-		    = sstv::analog::martinM1TransmissionDuration();
+		const sstv::core::Duration duration = transmission.duration;
 		const long double seconds = static_cast<long double>(duration.numerator())
 		    / static_cast<long double>(duration.denominator());
 		std::cout << "Sample rate: " << metadata.sampleRate << " Hz\n"
@@ -350,10 +354,10 @@ void
 printImageCommandHelp()
 {
 	std::cout
-	    << "  scanline-sstv-cli prepare-image --mode martin-m1 --input INPUT\n"
+	    << "  scanline-sstv-cli prepare-image --mode MODE --input INPUT\n"
 	       "      --output PREPARED.png [--fit contain|cover]\n"
 	       "      [--crop X,Y,WIDTH,HEIGHT] [--background RRGGBB] [--force]\n"
-	       "  scanline-sstv-cli encode-image --mode martin-m1 --input INPUT\n"
+	       "  scanline-sstv-cli encode-image --mode MODE --input INPUT\n"
 	       "      --output OUTPUT.wav [--fit contain|cover]\n"
 	       "      [--crop X,Y,WIDTH,HEIGHT] [--background RRGGBB]\n"
 	       "      [--sample-rate RATE] [--force]\n";
