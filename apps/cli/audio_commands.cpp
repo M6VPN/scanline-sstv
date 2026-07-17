@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "audio_commands.hpp"
+#include "audio_diagnostic_commands.hpp"
 #include "audio_text.hpp"
 
 #include <sstv/audio/audio_discovery.hpp>
@@ -170,7 +171,7 @@ printSnapshot(const sstv::audio::AudioDiscoverySnapshot& snapshot)
 bool
 isAudioCommand(const std::string_view argument) noexcept
 {
-	return argument == "list-audio";
+	return argument == "list-audio" || isAudioDiagnosticCommand(argument);
 }
 
 void
@@ -180,12 +181,16 @@ printAudioCommandHelp()
 	    << "  scanline-sstv-cli list-audio [--backend BACKEND] [--include-null]\n"
 	       "    BACKEND: pulseaudio, jack, alsa, oss, sndio, or audio4\n"
 	       "    Read-only discovery only; no audio device is opened.\n";
+	printAudioDiagnosticCommandHelp();
 }
 
 int
 runAudioCommand(const int argc, char* argv[])
 {
 	try {
+		if (isAudioDiagnosticCommand(argv[1])) {
+			return runAudioDiagnosticCommand(argc, argv);
+		}
 		const ListAudioOptions options = parseOptions(argc, argv);
 		sstv::audio::DiscoveryRequest request;
 		if (options.backend) {

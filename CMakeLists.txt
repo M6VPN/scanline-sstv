@@ -1,3 +1,5 @@
+# Scanline SSTV - Developed by M6VPN (M6VPN@tuta.com)
+# scanline-sstv/CMakeLists.txt
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 cmake_minimum_required(VERSION 3.24)
@@ -14,7 +16,16 @@ include(GNUInstallDirs)
 
 option(SSTV_BUILD_GUI "Build the Qt Quick graphical application when Qt is available" ON)
 option(SSTV_BUILD_IMAGE "Build libvips raster image preparation support" ON)
-option(SSTV_BUILD_AUDIO "Build read-only audio backend discovery support" ON)
+option(SSTV_BUILD_AUDIO "Build audio discovery, stream, and diagnostic support" ON)
+option(SSTV_ENABLE_AUDIO_HARDWARE_TESTS "Enable explicitly armed audio hardware tests" OFF)
+option(SSTV_ARM_AUDIO_HARDWARE_TESTS "Arm the configured audio hardware test run" OFF)
+set(SSTV_AUDIO_HARDWARE_BACKEND "" CACHE STRING "Explicit hardware-test backend")
+set(SSTV_AUDIO_HARDWARE_PLAYBACK_ID "" CACHE STRING "Explicit hardware-test playback ID")
+set(SSTV_AUDIO_HARDWARE_CAPTURE_ID "" CACHE STRING "Explicit hardware-test capture ID")
+set(SSTV_AUDIO_HARDWARE_OUTPUT_CHANNEL "" CACHE STRING "Explicit hardware-test output channel")
+set(SSTV_AUDIO_HARDWARE_INPUT_CHANNEL "" CACHE STRING "Explicit hardware-test input channel")
+set(SSTV_AUDIO_HARDWARE_PLAYBACK_CHANNELS "" CACHE STRING "Hardware-test playback channel count")
+set(SSTV_AUDIO_HARDWARE_CAPTURE_CHANNELS "" CACHE STRING "Hardware-test capture channel count")
 option(SSTV_ENABLE_WERROR "Treat compiler warnings as errors" OFF)
 
 add_library(sstv_project_options INTERFACE)

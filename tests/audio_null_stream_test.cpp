@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <sstv/audio/audio_stream.hpp>
+#include <sstv/audio/audio_diagnostics.hpp>
 
 #include <chrono>
 #include <memory>
@@ -96,5 +97,62 @@ main()
 	require(!stream->close(), "null device close failed");
 	require(stream->state() == StreamState::closed,
 	    "null device did not reach closed state");
+	auto provider = createMiniaudioDiscoveryProvider();
+	AudioDiagnosticsService diagnostics(provider,
+	    [] { return createMiniaudioStreamAdapter(); });
+	const DiagnosticDiscoveryResult discovered
+	    = diagnostics.refresh(AudioBackend::nullDiagnostic);
+	require(std::holds_alternative<std::shared_ptr<const AudioDiscoverySnapshot>>(discovered),
+	    "null diagnostic discovery failed");
+	const auto diagnosticSnapshot
+	    = std::get<std::shared_ptr<const AudioDiscoverySnapshot>>(discovered);
+	std::optional<DeviceIdentity> playbackIdentity;
+	std::optional<DeviceIdentity> captureIdentity;
+	for (const AudioDevice& device : diagnosticSnapshot->backends.front().devices) {
+		if (device.identity.direction == AudioDirection::playback) {
+			playbackIdentity = device.identity;
+		} else {
+			captureIdentity = device.identity;
+		}
+	}
+	require(playbackIdentity.has_value() && captureIdentity.has_value(),
+	    "null backend did not provide both diagnostic directions");
+	DiagnosticRequest meter;
+	meter.operation = DiagnosticOperation::inputMeter;
+	meter.backend = AudioBackend::nullDiagnostic;
+	meter.captureIdentity = captureIdentity;
+	meter.captureChannels = 1;
+	meter.durationMs = 250;
+	meter.periodFrames = 48;
+	meter.periodCount = 2;
+	meter.captureRingCapacity = 2'400;
+	const DiagnosticResult meterResult = diagnostics.run(meter);
+	require(std::holds_alternative<DiagnosticSnapshot>(meterResult),
+	    "bounded null input meter failed");
+	const DiagnosticSnapshot& meterSnapshot = std::get<DiagnosticSnapshot>(meterResult);
+	require(meterSnapshot.level && meterSnapshot.level->state == LevelState::silence
+	    && meterSnapshot.stream.captureFramesReceived >= 12'000,
+	    "null input meter did not report bounded silence");
+	DiagnosticRequest outputRequest;
+	outputRequest.operation = DiagnosticOperation::outputCalibration;
+	outputRequest.backend = AudioBackend::nullDiagnostic;
+	outputRequest.playbackIdentity = playbackIdentity;
+	outputRequest.playbackChannels = 1;
+	outputRequest.durationMs = 250;
+	outputRequest.levelDbfs = -60.0;
+	outputRequest.periodFrames = 48;
+	outputRequest.periodCount = 2;
+	outputRequest.playbackRingCapacity = 24'000;
+	outputRequest.playbackPrefillFrames = 2'400;
+	outputRequest.isRealAudioArmed = true;
+	const DiagnosticResult outputResult = diagnostics.run(outputRequest);
+	if (const auto* error = std::get_if<DiagnosticError>(&outputResult)) {
+		throw std::runtime_error("bounded null output calibration failed: "
+		    + error->message);
+	}
+	const DiagnosticSnapshot& outputSnapshot = std::get<DiagnosticSnapshot>(outputResult);
+	require(outputSnapshot.stream.playbackFramesDelivered >= 12'000
+	    && outputSnapshot.stream.underrunFrames == 0,
+	    "null output calibration did not deliver the bounded signal cleanly");
 	return 0;
 }

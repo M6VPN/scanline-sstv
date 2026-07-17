@@ -19,8 +19,9 @@ in progress. M1F adds optional evidence-backed analogue FSK ID suffixes and defe
 offline PCM16 RIFF/WAVE inspection. M1G adds the Wayland-first offline GUI TX editor and
 mode-aware prepared-image preview. M2A adds pinned miniaudio and read-only backend/device
 discovery. M2B adds deterministic bounded sample transport and mock/null stream lifecycle
-without an SSTV live-audio or PTT path. M1 remains incomplete pending the M3 round-trip
-dependency.
+without an SSTV live-audio or PTT path. M2C adds explicitly armed real-device metering,
+calibration, and local loopback diagnostics without SSTV playback or PTT. M1 remains
+incomplete pending the M3 round-trip dependency.
 
 ### Added
 
@@ -124,6 +125,15 @@ dependency.
 - Injected deterministic stream adapter tests and a separately labelled miniaudio
   null-backend lifecycle test that never opens real hardware.
 - Focused ThreadSanitizer preset for the hardware-free audio concurrency suite.
+- Qt-free single-owner audio diagnostics service with exact-device refresh, bounded
+  capture metering, low-level output calibration, deterministic loopback correlation,
+  cancellation, timeout, disconnect, and immutable progress snapshots.
+- `audio-meter`, `audio-output-test`, and `audio-loopback` CLI diagnostics with explicit
+  backend/device/channel selection and a per-run `--arm-real-audio` output gate.
+- Accessible Qt Audio Diagnostics panel with exact device selectors, channel and period
+  controls, meter, fresh output warning, negotiated results, and emergency Stop.
+- Hardware-free signal/statistics/correlation fixtures, injected arming tests, bounded
+  null-backend meter/output integration, and a disabled-by-default audio hardware gate.
 
 ### Changed
 
@@ -148,8 +158,9 @@ dependency.
   both commands through the existing central offline TX service and frozen WAV writer.
 - Added truthful optional offline FSK ID capability metadata to all four accepted analogue
   modes without adding live TX or receive capability.
-- Enabled read-only audio discovery in normal headless, development, and sanitizer builds
-  while keeping `sstv_core` and audio-disabled offline behavior independent of miniaudio.
+- Enabled audio discovery and hardware-free stream/diagnostic tests in normal headless,
+  development, and sanitizer builds while keeping `sstv_core` and audio-disabled offline
+  behavior independent of miniaudio.
 
 ### Fixed
 

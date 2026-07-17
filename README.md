@@ -7,7 +7,7 @@ through flrig or Hamlib.
 
 ## Status
 
-M1 analogue TX work remains provisionally incomplete, and M2B audio transport is
+M1 analogue TX work remains provisionally incomplete, and M2C audio diagnostics are
 complete. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
@@ -34,8 +34,13 @@ not been removed or weakened.
 M2B adds fixed-capacity mono float32 SPSC rings, explicit playback/capture/duplex stream
 configuration, exact-device lifecycle control, channel mapping, and immutable stream
 statistics. Automated lifecycle tests use an injected adapter or miniaudio's null backend.
-There is no CLI or GUI action that opens a device, no SSTV live-audio path, and no PTT or
-radio-control integration.
+M2B itself has no user-facing open action, SSTV live-audio path, PTT, or radio-control
+integration.
+
+M2C adds explicitly selected real-device diagnostics: bounded input metering, a freshly
+armed low-level 1 kHz interface-calibration signal, and deterministic local cable
+loopback. It never plays SSTV or WAV content. Output defaults to -30 dBFS, is limited to
+-6 dBFS, and cannot run longer than 10 seconds. M1 and M2 remain incomplete.
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -145,6 +150,15 @@ Current offline commands:
     ./build/headless/apps/cli/scanline-sstv-cli list-audio --backend pulseaudio
     ./build/headless/apps/cli/scanline-sstv-cli list-audio --backend jack
     ./build/headless/apps/cli/scanline-sstv-cli list-audio --include-null
+    ./build/headless/apps/cli/scanline-sstv-cli audio-meter \
+        --backend alsa --capture-id ID --channel 0 --duration 5
+    ./build/headless/apps/cli/scanline-sstv-cli audio-output-test \
+        --backend alsa --playback-id ID --channel 0 --level-dbfs -30 \
+        --duration 2 --arm-real-audio
+    ./build/headless/apps/cli/scanline-sstv-cli audio-loopback \
+        --backend alsa --playback-id ID --capture-id ID \
+        --output-channel 0 --input-channel 0 --level-dbfs -30 \
+        --arm-real-audio
 
 The image and WAV commands refuse to overwrite an existing output unless `--force` is
 supplied. FSK identifiers contain one to nine evidence-compatible characters; lowercase
@@ -168,6 +182,25 @@ mono sample transport, while `AudioStream` owns exact-device open, prime, start,
 close, callback, negotiated-format, and statistics state. These APIs are not connected to
 the CLI or GUI in this milestone.
 
+M2C diagnostics refresh the chosen backend immediately before opening and require the
+exact IDs printed by `list-audio`; names and defaults are never selectors. Output and
+loopback require `--arm-real-audio` for every invocation. The flag is not stored. Before
+arming, disconnect radio transmit audio where practical, disable VOX, verify no external
+PTT is asserted, reduce monitor/headphone volume, and use a local cable or dummy audio
+load. Input metering captures transient sample values for bounded in-memory statistics;
+it writes no recording but still exposes local microphone/interface audio to this process.
+
+Loopback reports correlation, apparent round-trip latency, gain, polarity, clipping, and
+stream discontinuities. Its deterministic marker is an interface diagnostic, not SSTV,
+and results are not laboratory-grade frequency-response measurements. Silence, ambiguous
+peaks, missing samples, underruns, and drops are reported rather than automatically
+changing gain, periods, or channels.
+
+Hardware-in-loop testing is disabled by default. `SSTV_ENABLE_AUDIO_HARDWARE_TESTS=ON`
+does nothing audible unless `SSTV_ARM_AUDIO_HARDWARE_TESTS=ON` and explicit backend,
+playback/capture IDs, channel indices, and channel counts are also configured. CI never
+sets these values. See [the testing guide](docs/TESTING.md) for the manual checklist.
+
 The Qt application provides the same offline image workflow without duplicating protocol
 or image logic:
 
@@ -176,7 +209,8 @@ or image logic:
 Choose a local JPEG or PNG, select the mode and preparation recipe, then export the exact
 prepared PNG or an offline PCM16 WAV. The editor inspects an exported WAV through the
 same defensive service used by the CLI. Existing destinations require explicit
-confirmation. No GUI action opens an audio device or accesses radio control.
+confirmation. The separate Audio Diagnostics panel uses the same bounded service and
+fresh arm warning. No GUI action accesses radio control or PTT.
 
 ## Repository map
 
@@ -184,8 +218,7 @@ confirmation. No GUI action opens an audio device or accesses radio control.
 - `src/core` - shared core implementation.
 - `include/sstv/image` and `src/image` - bounded libvips raster preparation.
 - `include/sstv/app` and `src/app` - frontend-independent offline editor workflow.
-- `include/sstv/audio` and `src/audio` - discovery, bounded rings, and stream lifecycle.
-- `include/sstv/audio` and `src/audio` - frontend-independent read-only audio discovery.
+- `include/sstv/audio` and `src/audio` - discovery, bounded rings, streams, and diagnostics.
 - `apps/cli` - offline and diagnostic command line.
 - `apps/gui` - Qt Quick application.
 - `docs` - architecture, milestones, protocol provenance, dependencies, and testing.

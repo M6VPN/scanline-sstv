@@ -18,6 +18,7 @@ ApplicationWindow {
 
 	property url pendingOverwriteUrl
 	property string pendingOverwriteKind
+	property string pendingAudioDiagnostic
 
 	function prepareCurrent() {
 		txEditorModel.updateRequest(
@@ -42,6 +43,11 @@ ApplicationWindow {
 				opacity: 0.72
 			}
 			Item { Layout.fillWidth: true }
+			Button {
+				text: qsTr("Audio diagnostics...")
+				Accessible.name: qsTr("Open audio diagnostics")
+				onClicked: audioDiagnosticsDialog.open()
+			}
 			Label {
 				text: txEditorModel.state.toUpperCase()
 				font.bold: true
@@ -252,7 +258,7 @@ ApplicationWindow {
 						Layout.fillWidth: true
 						wrapMode: Text.WordWrap
 						font.bold: true
-						text: qsTr("Offline only: audio playback, sound-card access, radio control, and PTT are unavailable.")
+						text: qsTr("SSTV audio playback, radio control, and PTT are unavailable. Audio-interface diagnostics are separate and require explicit arming.")
 						Accessible.name: qsTr("Offline safety notice")
 					}
 					Label {
@@ -310,6 +316,186 @@ ApplicationWindow {
 		fileMode: FileDialog.OpenFile
 		nameFilters: [qsTr("WAVE audio (*.wav)"), qsTr("All files (*)")]
 		onAccepted: txEditorModel.inspectWav(selectedFile)
+	}
+	Dialog {
+		id: audioDiagnosticsDialog
+		objectName: "audioDiagnosticsPanel"
+		title: qsTr("Audio interface diagnostics")
+		modal: true
+		width: Math.min(window.width - 40, 760)
+		height: Math.min(window.height - 40, 700)
+		standardButtons: Dialog.Close
+		onRejected: audioDiagnosticsModel.stop()
+		ScrollView {
+			anchors.fill: parent
+			contentWidth: availableWidth
+			ColumnLayout {
+				width: parent.width
+				spacing: 8
+				Label {
+					Layout.fillWidth: true
+					wrapMode: Text.WordWrap
+					font.bold: true
+					text: qsTr("Calibration only. No SSTV audio. PTT unavailable. Output and loopback require a fresh warning confirmation.")
+					Accessible.name: qsTr("Audio diagnostics safety status")
+				}
+				RowLayout {
+					Layout.fillWidth: true
+					Label { text: qsTr("Backend") }
+					ComboBox {
+						id: audioBackendBox
+						Layout.fillWidth: true
+						model: audioDiagnosticsModel.backends
+						textRole: "name"
+						valueRole: "id"
+						Accessible.name: qsTr("Audio backend")
+					}
+					Button {
+						text: qsTr("Refresh Devices")
+						enabled: !audioDiagnosticsModel.running
+						Accessible.name: qsTr("Refresh exact audio devices")
+						onClicked: {
+							playbackDeviceBox.currentIndex = -1
+							captureDeviceBox.currentIndex = -1
+							audioDiagnosticsModel.refreshDevices(audioBackendBox.currentValue)
+						}
+					}
+				}
+				Label { text: qsTr("Playback device") }
+				ComboBox {
+					id: playbackDeviceBox
+					Layout.fillWidth: true
+					model: audioDiagnosticsModel.playbackDevices
+					textRole: "label"
+					valueRole: "id"
+					currentIndex: -1
+					Accessible.name: qsTr("Exact playback device")
+				}
+				Label { text: qsTr("Capture device") }
+				ComboBox {
+					id: captureDeviceBox
+					Layout.fillWidth: true
+					model: audioDiagnosticsModel.captureDevices
+					textRole: "label"
+					valueRole: "id"
+					currentIndex: -1
+					Accessible.name: qsTr("Exact capture device")
+				}
+				GridLayout {
+					Layout.fillWidth: true
+					columns: 4
+					Label { text: qsTr("Output channel") }
+					SpinBox { id: outputChannel; from: 0; to: 63; Accessible.name: qsTr("Output channel") }
+					Label { text: qsTr("Output channels") }
+					SpinBox { id: outputChannels; from: 1; to: 64; value: 2; Accessible.name: qsTr("Requested output channels") }
+					Label { text: qsTr("Input channel") }
+					SpinBox { id: inputChannel; from: 0; to: 63; Accessible.name: qsTr("Input channel") }
+					Label { text: qsTr("Input channels") }
+					SpinBox { id: inputChannels; from: 1; to: 64; value: 2; Accessible.name: qsTr("Requested input channels") }
+					Label { text: qsTr("Period frames") }
+					SpinBox { id: audioPeriodFrames; from: 16; to: 8192; value: 480; editable: true; Accessible.name: qsTr("Audio period frames") }
+					Label { text: qsTr("Period count") }
+					SpinBox { id: audioPeriodCount; from: 2; to: 16; value: 3; Accessible.name: qsTr("Audio period count") }
+					Label { text: qsTr("Duration seconds") }
+					SpinBox { id: audioDuration; from: 1; to: 10; value: 2; Accessible.name: qsTr("Diagnostic duration") }
+					Label { text: qsTr("Level dBFS") }
+					SpinBox { id: audioLevel; from: -60; to: -6; value: -30; Accessible.name: qsTr("Calibration output level in dBFS") }
+				}
+				ProgressBar {
+					Layout.fillWidth: true
+					from: -120
+					to: 0
+					value: audioDiagnosticsModel.peakDbfs
+					Accessible.name: qsTr("Capture peak level")
+					Accessible.description: qsTr("Peak level in decibels relative to full scale")
+				}
+				Label {
+					text: qsTr("Peak %1 dBFS").arg(audioDiagnosticsModel.peakDbfs.toFixed(1))
+					Accessible.name: qsTr("Capture peak numeric value")
+				}
+				RowLayout {
+					Layout.fillWidth: true
+					Button {
+						text: qsTr("Run input meter")
+						enabled: !audioDiagnosticsModel.running && captureDeviceBox.currentIndex >= 0
+						Accessible.name: qsTr("Run bounded input level meter")
+						onClicked: audioDiagnosticsModel.startMeter(audioBackendBox.currentValue,
+							captureDeviceBox.currentValue, inputChannel.value, inputChannels.value,
+							audioDuration.value, audioPeriodFrames.value, audioPeriodCount.value)
+					}
+					Button {
+						text: qsTr("Arm output calibration...")
+						enabled: !audioDiagnosticsModel.running && playbackDeviceBox.currentIndex >= 0
+						Accessible.name: qsTr("Arm audio interface output calibration")
+						onClicked: {
+							window.pendingAudioDiagnostic = "output"
+							audioArmDialog.open()
+						}
+					}
+					Button {
+						text: qsTr("Arm local loopback...")
+						enabled: !audioDiagnosticsModel.running
+							&& playbackDeviceBox.currentIndex >= 0 && captureDeviceBox.currentIndex >= 0
+						Accessible.name: qsTr("Arm local cable loopback")
+						onClicked: {
+							window.pendingAudioDiagnostic = "loopback"
+							audioArmDialog.open()
+						}
+					}
+				}
+				Button {
+					text: qsTr("Stop")
+					Layout.fillWidth: true
+					enabled: audioDiagnosticsModel.running
+					font.bold: true
+					Accessible.name: qsTr("Emergency stop audio diagnostic")
+					onClicked: audioDiagnosticsModel.stop()
+				}
+				Label {
+					Layout.fillWidth: true
+					wrapMode: Text.WordWrap
+					font.bold: true
+					text: audioDiagnosticsModel.state.toUpperCase() + ": "
+						+ audioDiagnosticsModel.statusText
+					Accessible.name: qsTr("Audio diagnostic state")
+				}
+				TextArea {
+					Layout.fillWidth: true
+					Layout.preferredHeight: 180
+					readOnly: true
+					text: audioDiagnosticsModel.resultText
+					Accessible.name: qsTr("Audio diagnostic negotiated facts and results")
+				}
+			}
+		}
+	}
+	Dialog {
+		id: audioArmDialog
+		title: qsTr("Arm real audio for this run?")
+		modal: true
+		standardButtons: Dialog.Yes | Dialog.No
+		Label {
+			width: 520
+			wrapMode: Text.WordWrap
+			text: qsTr("Disconnect radio transmit audio where practical. Disable radio VOX and ensure no external PTT is asserted. Reduce monitor/headphone volume. Use a local cable or dummy audio load for loopback. This confirmation applies to one run only.")
+			Accessible.name: qsTr("Real audio safety warning")
+		}
+		onAccepted: {
+			if (window.pendingAudioDiagnostic === "output") {
+				audioDiagnosticsModel.startOutput(audioBackendBox.currentValue,
+					playbackDeviceBox.currentValue, outputChannel.value, outputChannels.value,
+					audioDuration.value, audioPeriodFrames.value, audioPeriodCount.value,
+					audioLevel.value, true)
+			} else {
+				audioDiagnosticsModel.startLoopback(audioBackendBox.currentValue,
+					playbackDeviceBox.currentValue, captureDeviceBox.currentValue,
+					outputChannel.value, inputChannel.value, outputChannels.value,
+					inputChannels.value, audioPeriodFrames.value, audioPeriodCount.value,
+					audioLevel.value, true)
+			}
+			window.pendingAudioDiagnostic = ""
+		}
+		onRejected: window.pendingAudioDiagnostic = ""
 	}
 	Dialog {
 		id: overwriteDialog

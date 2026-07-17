@@ -36,6 +36,23 @@ if(SSTV_BUILD_AUDIO)
 	add_test(NAME scanline-sstv-audio-tests COMMAND scanline-sstv-audio-tests)
 	set_tests_properties(scanline-sstv-audio-tests PROPERTIES TIMEOUT 10)
 
+	add_executable(scanline-sstv-audio-diagnostics-tests audio_diagnostics_tests.cpp)
+	target_link_libraries(
+		scanline-sstv-audio-diagnostics-tests
+		PRIVATE
+			sstv::audio
+			sstv_project_options
+			sstv_project_warnings
+	)
+	add_test(
+		NAME scanline-sstv-audio-diagnostics-tests
+		COMMAND scanline-sstv-audio-diagnostics-tests
+	)
+	set_tests_properties(
+		scanline-sstv-audio-diagnostics-tests
+		PROPERTIES LABELS "audio-concurrency" TIMEOUT 20
+	)
+
 	add_executable(scanline-sstv-audio-stream-tests audio_stream_tests.cpp)
 	target_link_libraries(
 		scanline-sstv-audio-stream-tests
@@ -90,6 +107,38 @@ if(SSTV_BUILD_AUDIO)
 			-P ${CMAKE_CURRENT_SOURCE_DIR}/cli_audio_test.cmake
 	)
 	set_tests_properties(scanline-sstv-cli-audio-test PROPERTIES TIMEOUT 10)
+
+	if(SSTV_ENABLE_AUDIO_HARDWARE_TESTS AND SSTV_ARM_AUDIO_HARDWARE_TESTS)
+		if(SSTV_AUDIO_HARDWARE_BACKEND STREQUAL ""
+				OR SSTV_AUDIO_HARDWARE_PLAYBACK_ID STREQUAL ""
+				OR SSTV_AUDIO_HARDWARE_CAPTURE_ID STREQUAL ""
+				OR SSTV_AUDIO_HARDWARE_OUTPUT_CHANNEL STREQUAL ""
+				OR SSTV_AUDIO_HARDWARE_INPUT_CHANNEL STREQUAL ""
+				OR SSTV_AUDIO_HARDWARE_PLAYBACK_CHANNELS STREQUAL ""
+				OR SSTV_AUDIO_HARDWARE_CAPTURE_CHANNELS STREQUAL "")
+			message(FATAL_ERROR
+				"Armed audio hardware tests require explicit backend, playback ID, "
+				"capture ID, output channel, and input channel cache values."
+			)
+		endif()
+		add_test(
+			NAME scanline-sstv-audio-hardware-loopback
+			COMMAND
+				$<TARGET_FILE:scanline-sstv-cli> audio-loopback
+				--backend ${SSTV_AUDIO_HARDWARE_BACKEND}
+				--playback-id ${SSTV_AUDIO_HARDWARE_PLAYBACK_ID}
+				--capture-id ${SSTV_AUDIO_HARDWARE_CAPTURE_ID}
+				--output-channel ${SSTV_AUDIO_HARDWARE_OUTPUT_CHANNEL}
+				--input-channel ${SSTV_AUDIO_HARDWARE_INPUT_CHANNEL}
+				--playback-channels ${SSTV_AUDIO_HARDWARE_PLAYBACK_CHANNELS}
+				--capture-channels ${SSTV_AUDIO_HARDWARE_CAPTURE_CHANNELS}
+				--level-dbfs -60 --arm-real-audio
+		)
+		set_tests_properties(
+			scanline-sstv-audio-hardware-loopback
+			PROPERTIES LABELS "audio-hardware" TIMEOUT 10
+		)
+	endif()
 endif()
 
 add_executable(scanline-sstv-m1a-tests m1a_tests.cpp)

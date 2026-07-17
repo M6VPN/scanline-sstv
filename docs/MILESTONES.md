@@ -317,8 +317,39 @@ Acceptance:
 - No SSTV stream reaches a device, no user-facing command opens a device, and no PTT or
   radio-control state exists in the audio boundary.
 
-M2C is the next intended slice: explicit real-device diagnostics, channel selection,
-level calibration, and local loopback without automatic PTT.
+### M2C - Explicit real-device audio diagnostics
+
+Status: **complete**
+
+- Add a frontend-independent single-owner diagnostics service for bounded input metering,
+  armed output calibration, and deterministic local cable loopback.
+- Require exact refreshed backend-and-direction identities, explicit channels, bounded
+  periods/durations, and no default, name, index, fallback, or automatic reopen.
+- Require a fresh per-run CLI flag or GUI confirmation before any output-capable operation
+  can construct a discovery provider or stream adapter.
+- Add CLI and Wayland-first Qt diagnostics using immutable bounded-rate snapshots and the
+  same M2B stream lifecycle.
+- Add a disabled-by-default `SSTV_ENABLE_AUDIO_HARDWARE_TESTS` gate. Enabling it alone
+  cannot select hardware or arm output.
+
+Acceptance:
+
+- Independent numerical tests cover dBFS boundaries, signal duration/amplitude/envelope,
+  finite and non-finite capture, silence, clipping, known delay/gain/polarity, and
+  inconclusive correlation.
+- Service instrumentation plus CLI and injected Qt tests prove unarmed output and
+  loopback perform zero backend operations, refresh clears selection without replacement,
+  and GUI progress is independent of audio callback cadence.
+- Null-only integration covers bounded input and output lifecycle but is not reported as
+  a physical loopback.
+- Output is limited to -6 dBFS and 10 seconds, underrun is fatal, capture overflow is
+  reported, cancellation and disconnect stop and close without fallback, and no run is
+  indefinite.
+- Automated verification opens no physical device. No SSTV waveform, WAV playback,
+  radio-control, VOX, or PTT path is reachable.
+
+M2D is the next intended slice: mock-only transmit orchestration and the mandatory unkey
+state machine/watchdog, before flrig or rigctld networking and before any on-air path.
 
 - Integrate miniaudio.
 - Enumerate and select Linux/BSD input/output backends and individual devices.

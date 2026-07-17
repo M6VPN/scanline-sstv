@@ -5,6 +5,7 @@
 add_library(
 	sstv_audio
 	audio_discovery.cpp
+	audio_diagnostics.cpp
 	audio_stream.cpp
 	sample_ring.cpp
 	miniaudio_adapter.cpp

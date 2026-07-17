@@ -9,13 +9,14 @@
 bool
 isAudioCommand(const std::string_view argument) noexcept
 {
-	return argument == "list-audio";
+	return argument == "list-audio" || argument == "audio-meter"
+	    || argument == "audio-output-test" || argument == "audio-loopback";
 }
 
 void
 printAudioCommandHelp()
 {
-	std::cout << "  list-audio: unavailable in this audio-disabled build\n";
+	std::cout << "  audio diagnostics: unavailable in this audio-disabled build\n";
 }
 
 int

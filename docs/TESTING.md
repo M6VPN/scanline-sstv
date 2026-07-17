@@ -267,6 +267,54 @@ ctest --preset tsan --output-on-failure
 The `tsan` test preset selects only the `audio-concurrency` label. A host runtime failure
 must be reported rather than suppressed or treated as a passing concurrency test.
 
+### M2C audio diagnostics
+
+`scanline-sstv-audio-diagnostics-tests` is hardware-free. It independently checks the
+-60 to -6 dBFS conversion range, default -30 dBFS calibration signal, continuous phase,
+10 ms fades, exact duration, deterministic loopback sequence, incremental peak/RMS/DC and
+clipping statistics, finite -120 dBFS silence representation, and fail-closed NaN/infinity
+handling. Frozen correlation cases cover a 137-frame delay, -6.02 dB gain, polarity
+inversion, silence, and insufficient capture. Instrumentation proves an unarmed output or
+loopback request performs no discovery or adapter creation.
+
+An explicitly pumped injected stream adapter covers selected-channel capture, exact
+bounded meter frames, overrun/drop accounting, selected-channel calibration output,
+producer-starvation underrun, known-delay loopback, device removal, cancellation during
+discovery, stream cleanup, and concurrent-start rejection without sleeps or hardware.
+
+CLI tests cover missing, duplicate, malformed, wrong-command, channel-bound, and unarmed
+options. Usage failures return 2, runtime failures return 1, and inconclusive loopback
+returns 3. The Qt model test injects discovery, verifies refresh publishes exact identities
+without selecting one, rejects a second queued refresh immediately, and proves unarmed
+output creates no stream adapter. The model uses request revisions to discard stale queued
+snapshots. The offscreen
+smoke test requires the audio diagnostics panel, PTT-unavailable notice, and absence of an
+enabled Transmit action.
+
+The null-backend integration exercises a bounded silent input meter and armed low-level
+output calibration. Null capture is not treated as a physical loopback. Normal CI never
+constructs a physical-device adapter. The hardware gate defaults off:
+
+```sh
+cmake -S . -B build/audio-hardware -G Ninja \
+    -DSSTV_ENABLE_AUDIO_HARDWARE_TESTS=ON \
+    -DSSTV_ARM_AUDIO_HARDWARE_TESTS=ON \
+    -DSSTV_AUDIO_HARDWARE_BACKEND=alsa \
+    -DSSTV_AUDIO_HARDWARE_PLAYBACK_ID=ID \
+    -DSSTV_AUDIO_HARDWARE_CAPTURE_ID=ID \
+    -DSSTV_AUDIO_HARDWARE_OUTPUT_CHANNEL=0 \
+    -DSSTV_AUDIO_HARDWARE_INPUT_CHANNEL=0 \
+    -DSSTV_AUDIO_HARDWARE_PLAYBACK_CHANNELS=2 \
+    -DSSTV_AUDIO_HARDWARE_CAPTURE_CHANNELS=2
+```
+
+That option only makes separately authored hardware tests eligible. A run must still
+receive explicit backend, device identities, channels, and a per-run arm flag. Before a
+manual cable-loopback check: disconnect radio transmit audio where practical, disable
+VOX, verify external PTT is inactive, reduce monitor/headphone volume, connect only the
+chosen output to the chosen input or dummy audio load, start at -60 dBFS, verify Stop,
+then verify device-removal cleanup. Hardware tests are never run in CI.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:
@@ -343,7 +391,8 @@ Planned required jobs:
 
 All CI uses mock PTT. Integration jobs bind test servers to loopback only.
 
-Current hosted CI runs Linux GCC and Clang with libvips and read-only audio discovery, a
+Current hosted CI runs Linux GCC and Clang with libvips, read-only audio discovery, and
+hardware-free M2B/M2C audio tests, a
 separate image/audio-disabled minimal build, an audio-disabled offline-image build, and Qt
 with offscreen software rendering. Native FreeBSD, OpenBSD, and NetBSD jobs remain later
 focused portability work; Linux containers are not treated as BSD coverage.

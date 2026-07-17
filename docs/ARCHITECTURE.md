@@ -169,6 +169,33 @@ The separately labelled integration test opens only miniaudio's null backend. No
 GUI operation can open a stream in M2B, and no SSTV encoder, radio control, or PTT path is
 connected to this boundary.
 
+M2C adds a Qt-free `AudioDiagnosticsService` over M2A discovery and M2B streams. Each run
+refreshes one explicit backend, validates exact playback/capture identities against the
+new snapshot, and opens only those endpoints. Display names, defaults, indices, and
+fallback devices never participate in selection. Duplex loopback requires one backend
+because M2B owns one miniaudio context per stream.
+
+Input metering drains capture into fixed worker blocks and incrementally accumulates peak,
+RMS, DC, clipping, and frame counts. Silence is represented explicitly and formatted at a
+finite -120 dBFS floor. NaN or infinite capture samples fault the run. Output calibration
+uses a project-owned continuous-phase 1 kHz sine at -30 dBFS by default, limited to -60
+through -6 dBFS, with 10 ms linear fades and bounded duration. It is unrelated to SSTV
+tone events, WAV input, VIS, or FSK ID.
+
+Loopback uses 100 ms silence, a deterministic 500 ms pseudo-random phase-coded 1 kHz
+marker, and 200 ms trailing silence. Normalized correlation requires 0.65 confidence and
+rejects competing peaks within five percent of the best peak outside a five-millisecond
+exclusion region. Results are local interface latency, level, polarity, and continuity
+diagnostics, not laboratory frequency-response measurements.
+
+Generation, ring feeding, draining, analysis, and immutable snapshot creation run on one
+worker/control thread. The callback contract is unchanged. GUI snapshots are published
+at no more than ten updates per second. The Qt model owns an immediate busy flag and a
+request revision, so a queued older refresh or progress snapshot cannot replace a newer
+or completed result. Cancellation propagates through discovery, opening, priming, and the
+worker loop, which then stops and closes the stream before reporting cancellation. No
+M2C type can reach SSTV encoders, radio state, rig control, or PTT.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.

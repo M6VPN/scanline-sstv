@@ -1,8 +1,14 @@
+# Scanline SSTV - Developed by M6VPN (M6VPN@tuta.com)
+# scanline-sstv/apps/cli/CMakeLists.txt
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 set(SSTV_CLI_SOURCES main.cpp wav_commands.cpp)
 if(SSTV_BUILD_AUDIO)
-	list(APPEND SSTV_CLI_SOURCES audio_commands.cpp audio_text.cpp)
+	list(APPEND SSTV_CLI_SOURCES
+		audio_commands.cpp
+		audio_diagnostic_commands.cpp
+		audio_text.cpp
+	)
 else()
 	list(APPEND SSTV_CLI_SOURCES audio_commands_stub.cpp)
 endif()

@@ -1,3 +1,5 @@
+# Scanline SSTV - Developed by M6VPN (M6VPN@tuta.com)
+# scanline-sstv/apps/gui/CMakeLists.txt
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 qt_standard_project_setup(REQUIRES 6.5)
@@ -6,6 +8,7 @@ set(SCANLINE_SSTV_QML_URI "org.m6vpn.ScanlineSSTV")
 
 add_library(
 	sstv_gui_model STATIC
+	audio_diagnostics_model.cpp
 	prepared_image_provider.cpp
 	tx_editor_model.cpp
 )
@@ -13,6 +16,7 @@ target_link_libraries(
 	sstv_gui_model
 	PUBLIC
 		sstv::app
+		sstv::audio
 		Qt6::Core
 		Qt6::Gui
 		Qt6::Quick
@@ -74,6 +78,28 @@ if(BUILD_TESTING)
 		PROPERTIES
 			ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software"
 			TIMEOUT 60
+	)
+	qt_add_executable(
+		scanline-sstv-audio-diagnostics-model-tests
+		audio_diagnostics_model_tests.cpp
+	)
+	target_link_libraries(
+		scanline-sstv-audio-diagnostics-model-tests
+		PRIVATE
+			sstv_gui_model
+			sstv_project_options
+			sstv_project_warnings
+			Qt6::Test
+	)
+	add_test(
+		NAME scanline-sstv-audio-diagnostics-model-tests
+		COMMAND $<TARGET_FILE:scanline-sstv-audio-diagnostics-model-tests>
+	)
+	set_tests_properties(
+		scanline-sstv-audio-diagnostics-model-tests
+		PROPERTIES
+			ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software"
+			TIMEOUT 15
 	)
 	add_test(
 		NAME scanline-sstv-gui-smoke
