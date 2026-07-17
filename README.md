@@ -14,10 +14,12 @@ PNG export, and offline Martin M1 image-to-WAV generation. M1C adds evidence-bac
 Scottie S1 test-pattern and prepared-image WAV generation through a shared sequential RGB
 encoder and central offline TX dispatch. M1D adds evidence-backed Robot 36 offline
 test-pattern and prepared-image WAV generation with deterministic luma and 2 by 2
-subsampled red/blue colour-difference conversion. It does not play audio, transmit,
-receive, decode, control a radio, or key PTT.
+subsampled red/blue colour-difference conversion. M1E adds evidence-backed PD120 offline
+test-pattern and prepared-image WAV generation with paired luma rows and full-width,
+vertically averaged red/blue colour-difference components. It does not play audio,
+transmit, receive, decode, control a radio, or key PTT.
 
-Martin M1, Scottie S1, and Robot 36 advertise only `offline-test-pattern-tx` and
+Martin M1, Scottie S1, Robot 36, and PD120 advertise only `offline-test-pattern-tx` and
 `offline-image-tx`. Overall M1 is not complete.
 
 ## Locked stack
@@ -77,6 +79,8 @@ Current offline commands:
         --mode scottie-s1 --output scottie-s1.wav
     ./build/headless/apps/cli/scanline-sstv-cli encode-test-pattern \
         --mode robot-36 --output robot-36.wav
+    ./build/headless/apps/cli/scanline-sstv-cli encode-test-pattern \
+        --mode pd-120 --output pd-120.wav
     ./build/headless/apps/cli/scanline-sstv-cli prepare-image \
         --mode martin-m1 --input source.png --output prepared.png \
         --fit contain --background 000000
@@ -86,6 +90,9 @@ Current offline commands:
     ./build/headless/apps/cli/scanline-sstv-cli prepare-image \
         --mode robot-36 --input source.png --output robot-36-prepared.png \
         --fit contain --background 000000
+    ./build/headless/apps/cli/scanline-sstv-cli prepare-image \
+        --mode pd-120 --input source.png --output pd-120-prepared.png \
+        --fit contain --background 000000
     ./build/headless/apps/cli/scanline-sstv-cli encode-image \
         --mode martin-m1 --input source.jpg --output martin-m1-image.wav \
         --fit cover --sample-rate 48000
@@ -94,6 +101,9 @@ Current offline commands:
         --fit cover --sample-rate 48000
     ./build/headless/apps/cli/scanline-sstv-cli encode-image \
         --mode robot-36 --input source.jpg --output robot-36-image.wav \
+        --fit cover --sample-rate 48000
+    ./build/headless/apps/cli/scanline-sstv-cli encode-image \
+        --mode pd-120 --input source.jpg --output pd-120-image.wav \
         --fit cover --sample-rate 48000
 
 The image and WAV commands refuse to overwrite an existing output unless `--force` is

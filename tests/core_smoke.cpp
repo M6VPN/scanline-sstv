@@ -13,7 +13,7 @@ main()
 	static_assert(sstv::core::version_major == 0);
 	assert(!sstv::core::version_string.empty());
 	const auto modes = sstv::core::built_in_modes();
-	assert(modes.size() == 3);
+	assert(modes.size() == 4);
 	const auto* martin = sstv::core::find_mode("martin-m1");
 	assert(martin != nullptr);
 	assert(martin->capabilities.contains(sstv::core::ModeCapability::offlineTestPatternTx));
@@ -37,6 +37,17 @@ main()
 	assert(robot->capabilities.contains(sstv::core::ModeCapability::offlineImageTx));
 	assert(!robot->capabilities.contains(sstv::core::ModeCapability::liveTx));
 	assert(!robot->capabilities.contains(sstv::core::ModeCapability::receive));
+	const auto* pd120 = sstv::core::find_mode("pd-120");
+	assert(pd120 != nullptr);
+	assert(pd120->vis_code == 95);
+	assert(pd120->width == 640);
+	assert(pd120->height == 496);
+	assert(pd120->colour_encoding == sstv::core::ColourEncoding::lumaColourDifference);
+	assert(pd120->capabilities.contains(
+	    sstv::core::ModeCapability::offlineTestPatternTx));
+	assert(pd120->capabilities.contains(sstv::core::ModeCapability::offlineImageTx));
+	assert(!pd120->capabilities.contains(sstv::core::ModeCapability::liveTx));
+	assert(!pd120->capabilities.contains(sstv::core::ModeCapability::receive));
 	constexpr auto combined = sstv::core::ModeCapability::offlineTestPatternTx
 	    | sstv::core::ModeCapability::offlineImageTx
 	    | sstv::core::ModeCapability::liveTx;

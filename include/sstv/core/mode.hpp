@@ -36,6 +36,7 @@ enum class OfflineTxStrategy : std::uint8_t {
 	martinM1,
 	scottieS1,
 	robot36,
+	pd120,
 };
 
 class ModeCapabilities {

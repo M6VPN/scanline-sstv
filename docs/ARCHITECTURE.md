@@ -93,6 +93,15 @@ conversion, averaging, even/odd component selection, and alternating line descri
 separate from the sequential-RGB model. The existing central offline TX service selects
 the Robot strategy without exposing protocol, libvips, or Qt types across boundaries.
 
+M1E adds a separate paired-line analogue strategy for PD120. The image boundary still
+produces immutable sRGB RGB8. Inside the analogue boundary, PD120 conversion preserves
+two independent full-width luma rows and derives one full-width vertically averaged
+red-difference plane and one full-width vertically averaged blue-difference plane for
+each source-row pair. The immutable paired-line descriptor records the complete fixed and
+scan schedule without changing the sequential-RGB or Robot 36 scheduling models. The
+central offline TX service selects the PD120 strategy and returns the same typed tone-event
+stream consumed by the existing renderer and WAV writer.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.

@@ -12,7 +12,9 @@ M1a adds the first evidence-backed offline analogue waveform slice. M1B adds saf
 raster preparation and Martin M1 image-to-WAV generation. M1C adds evidence-backed
 Scottie S1 offline test-pattern and image-to-WAV generation through shared analogue
 services. M1D adds evidence-backed Robot 36 offline test-pattern and image-to-WAV
-generation with deterministic luma and colour-difference subsampling. Overall M1 remains
+generation with deterministic luma and colour-difference subsampling. M1E adds
+evidence-backed PD120 offline test-pattern and image-to-WAV generation with paired luma
+rows and full-width vertically averaged colour-difference components. Overall M1 remains
 in progress.
 
 ### Added
@@ -68,6 +70,18 @@ in progress.
 - Robot 36 offline test-pattern, native JPEG/PNG image, atomic WAV, independent compact
   vector, colour, subsampling, timing, renderer, dispatch, CLI, image integration, and
   sanitizer tests.
+- PD120 protocol and colour evidence with pinned sources, inspected locations, artifact
+  hashes, exact VIS and paired-line schedule, and resolved timing, terminology, colour,
+  averaging, and active-height disagreements.
+- Immutable dependency-free paired-line storage with full-resolution luma and full-width
+  vertically subsampled red-difference and blue-difference planes, checked dimensions,
+  plane sizes, arithmetic, and access.
+- Deterministic fixed-point nonlinear RGB conversion, conversion-before-average chroma,
+  explicit first/second luma and colour-difference ordering, and a separate paired-line
+  descriptor.
+- PD120 offline test-pattern, native JPEG/PNG image, atomic WAV, independent compact
+  vector, colour, paired-line, timing, renderer, dispatch, CLI, image integration, and
+  sanitizer tests.
 
 ### Changed
 
@@ -87,6 +101,8 @@ in progress.
   ordered event stream, event count, duration, frame counts, compact vector, and prepared
   image equivalence.
 - Registered Robot 36 with offline test-pattern and image TX capabilities only and routed
+  both commands through the existing central offline TX service and frozen WAV writer.
+- Registered PD120 with offline test-pattern and image TX capabilities only and routed
   both commands through the existing central offline TX service and frozen WAV writer.
 
 ### Fixed

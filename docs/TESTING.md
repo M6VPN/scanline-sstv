@@ -116,6 +116,34 @@ and direct/prepared-image equality remain regression gates. ASan and UBSan cover
 colour conversion, subsampling, schedule, dispatch, CLI, and image integration paths.
 No test plays generated audio or accesses radio or PTT hardware.
 
+### M1E PD120 offline TX
+
+The M1E suite retains all M1a through M1D assertions and adds:
+
+- Independent PD120 conversion vectors for black, white, neutral greys, primaries,
+  boundary values, exact fixed-point truncation, clamping, and deterministic output.
+- Full-width vertically averaged red-difference and blue-difference planes, with fixtures
+  distinguishing conversion-before-average, vertical averaging from row reuse, full
+  horizontal resolution from Robot-style subsampling, component order, and final-pair
+  bounds.
+- PD120 VIS, dimensions, colour metadata, exact paired-line schedule, first, second,
+  middle, and final pair boundaries, selected component mappings, complete event count,
+  exact duration, all supported frame counts, and long no-drift scheduling.
+- Block-size-invariant continuous-phase rendering, finite bounded samples, PCM16 RIFF
+  metadata, overwrite refusal, forced replacement, and failed-publication cleanup.
+- Registry and dispatch consistency, typed capability and dimension failures, diagnostic
+  test-pattern WAV generation, native PNG/JPEG image WAV generation, and contain, cover,
+  crop, background, and exact-size prepared-image paths.
+- Pixel-identical 640 by 496 diagnostic PNG preparation followed by event-identical PD120
+  direct and prepared-frame encoding.
+
+The Martin M1, Scottie S1, and Robot 36 reference JSON files are not regenerated. Their
+accepted event streams, durations, sample boundaries, frame counts, fixture hashes, and
+direct/prepared-image equality remain regression gates. Robot conversion and 4:2:0 plane
+bytes remain exact. ASan and UBSan cover PD120 conversion, paired-line preparation,
+scheduling, dispatch, CLI, and image integration. No test plays generated audio or
+accesses radio or PTT hardware.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <sstv/analog/martin_m1.hpp>
+#include <sstv/analog/pd_120.hpp>
 #include <sstv/analog/robot_36.hpp>
 #include <sstv/analog/scottie_s1.hpp>
 #include <sstv/core/rgb8_frame.hpp>
@@ -188,6 +189,28 @@ testExactIntegration(const std::filesystem::path& temporary)
 		    && directRobotEvents[index].amplitude()
 		        == loadedRobotEvents[index].amplitude(),
 		    "image path changed the Robot 36 event stream");
+	}
+	const sstv::core::Rgb8Frame directPd120
+	    = sstv::core::makeDiagnosticPattern(640, 496);
+	const std::filesystem::path pd120Path = temporary / "pd-120-diagnostic.png";
+	writeFrame(pd120Path, directPd120.view());
+	const auto preparedPd120 = prepare(pd120Path, makeRecipe(640, 496));
+	require(equalFrames(directPd120.view(), preparedPd120.frame.view()),
+	    "exact-size PD120 PNG round trip changed pixels");
+	const auto directPd120Events
+	    = sstv::analog::encodePd120(directPd120.view(), 0.8F);
+	const auto loadedPd120Events
+	    = sstv::analog::encodePd120(preparedPd120.frame.view(), 0.8F);
+	require(directPd120Events.size() == loadedPd120Events.size(),
+	    "PD120 event count changed through exact-size PNG preparation");
+	for (std::size_t index = 0; index < directPd120Events.size(); ++index) {
+		require(directPd120Events[index].duration()
+		        == loadedPd120Events[index].duration()
+		    && directPd120Events[index].frequencyHz()
+		        == loadedPd120Events[index].frequencyHz()
+		    && directPd120Events[index].amplitude()
+		        == loadedPd120Events[index].amplitude(),
+		    "image path changed the PD120 event stream");
 	}
 }
 

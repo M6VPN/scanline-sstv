@@ -150,13 +150,43 @@ Acceptance:
 - Minimal, headless, Qt, ASan, and UBSan verification passes without playback, radio
   access, or PTT.
 
-M1 remains incomplete. PD120, FSK ID, GUI TX editing, live paths, receive work, and
-encode/decode round-trip gates remain later work.
+### M1E - PD120 offline TX and paired-line luma/chroma infrastructure
+
+Status: **complete**
+
+- Record attributable PD120 evidence with original-author documentation, pinned
+  interoperability implementations, exact inspected locations, licences, hashes, colour
+  definitions, pair rules, timings, and resolved disagreements.
+- Add immutable dependency-free full-resolution luma and full-width vertically subsampled
+  red-difference and blue-difference storage with deterministic fixed-point conversion
+  from nonlinear sRGB RGB8.
+- Add a separate paired-line descriptor and encoder without changing sequential-RGB or
+  Robot 36 scheduling and colour behaviour.
+- Register PD120 through the central offline dispatch for diagnostic-pattern and
+  prepared-image WAV generation only.
+
+Acceptance:
+
+- Conversion, clamping, truncation, conversion-before-average, vertical pair averaging,
+  full horizontal chroma resolution, first/final pair handling, and invalid storage match
+  the independent compact vector.
+- VIS, pair schedule, scan order, event count, duration, selected boundaries, tone mapping,
+  and every supported sample-rate frame count pass exactly with no pair drift.
+- Rendering remains block-size invariant and continuous-phase; PCM16 RIFF publication,
+  overwrite, forced replacement, and failure cleanup pass.
+- Test-pattern, PNG, JPEG, contain, cover, crop, background, and exact prepared-image paths
+  use the same PD120 encoder and central dispatch.
+- Martin M1, Scottie S1, and Robot 36 vectors, ordered events, durations, frame counts,
+  colour storage, and direct/prepared-image equivalence remain unchanged.
+- Minimal, headless, Qt, ASan, and UBSan verification passes without playback, radio
+  access, or PTT.
+
+M1 remains incomplete. FSK ID, GUI TX editing, live paths, receive work, WAV inspection,
+and encode/decode round-trip gates remain later work.
 
 - Build the data-driven mode descriptor schema.
 - Add attributed timing/specification tables and golden vectors.
-- Implement the remaining offline WAV encoder for PD120.
-- Add VIS and optional FSK ID generation.
+- Add optional FSK ID generation.
 - Add WAV inspection commands.
 - Add GUI TX editor foundation and mode-aware preview.
 

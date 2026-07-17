@@ -8,6 +8,8 @@ add_library(
 	martin_m1.cpp
 	mode_registry.cpp
 	offline_tx.cpp
+	paired_luma_chroma.cpp
+	pd_120.cpp
 	rgb8_frame.cpp
 	robot_36.cpp
 	scottie_s1.cpp

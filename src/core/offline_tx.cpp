@@ -5,6 +5,7 @@
 #include <sstv/analog/offline_tx.hpp>
 
 #include <sstv/analog/martin_m1.hpp>
+#include <sstv/analog/pd_120.hpp>
 #include <sstv/analog/robot_36.hpp>
 #include <sstv/analog/scottie_s1.hpp>
 
@@ -54,6 +55,11 @@ encodeOfflineTransmission(const std::string_view modeId,
 		return OfflineTransmission{
 			encodeRobot36(frame, amplitude),
 			robot36TransmissionDuration(),
+		};
+	case core::OfflineTxStrategy::pd120:
+		return OfflineTransmission{
+			encodePd120(frame, amplitude),
+			pd120TransmissionDuration(),
 		};
 	case core::OfflineTxStrategy::none:
 		return OfflineTxError{

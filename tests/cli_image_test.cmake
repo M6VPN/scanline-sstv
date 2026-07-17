@@ -17,6 +17,10 @@ set(robot_png "${WORK}/robot-prepared.png")
 set(robot_wav "${WORK}/robot-image.wav")
 set(robot_jpeg_wav "${WORK}/robot-jpeg.wav")
 set(robot_exact_wav "${WORK}/robot-exact.wav")
+set(pd120_png "${WORK}/pd-120-prepared.png")
+set(pd120_wav "${WORK}/pd-120-image.wav")
+set(pd120_jpeg_wav "${WORK}/pd-120-jpeg.wav")
+set(pd120_exact_wav "${WORK}/pd-120-exact.wav")
 
 function(run_expect expected)
 	execute_process(
@@ -179,6 +183,64 @@ run_expect(1 encode-image --mode robot-36 --input "${INPUT}"
 run_expect(0 encode-image --mode robot-36 --input "${INPUT}"
 	--output "${robot_wav}" --force)
 
+run_expect(0 prepare-image --mode pd-120 --input "${INPUT}"
+	--output "${pd120_png}" --fit contain --background 203040)
+if(NOT EXISTS "${pd120_png}")
+	message(FATAL_ERROR "PD120 prepare-image did not publish its PNG")
+endif()
+foreach(expected IN ITEMS
+	"Source format: PNG"
+	"Source dimensions: 5x3"
+	"Fit: contain"
+	"Prepared dimensions: 640x496")
+	string(FIND "${last_stdout}" "${expected}" found)
+	if(found EQUAL -1)
+		message(FATAL_ERROR "Missing PD120 prepare-image output: ${expected}")
+	endif()
+endforeach()
+
+run_expect(0 encode-image --mode pd-120 --input "${INPUT}"
+	--output "${pd120_wav}" --fit cover --crop 0,0,5,3 --background 102030
+	--sample-rate 8000)
+if(NOT EXISTS "${pd120_wav}")
+	message(FATAL_ERROR "PD120 PNG encode-image did not publish its WAV")
+endif()
+file(SIZE "${pd120_wav}" pd120_wav_size)
+if(NOT pd120_wav_size EQUAL 2032252)
+	message(FATAL_ERROR "Unexpected PD120 image WAV size: ${pd120_wav_size}")
+endif()
+foreach(expected IN ITEMS
+	"Source format: PNG"
+	"Crop: 0,0,5,3"
+	"Fit: cover"
+	"Prepared dimensions: 640x496"
+	"Frame count: 1016104"
+	"Duration: 127.013040 seconds")
+	string(FIND "${last_stdout}" "${expected}" found)
+	if(found EQUAL -1)
+		message(FATAL_ERROR "Missing PD120 PNG encode output: ${expected}")
+	endif()
+endforeach()
+
+run_expect(0 encode-image --mode pd-120 --input "${JPEG}"
+	--output "${pd120_jpeg_wav}" --fit contain --background 102030
+	--sample-rate 8000)
+string(FIND "${last_stdout}" "Source format: JPEG" found)
+if(found EQUAL -1)
+	message(FATAL_ERROR "PD120 JPEG path did not report its actual loader")
+endif()
+
+run_expect(0 encode-image --mode pd-120 --input "${pd120_png}"
+	--output "${pd120_exact_wav}" --sample-rate 8000)
+string(FIND "${last_stdout}" "Prepared dimensions: 640x496" found)
+if(found EQUAL -1)
+	message(FATAL_ERROR "PD120 exact-size prepared path reported wrong dimensions")
+endif()
+run_expect(1 encode-image --mode pd-120 --input "${INPUT}"
+	--output "${pd120_wav}")
+run_expect(0 encode-image --mode pd-120 --input "${INPUT}"
+	--output "${pd120_wav}" --force --sample-rate 8000)
+
 run_expect(1 encode-image --mode martin-m1 --input "${INPUT}" --output "${wav}")
 file(WRITE "${wav}" "replacement sentinel")
 run_expect(0 encode-image --mode martin-m1 --input "${INPUT}" --output "${wav}" --force)
@@ -220,6 +282,18 @@ file(GLOB abandoned_robot_wav "${failed_robot_wav}.tmp.*")
 if(abandoned_robot_wav)
 	message(FATAL_ERROR
 		"Failed Robot 36 WAV publish abandoned temporary files: ${abandoned_robot_wav}")
+endif()
+
+set(failed_pd120_wav "${WORK}/missing/pd-120.wav")
+run_expect(1 encode-image --mode pd-120 --input "${INPUT}"
+	--output "${failed_pd120_wav}")
+if(EXISTS "${failed_pd120_wav}")
+	message(FATAL_ERROR "Failed PD120 WAV publish left a destination")
+endif()
+file(GLOB abandoned_pd120_wav "${failed_pd120_wav}.tmp.*")
+if(abandoned_pd120_wav)
+	message(FATAL_ERROR
+		"Failed PD120 WAV publish abandoned temporary files: ${abandoned_pd120_wav}")
 endif()
 
 file(REMOVE_RECURSE "${WORK}")

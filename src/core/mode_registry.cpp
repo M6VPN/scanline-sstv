@@ -10,7 +10,7 @@ namespace sstv::core {
 namespace {
 
 /* Each offline mode is registered only after its evidence and vector gate passes. */
-constexpr std::array<ModeDescriptor, 3> modes{{
+constexpr std::array<ModeDescriptor, 4> modes{{
 	{
 		"martin-m1",
 		"Martin M1",
@@ -43,6 +43,17 @@ constexpr std::array<ModeDescriptor, 3> modes{{
 		8,
 		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx,
 		OfflineTxStrategy::robot36,
+	},
+	{
+		"pd-120",
+		"PD120",
+		ModeFamily::analog,
+		ColourEncoding::lumaColourDifference,
+		640,
+		496,
+		95,
+		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx,
+		OfflineTxStrategy::pd120,
 	},
 }};
 

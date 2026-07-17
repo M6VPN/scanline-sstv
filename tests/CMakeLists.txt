@@ -49,6 +49,18 @@ target_link_libraries(
 add_test(NAME scanline-sstv-m1d-tests COMMAND scanline-sstv-m1d-tests)
 set_tests_properties(scanline-sstv-m1d-tests PROPERTIES TIMEOUT 30)
 
+add_executable(scanline-sstv-m1e-tests m1e_tests.cpp)
+target_link_libraries(
+	scanline-sstv-m1e-tests
+	PRIVATE
+		sstv::core
+		sstv_project_options
+		sstv_project_warnings
+)
+
+add_test(NAME scanline-sstv-m1e-tests COMMAND scanline-sstv-m1e-tests)
+set_tests_properties(scanline-sstv-m1e-tests PROPERTIES TIMEOUT 45)
+
 add_test(
 	NAME scanline-sstv-cli-encode-test
 	COMMAND
@@ -83,6 +95,6 @@ if(SSTV_BUILD_IMAGE)
 			-DWORK=${CMAKE_CURRENT_BINARY_DIR}/cli-image-test
 			-P ${CMAKE_CURRENT_SOURCE_DIR}/cli_image_test.cmake
 	)
-	set_tests_properties(scanline-sstv-cli-image-test PROPERTIES TIMEOUT 45)
+	set_tests_properties(scanline-sstv-cli-image-test PROPERTIES TIMEOUT 90)
 endif()
 set_tests_properties(scanline-sstv-cli-encode-test PROPERTIES TIMEOUT 30)

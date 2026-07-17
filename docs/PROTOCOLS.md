@@ -76,6 +76,21 @@ conversion and reversed component identifiers are also documented and not mixed 
 selected values. Robot 36 advertises offline test-pattern and image TX only; live TX,
 receive, and other Robot modes remain unsupported.
 
+PD120 is accepted for M1E offline diagnostic-pattern and prepared-image transmission. Its
+[protocol evidence record](protocols/analogue/pd-120.md) fixes VIS code 95, 640 by 496
+dimensions, 248 paired scan groups, limited-range nonlinear-RGB luma/red-difference/
+blue-difference conversion, conversion-before-average, full-width vertically averaged
+chroma, the Y0/R-Y/B-Y/Y1 order, nominal 2.08 ms porch, 121.6 ms component scans, and
+127.013040 s complete duration. The independent compact vector under
+`tests/vectors/analogue/pd-120` imports no production code.
+
+Production follows Paul Turner's original PD bulletin, the Dayton colour definition, and
+SSTV Encoder 2.13's deterministic truncation and averaging behaviour. QSSTV's adjusted
+2.30 ms TX porch, adjusted duration, full-range matrix, and average-before-conversion path
+are retained only as interoperability comparisons. PySSTV's Pillow conversion is also not
+mixed into the selected values. PD120 advertises offline test-pattern and image TX only;
+live TX, receive, FSK ID, and other PD modes remain unsupported.
+
 ## HamDRM
 
 QSSTV is an allowed GPL-3.0 reference, but compatibility is validated with external
