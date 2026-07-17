@@ -4,6 +4,25 @@ qt_standard_project_setup(REQUIRES 6.5)
 
 set(SCANLINE_SSTV_QML_URI "org.m6vpn.ScanlineSSTV")
 
+add_library(
+	sstv_gui_model STATIC
+	prepared_image_provider.cpp
+	tx_editor_model.cpp
+)
+target_link_libraries(
+	sstv_gui_model
+	PUBLIC
+		sstv::app
+		Qt6::Core
+		Qt6::Gui
+		Qt6::Quick
+	PRIVATE
+		sstv_project_options
+		sstv_project_warnings
+		Qt6::Concurrent
+)
+target_include_directories(sstv_gui_model PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 qt_add_executable(scanline-sstv-gui main.cpp)
 
 qt_add_qml_module(
@@ -21,7 +40,7 @@ target_compile_definitions(
 target_link_libraries(
 	scanline-sstv-gui
 	PRIVATE
-		sstv::core
+		sstv_gui_model
 		sstv_project_options
 		sstv_project_warnings
 		Qt6::Core
@@ -32,6 +51,30 @@ target_link_libraries(
 )
 
 if(BUILD_TESTING)
+	find_package(Qt6 6.5 REQUIRED COMPONENTS Test)
+	qt_add_executable(scanline-sstv-gui-model-tests tx_editor_model_tests.cpp)
+	target_link_libraries(
+		scanline-sstv-gui-model-tests
+		PRIVATE
+			sstv_gui_model
+			sstv_project_options
+			sstv_project_warnings
+			Qt6::Test
+	)
+	target_compile_definitions(
+		scanline-sstv-gui-model-tests
+		PRIVATE SSTV_IMAGE_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/tests/fixtures/image"
+	)
+	add_test(
+		NAME scanline-sstv-gui-model-tests
+		COMMAND $<TARGET_FILE:scanline-sstv-gui-model-tests>
+	)
+	set_tests_properties(
+		scanline-sstv-gui-model-tests
+		PROPERTIES
+			ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software"
+			TIMEOUT 60
+	)
 	add_test(
 		NAME scanline-sstv-gui-smoke
 		COMMAND $<TARGET_FILE:scanline-sstv-gui> --smoke-test

@@ -52,12 +52,19 @@ if(SSTV_BUILD_IMAGE)
 		)
 	endif()
 	add_subdirectory(src/image)
+	add_subdirectory(src/app)
 endif()
 
 add_subdirectory(apps/cli)
 
 if(SSTV_BUILD_GUI)
-	find_package(Qt6 6.5 QUIET COMPONENTS Core Gui Qml Quick QuickControls2)
+	if(NOT SSTV_BUILD_IMAGE)
+		message(FATAL_ERROR
+			"SSTV_BUILD_GUI is ON, but the offline editor requires SSTV_BUILD_IMAGE. "
+			"Enable image support or configure with -DSSTV_BUILD_GUI=OFF."
+		)
+	endif()
+	find_package(Qt6 6.5 QUIET COMPONENTS Concurrent Core Gui Qml Quick QuickControls2)
 	if(Qt6_FOUND)
 		add_subdirectory(apps/gui)
 	else()

@@ -16,7 +16,8 @@ generation with deterministic luma and colour-difference subsampling. M1E adds
 evidence-backed PD120 offline test-pattern and image-to-WAV generation with paired luma
 rows and full-width vertically averaged colour-difference components. Overall M1 remains
 in progress. M1F adds optional evidence-backed analogue FSK ID suffixes and defensive
-offline PCM16 RIFF/WAVE inspection.
+offline PCM16 RIFF/WAVE inspection. M1G adds the Wayland-first offline GUI TX editor and
+mode-aware prepared-image preview.
 
 ### Added
 
@@ -28,6 +29,14 @@ offline PCM16 RIFF/WAVE inspection.
 - Frontend-independent mode registry API.
 - Diagnostic `scanline-sstv-cli` with version and mode-list commands.
 - Optional Qt Quick GUI foundation.
+- Frontend-independent offline TX editor service with immutable prepared snapshots,
+  bounded retained events, exact frame projections, atomic export, and WAV inspection.
+- Asynchronous Qt editor model with stale-request rejection and a revisioned thread-safe
+  prepared-image provider.
+- Offline GUI controls for all four accepted modes, image recipe, sample rate, optional
+  FSK ID, prepared PNG/WAV export, overwrite confirmation, and PCM16 WAV inspection.
+- Qt model and extended offscreen GUI smoke tests covering editor states, registry modes,
+  preview invalidation, local-URL policy, export safety, and the no-audio/no-PTT boundary.
 - Core smoke test.
 - Noninteractive Qt Quick startup smoke test using offscreen software rendering.
 - Linux GCC and Clang headless CI plus a Qt 6.5+ GUI smoke-test job.

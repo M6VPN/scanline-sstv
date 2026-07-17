@@ -17,6 +17,22 @@
 namespace sstv::analog {
 namespace {
 
+[[nodiscard]] OfflineDurationResult
+durationForMode(const core::ModeDescriptor& mode)
+{
+	switch (mode.offline_tx_strategy) {
+	case core::OfflineTxStrategy::martinM1: return martinM1TransmissionDuration();
+	case core::OfflineTxStrategy::scottieS1: return scottieS1TransmissionDuration();
+	case core::OfflineTxStrategy::robot36: return robot36TransmissionDuration();
+	case core::OfflineTxStrategy::pd120: return pd120TransmissionDuration();
+	case core::OfflineTxStrategy::none:
+		return OfflineTxError{OfflineTxErrorCode::unsupportedStrategy,
+			"mode has no offline TX encoder: " + std::string(mode.id)};
+	}
+	return OfflineTxError{OfflineTxErrorCode::unsupportedStrategy,
+		"mode has an invalid offline TX encoder strategy: " + std::string(mode.id)};
+}
+
 [[nodiscard]] OfflineTxResult
 encodeBaseTransmission(const std::string_view modeId,
 	const core::ModeCapability requiredCapability, const core::Rgb8View frame,
@@ -92,6 +108,23 @@ appendFskSuffix(OfflineTransmission& transmission, FskIdSuffix suffix)
 }
 
 } // namespace
+
+OfflineDurationResult
+offlineTransmissionDuration(const std::string_view modeId,
+	const core::ModeCapability requiredCapability)
+{
+	const core::ModeDescriptor* const mode = core::find_mode(modeId);
+	if (mode == nullptr) {
+		return OfflineTxError{OfflineTxErrorCode::unknownMode,
+			"unknown mode: " + std::string(modeId)};
+	}
+	if (!mode->capabilities.contains(requiredCapability)) {
+		return OfflineTxError{OfflineTxErrorCode::missingCapability,
+			"mode does not provide the requested offline TX capability: "
+			    + std::string(modeId)};
+	}
+	return durationForMode(*mode);
+}
 
 OfflineTxResult
 encodeOfflineTransmission(const std::string_view modeId,

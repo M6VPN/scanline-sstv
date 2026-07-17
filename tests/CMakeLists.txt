@@ -83,6 +83,21 @@ add_test(
 )
 
 if(SSTV_BUILD_IMAGE)
+	add_executable(scanline-sstv-m1g-app-tests m1g_app_tests.cpp)
+	target_link_libraries(
+		scanline-sstv-m1g-app-tests
+		PRIVATE
+			sstv::app
+			sstv_project_options
+			sstv_project_warnings
+	)
+	target_compile_definitions(
+		scanline-sstv-m1g-app-tests
+		PRIVATE SSTV_IMAGE_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/image"
+	)
+	add_test(NAME scanline-sstv-m1g-app-tests COMMAND scanline-sstv-m1g-app-tests)
+	set_tests_properties(scanline-sstv-m1g-app-tests PROPERTIES TIMEOUT 120)
+
 	add_executable(scanline-sstv-image-tests image_tests.cpp)
 	target_link_libraries(
 		scanline-sstv-image-tests

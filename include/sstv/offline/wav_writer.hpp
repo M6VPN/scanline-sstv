@@ -22,6 +22,7 @@ struct WavMetadata {
 
 /** Return whether a rate is supported by the offline diagnostic writer. */
 [[nodiscard]] bool isSupportedSampleRate(std::uint32_t) noexcept;
+[[nodiscard]] std::span<const std::uint32_t> supportedSampleRates() noexcept;
 
 /** Stream events to a temporary mono PCM16 WAV and atomically publish it. */
 [[nodiscard]] WavMetadata writePcm16WavAtomic(const std::filesystem::path&,

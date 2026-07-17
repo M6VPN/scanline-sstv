@@ -41,6 +41,10 @@ struct OfflineTransmissionOptions {
 };
 
 using OfflineTxResult = std::variant<OfflineTransmission, OfflineTxError>;
+using OfflineDurationResult = std::variant<core::Duration, OfflineTxError>;
+
+[[nodiscard]] OfflineDurationResult offlineTransmissionDuration(
+	std::string_view, core::ModeCapability);
 
 /** Resolve and encode one evidence-approved built-in offline transmission. */
 [[nodiscard]] OfflineTxResult encodeOfflineTransmission(

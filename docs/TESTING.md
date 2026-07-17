@@ -184,6 +184,26 @@ Run the sanitizer presets with:
 Both presets use Clang, retain image integration, and disable the GUI. No M1F test plays
 audio, performs SSTV receive decoding, accesses radio hardware, or keys PTT.
 
+### M1G offline GUI TX editor
+
+The frontend-independent M1G app-service suite verifies registry-derived choices and
+dimensions for all four accepted modes, exact cumulative frame projection at supported
+sample rates, stale-generation rejection, immutable preparation, optional FSK metadata,
+atomic PNG/WAV publication, overwrite refusal and confirmed replacement, and inspection
+of the actual exported WAV.
+
+The Qt model suite runs with `QT_QPA_PLATFORM=offscreen` and
+`QT_QUICK_BACKEND=software`. It verifies initial, loading, ready, exporting, completed,
+and error behavior; mode/recipe invalidation; stale completion rejection; local-URL
+policy; FSK validation; revisioned preview publication; export enablement and overwrite
+confirmation; and WAV inspection. The GUI smoke test also requires four registry modes,
+the editor workspace, the visible offline safety notice, and no enabled action named
+`Transmit`.
+
+Native Wayland and XCB launches are runtime checks separate from offscreen acceptance.
+Offscreen success does not claim native compositor coverage. No M1G target links an audio
+or radio-control implementation, and no test plays generated WAV files.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

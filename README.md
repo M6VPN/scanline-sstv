@@ -18,7 +18,10 @@ subsampled red/blue colour-difference conversion. M1E adds evidence-backed PD120
 test-pattern and prepared-image WAV generation with paired luma rows and full-width,
 vertically averaged red/blue colour-difference components. M1F adds evidence-backed
 optional analogue FSK ID suffixes and a defensive read-only PCM16 RIFF/WAVE inspector.
-It does not play audio, transmit, receive, decode SSTV, control a radio, or key PTT.
+M1G replaces the GUI placeholder with an asynchronous offline TX editor for exact
+prepared-image preview, recipe control, optional FSK ID, atomic PNG/WAV export, and WAV
+inspection. It does not play audio, transmit over a sound card, receive, decode SSTV,
+control a radio, or key PTT.
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -47,8 +50,9 @@ Required:
 - A C++20 compiler.
 - libvips 8.15 or newer with the `vips-cpp` pkg-config package.
 
-Qt 6.5 or newer with Core, Gui, Qml, Quick, and QuickControls2 remains optional for
-headless builds. libvips is required by the normal `dev` and `headless` presets. If Qt is
+Qt 6.5 or newer with Concurrent, Core, Gui, Qml, Quick, QuickControls2, and Test remains
+optional for headless builds. libvips is required by the normal `dev` and `headless`
+presets. If Qt is
 not found, CMake builds the core, CLI, image module, and tests and reports that
 the GUI was skipped.
 
@@ -122,11 +126,22 @@ project-supported rates and reports container metadata and sample statistics. It
 an SSTV decoder or mode detector. Preparation, generation, and inspection are offline
 only and never start playback or PTT.
 
+The Qt application provides the same offline image workflow without duplicating protocol
+or image logic:
+
+    ./build/dev/apps/gui/scanline-sstv-gui
+
+Choose a local JPEG or PNG, select the mode and preparation recipe, then export the exact
+prepared PNG or an offline PCM16 WAV. The editor inspects an exported WAV through the
+same defensive service used by the CLI. Existing destinations require explicit
+confirmation. No GUI action opens an audio device or accesses radio control.
+
 ## Repository map
 
 - `include/sstv/core` - stable, frontend-independent public interfaces.
 - `src/core` - shared core implementation.
 - `include/sstv/image` and `src/image` - bounded libvips raster preparation.
+- `include/sstv/app` and `src/app` - frontend-independent offline editor workflow.
 - `apps/cli` - offline and diagnostic command line.
 - `apps/gui` - Qt Quick application.
 - `docs` - architecture, milestones, protocol provenance, dependencies, and testing.

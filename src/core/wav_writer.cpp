@@ -28,6 +28,10 @@ namespace sstv::offline {
 namespace {
 
 constexpr std::size_t renderBlockFrames = 4'096;
+constexpr std::array<std::uint32_t, 11> supportedRates{
+	8'000, 11'025, 16'000, 22'050, 32'000, 44'100,
+	48'000, 88'200, 96'000, 176'400, 192'000,
+};
 
 class TemporaryFile {
 public:
@@ -187,16 +191,18 @@ floatToPcm16(const float sample)
 bool
 isSupportedSampleRate(const std::uint32_t sampleRate) noexcept
 {
-	constexpr std::array<std::uint32_t, 11> rates{
-		8'000, 11'025, 16'000, 22'050, 32'000, 44'100,
-		48'000, 88'200, 96'000, 176'400, 192'000,
-	};
-	for (const std::uint32_t rate : rates) {
+	for (const std::uint32_t rate : supportedRates) {
 		if (rate == sampleRate) {
 			return true;
 		}
 	}
 	return false;
+}
+
+std::span<const std::uint32_t>
+supportedSampleRates() noexcept
+{
+	return supportedRates;
 }
 
 WavMetadata

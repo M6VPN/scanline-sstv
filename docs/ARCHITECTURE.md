@@ -114,6 +114,22 @@ regular local files and streams mono PCM16 sample statistics in fixed blocks. It
 RIFF chunks with checked offsets and explicit format validation; it does not detect SSTV
 modes, decode images, run spectral processing, play audio, or access radio control.
 
+M1G adds `sstv::app` as a Qt-free offline TX editor service over the accepted image,
+analogue, scheduling, WAV publication, and WAV inspection boundaries. A typed request
+contains the registry mode ID, local input, preparation recipe, sample rate, and optional
+validated FSK ID. A completed immutable snapshot contains the prepared RGB8 frame, source
+facts, exact combined transmission, cumulative frame count, and bounded projected WAV
+size. The service retains at most 700,000 tone events per prepared job and rejects RIFF
+size overflow before publication.
+
+The Qt adapter runs preparation, rendering/export, and inspection on a bounded worker
+pool. Monotonic request revisions invalidate the prior preview immediately and prevent a
+late completion from replacing newer state. A thread-safe image provider copies each
+completed immutable RGB8 snapshot once into a revisioned `QImage`; QML uses the revision
+in the provider URL with caching and smoothing disabled. QML contains no mode dimensions,
+protocol timing, image processing, FSK framing, waveform generation, WAV writing, or WAV
+parsing. M1G has no audio, radio-control, or PTT dependency.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.

@@ -212,12 +212,38 @@ Acceptance:
 - Minimal, headless, Qt, ASan, and UBSan verification passes without playback, radio
   access, or PTT.
 
-M1 remains incomplete. GUI TX editing, mode-aware preview, live paths, receive work, and
-encode/decode round-trip analysis gates remain later work.
+### M1G - Wayland-first offline GUI TX editor foundation
+
+Status: **complete**
+
+- Add a Qt-free offline TX editor application service using the existing registry, image
+  preparation, central analogue dispatch, FSK validation, WAV writer, and WAV inspector.
+- Replace the placeholder QML shell with an asynchronous editor for all four accepted
+  offline image modes, contain/cover, crop, background, sample rate, optional FSK ID,
+  exact prepared-image preview, metadata, atomic PNG/WAV export, and WAV inspection.
+- Publish immutable revisioned preview snapshots and reject stale preparation/export
+  completions without exposing mutable image storage across threads.
+- Preserve the noninteractive offscreen startup test and explicit no-audio/no-PTT UI.
+
+Acceptance:
+
+- Registry-derived mode choices expose exact dimensions, colour encoding, VIS metadata,
+  base and combined duration, and cumulative frame counts at supported sample rates.
+- Preparation and encoding stay off the GUI thread; old asynchronous completions cannot
+  replace newer mode, image, or recipe state.
+- Export is disabled until the current request is ready, refuses overwrite without user
+  confirmation, publishes atomically, and inspects the actual exported WAV.
+- Qt model tests cover lifecycle states, invalidation, non-local URL rejection, FSK
+  feedback, preview revisions, overwrite confirmation, export, and inspection.
+- Minimal, headless, dev, ASan, and UBSan presets pass; Qt 6.5+ offscreen GUI tests pass
+  without playback, sound-card access, radio access, or PTT.
+
+M1 remains incomplete. Live paths, receive work, and encode/decode round-trip analysis
+gates remain later work. The non-live round-trip gate requires the later M3 decoder and is
+not weakened by this GUI foundation.
 
 - Build the data-driven mode descriptor schema.
 - Add attributed timing/specification tables and golden vectors.
-- Add GUI TX editor foundation and mode-aware preview.
 
 Acceptance:
 
