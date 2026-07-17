@@ -60,7 +60,8 @@ PySSTV v0.5.8 preserves the selected total line duration but redistributes visib
 and gap boundaries. The inspected QSSTV revision uses adjusted TX subintervals and a
 different first-line placement. Production follows the handbook's explicit schedule and
 does not average those values. Scottie S1 advertises offline test-pattern and image TX
-only; live TX, receive, and other Scottie modes remain unsupported.
+plus the M1F optional offline FSK suffix; live TX, receive, and other Scottie modes remain
+unsupported.
 
 Robot 36 is accepted for M1D offline diagnostic-pattern and prepared-image transmission.
 Its [protocol evidence record](protocols/analogue/robot-36.md) fixes VIS code 8, 320 by
@@ -73,8 +74,8 @@ Production follows the internally consistent Dayton proposal and SSTV Encoder 2.
 definition. QSSTV's full-range matrix, full horizontal chroma resolution, and adjusted
 timings are retained only as an interoperability comparison. PySSTV's line-local Pillow
 conversion and reversed component identifiers are also documented and not mixed into the
-selected values. Robot 36 advertises offline test-pattern and image TX only; live TX,
-receive, and other Robot modes remain unsupported.
+selected values. Robot 36 advertises offline test-pattern and image TX plus the M1F
+optional offline FSK suffix; live TX, receive, and other Robot modes remain unsupported.
 
 PD120 is accepted for M1E offline diagnostic-pattern and prepared-image transmission. Its
 [protocol evidence record](protocols/analogue/pd-120.md) fixes VIS code 95, 640 by 496
@@ -88,8 +89,23 @@ Production follows Paul Turner's original PD bulletin, the Dayton colour definit
 SSTV Encoder 2.13's deterministic truncation and averaging behaviour. QSSTV's adjusted
 2.30 ms TX porch, adjusted duration, full-range matrix, and average-before-conversion path
 are retained only as interoperability comparisons. PySSTV's Pillow conversion is also not
-mixed into the selected values. PD120 advertises offline test-pattern and image TX only;
-live TX, receive, FSK ID, and other PD modes remain unsupported.
+mixed into the selected values. PD120 advertises offline test-pattern and image TX plus
+the M1F optional offline FSK suffix; live TX, receive, and other PD modes remain
+unsupported.
+
+Optional analogue FSK ID is accepted for the M1F offline suffix used by Martin M1,
+Scottie S1, Robot 36, and PD120. Its
+[protocol evidence record](protocols/analogue/fsk-id.md) fixes the post-image placement,
+physical leader/start sequence, six-bit LSB-first alphabet, exact 22 ms bits, 1500/1900/
+2100 Hz tones, checksum, trailer, nine-character limit, and ASCII uppercase rule. The
+compact independent vector under `tests/vectors/analogue/fsk-id` imports no production
+code.
+
+Production follows the complete QSSTV and independently matching mySSTV transmitted
+sequence. The dreamport/libsstvenc logical-prefix representation and libsstvenc omission
+of checksum and trailer are documented differences rather than mixed into production.
+The suffix is optional and mode-neutral. It advertises only offline FSK ID composition;
+live FSK ID and FSK ID reception remain unsupported.
 
 ## HamDRM
 

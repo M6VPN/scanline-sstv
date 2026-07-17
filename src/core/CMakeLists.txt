@@ -4,6 +4,7 @@
 
 add_library(
 	sstv_core STATIC
+	fsk_id.cpp
 	luma_chroma.cpp
 	martin_m1.cpp
 	mode_registry.cpp
@@ -18,6 +19,7 @@ add_library(
 	tone.cpp
 	tone_renderer.cpp
 	vis.cpp
+	wav_inspector.cpp
 	wav_writer.cpp
 )
 add_library(sstv::core ALIAS sstv_core)

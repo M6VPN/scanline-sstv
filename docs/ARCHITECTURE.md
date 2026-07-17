@@ -102,6 +102,18 @@ scan schedule without changing the sequential-RGB or Robot 36 scheduling models.
 central offline TX service selects the PD120 strategy and returns the same typed tone-event
 stream consumed by the existing renderer and WAV writer.
 
+M1F adds optional analogue FSK ID as a mode-neutral suffix composed only after the central
+offline TX service has produced an accepted base-mode event stream. A validated immutable
+identifier and typed transmission options control the suffix. With no identifier, the
+compatibility overload returns the exact M1E event stream. With an identifier, the base
+events and evidence-backed suffix form one event stream so the existing renderer preserves
+oscillator phase across the boundary.
+
+The M1F WAV inspector is a read-only offline/core service. It accepts bounded, nonsymlink
+regular local files and streams mono PCM16 sample statistics in fixed blocks. It parses
+RIFF chunks with checked offsets and explicit format validation; it does not detect SSTV
+modes, decode images, run spectral processing, play audio, or access radio control.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.

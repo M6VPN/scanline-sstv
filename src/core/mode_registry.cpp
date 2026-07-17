@@ -19,7 +19,8 @@ constexpr std::array<ModeDescriptor, 4> modes{{
 		320,
 		256,
 		44,
-		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx,
+		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx
+		    | ModeCapability::offlineFskIdTx,
 		OfflineTxStrategy::martinM1,
 	},
 	{
@@ -30,7 +31,8 @@ constexpr std::array<ModeDescriptor, 4> modes{{
 		320,
 		256,
 		60,
-		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx,
+		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx
+		    | ModeCapability::offlineFskIdTx,
 		OfflineTxStrategy::scottieS1,
 	},
 	{
@@ -41,7 +43,8 @@ constexpr std::array<ModeDescriptor, 4> modes{{
 		320,
 		240,
 		8,
-		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx,
+		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx
+		    | ModeCapability::offlineFskIdTx,
 		OfflineTxStrategy::robot36,
 	},
 	{
@@ -52,7 +55,8 @@ constexpr std::array<ModeDescriptor, 4> modes{{
 		640,
 		496,
 		95,
-		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx,
+		ModeCapability::offlineTestPatternTx | ModeCapability::offlineImageTx
+		    | ModeCapability::offlineFskIdTx,
 		OfflineTxStrategy::pd120,
 	},
 }};

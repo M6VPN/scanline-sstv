@@ -34,6 +34,7 @@ struct ImageCommandOptions {
 	std::filesystem::path output;
 	sstv::image::FitMode fit = sstv::image::FitMode::contain;
 	std::optional<sstv::image::CropRect> crop;
+	std::optional<sstv::analog::FskIdentifier> fskIdentifier;
 	sstv::core::Rgb8Pixel background{0, 0, 0};
 	std::uint32_t sampleRate = defaultSampleRate;
 	bool force = false;
@@ -44,6 +45,7 @@ struct ImageCommandOptions {
 	bool hasCrop = false;
 	bool hasBackground = false;
 	bool hasSampleRate = false;
+	bool hasFskIdentifier = false;
 };
 
 [[nodiscard]] std::uint64_t
@@ -171,6 +173,19 @@ setValueOption(ImageCommandOptions& options, const std::string_view argument,
 		}
 		options.sampleRate = parseSampleRate(value);
 		options.hasSampleRate = true;
+	} else if (argument == "--fsk-id" && isEncode) {
+		if (options.hasFskIdentifier) {
+			throw std::invalid_argument("duplicate option: --fsk-id");
+		}
+		const sstv::analog::FskIdentifierResult result
+		    = sstv::analog::validateFskIdentifier(value);
+		if (const auto* error
+		    = std::get_if<sstv::analog::FskIdError>(&result)) {
+			throw std::invalid_argument(error->message);
+		}
+		options.fskIdentifier
+		    = std::get<sstv::analog::FskIdentifier>(result);
+		options.hasFskIdentifier = true;
 	} else {
 		throw std::invalid_argument("unexpected option: " + std::string(argument));
 	}
@@ -314,7 +329,8 @@ executeImageCommand(const int argc, char* argv[], const bool isEncode)
 		sstv::analog::OfflineTxResult encodeResult
 		    = sstv::analog::encodeOfflineTransmission(options.mode,
 		        sstv::core::ModeCapability::offlineImageTx,
-		        prepared.frame.view(), 0.8F);
+		        prepared.frame.view(), sstv::analog::OfflineTransmissionOptions{
+		            0.8F, options.fskIdentifier});
 		if (const auto* error
 		    = std::get_if<sstv::analog::OfflineTxError>(&encodeResult)) {
 			throw std::invalid_argument(error->message);
@@ -325,6 +341,11 @@ executeImageCommand(const int argc, char* argv[], const bool isEncode)
 		    = sstv::offline::writePcm16WavAtomic(
 		        options.output, transmission.events, options.sampleRate, options.force);
 		printPreparedInfo(prepared, options.output);
+		std::cout << "FSK ID: "
+		    << (options.fskIdentifier.has_value()
+		            ? "appended (" + std::string(options.fskIdentifier->value()) + ")"
+		            : "none")
+		    << '\n';
 		const sstv::core::Duration duration = transmission.duration;
 		const long double seconds = static_cast<long double>(duration.numerator())
 		    / static_cast<long double>(duration.denominator());
@@ -360,7 +381,7 @@ printImageCommandHelp()
 	       "  scanline-sstv-cli encode-image --mode MODE --input INPUT\n"
 	       "      --output OUTPUT.wav [--fit contain|cover]\n"
 	       "      [--crop X,Y,WIDTH,HEIGHT] [--background RRGGBB]\n"
-	       "      [--sample-rate RATE] [--force]\n";
+	       "      [--sample-rate RATE] [--fsk-id TEXT] [--force]\n";
 }
 
 int

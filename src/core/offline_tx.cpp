@@ -9,12 +9,16 @@
 #include <sstv/analog/robot_36.hpp>
 #include <sstv/analog/scottie_s1.hpp>
 
+#include <iterator>
+#include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace sstv::analog {
+namespace {
 
-OfflineTxResult
-encodeOfflineTransmission(const std::string_view modeId,
+[[nodiscard]] OfflineTxResult
+encodeBaseTransmission(const std::string_view modeId,
 	const core::ModeCapability requiredCapability, const core::Rgb8View frame,
 	const float amplitude)
 {
@@ -71,6 +75,49 @@ encodeOfflineTransmission(const std::string_view modeId,
 		OfflineTxErrorCode::unsupportedStrategy,
 		"mode has an invalid offline TX encoder strategy: " + std::string(modeId),
 	};
+}
+
+void
+appendFskSuffix(OfflineTransmission& transmission, FskIdSuffix suffix)
+{
+	if (suffix.events.size() > transmission.events.max_size()
+	    - transmission.events.size()) {
+		throw std::overflow_error("combined transmission event count overflow");
+	}
+	transmission.events.reserve(transmission.events.size() + suffix.events.size());
+	transmission.events.insert(transmission.events.end(),
+		std::make_move_iterator(suffix.events.begin()),
+		std::make_move_iterator(suffix.events.end()));
+	transmission.duration = transmission.duration + suffix.duration;
+}
+
+} // namespace
+
+OfflineTxResult
+encodeOfflineTransmission(const std::string_view modeId,
+	const core::ModeCapability requiredCapability, const core::Rgb8View frame,
+	const OfflineTransmissionOptions& options)
+{
+	OfflineTxResult result = encodeBaseTransmission(
+		modeId, requiredCapability, frame, options.amplitude);
+	if (std::holds_alternative<OfflineTxError>(result)
+	    || !options.fskIdentifier.has_value()) {
+		return result;
+	}
+	OfflineTransmission transmission
+		= std::get<OfflineTransmission>(std::move(result));
+	appendFskSuffix(transmission,
+		generateFskIdSuffix(*options.fskIdentifier, options.amplitude));
+	return transmission;
+}
+
+OfflineTxResult
+encodeOfflineTransmission(const std::string_view modeId,
+	const core::ModeCapability requiredCapability, const core::Rgb8View frame,
+	const float amplitude)
+{
+	return encodeOfflineTransmission(modeId, requiredCapability, frame,
+		OfflineTransmissionOptions{amplitude, std::nullopt});
 }
 
 } // namespace sstv::analog

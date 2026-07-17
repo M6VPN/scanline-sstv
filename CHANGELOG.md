@@ -15,7 +15,8 @@ services. M1D adds evidence-backed Robot 36 offline test-pattern and image-to-WA
 generation with deterministic luma and colour-difference subsampling. M1E adds
 evidence-backed PD120 offline test-pattern and image-to-WAV generation with paired luma
 rows and full-width vertically averaged colour-difference components. Overall M1 remains
-in progress.
+in progress. M1F adds optional evidence-backed analogue FSK ID suffixes and defensive
+offline PCM16 RIFF/WAVE inspection.
 
 ### Added
 
@@ -82,6 +83,15 @@ in progress.
 - PD120 offline test-pattern, native JPEG/PNG image, atomic WAV, independent compact
   vector, colour, paired-line, timing, renderer, dispatch, CLI, image integration, and
   sanitizer tests.
+- Analogue FSK ID evidence with pinned implementation revisions, artifact hashes, resolved
+  framing differences, and a compact independent event/boundary vector.
+- Validated immutable FSK identifiers and mode-neutral suffix composition through typed
+  offline-transmission options, with exact combined durations and continuous phase.
+- Optional `--fsk-id` support for test-pattern and prepared-image WAV commands.
+- Defensive `inspect-wav` command and frontend-independent streaming RIFF/WAVE PCM16
+  parser with typed errors, checked chunk arithmetic, bounded resources, and sample
+  statistics.
+- Clang ASan and UBSan CMake presets covering the core, CLI, parser, and image integration.
 
 ### Changed
 
@@ -104,6 +114,8 @@ in progress.
   both commands through the existing central offline TX service and frozen WAV writer.
 - Registered PD120 with offline test-pattern and image TX capabilities only and routed
   both commands through the existing central offline TX service and frozen WAV writer.
+- Added truthful optional offline FSK ID capability metadata to all four accepted analogue
+  modes without adding live TX or receive capability.
 
 ### Fixed
 
@@ -116,3 +128,6 @@ in progress.
 - Image inputs fail closed for special files, URLs, disallowed loaders, animation,
   contradictory metadata, corrupt ICC profiles, unprofiled CMYK, and configured resource
   limits before any output is published.
+- WAV inspection rejects URLs, symlinks, special files, unsupported formats, malformed or
+  contradictory chunks, excessive resources, and overflow attempts while streaming
+  sample analysis in fixed-size blocks.

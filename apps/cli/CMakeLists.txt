@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-set(SSTV_CLI_SOURCES main.cpp)
+set(SSTV_CLI_SOURCES main.cpp wav_commands.cpp)
 if(SSTV_BUILD_IMAGE)
 	list(APPEND SSTV_CLI_SOURCES image_commands.cpp)
 else()

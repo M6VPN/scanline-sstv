@@ -4,11 +4,13 @@
 
 #pragma once
 
+#include <sstv/analog/fsk_id.hpp>
 #include <sstv/core/mode.hpp>
 #include <sstv/core/rgb8_frame.hpp>
 #include <sstv/core/timing.hpp>
 #include <sstv/core/tone.hpp>
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -33,9 +35,19 @@ struct OfflineTransmission {
 	core::Duration duration;
 };
 
+struct OfflineTransmissionOptions {
+	float amplitude = 0.8F;
+	std::optional<FskIdentifier> fskIdentifier;
+};
+
 using OfflineTxResult = std::variant<OfflineTransmission, OfflineTxError>;
 
 /** Resolve and encode one evidence-approved built-in offline transmission. */
+[[nodiscard]] OfflineTxResult encodeOfflineTransmission(
+	std::string_view, core::ModeCapability, core::Rgb8View,
+	const OfflineTransmissionOptions&);
+
+/** Preserve the M1E no-FSK API and exact base-mode event stream. */
 [[nodiscard]] OfflineTxResult encodeOfflineTransmission(
 	std::string_view, core::ModeCapability, core::Rgb8View, float);
 

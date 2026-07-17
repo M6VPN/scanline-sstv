@@ -1,0 +1,547 @@
+{
+  "boundaries": [
+    {
+      "denominator": 10,
+      "numerator": 3
+    },
+    {
+      "denominator": 5,
+      "numerator": 2
+    },
+    {
+      "denominator": 500,
+      "numerator": 211
+    },
+    {
+      "denominator": 250,
+      "numerator": 111
+    },
+    {
+      "denominator": 500,
+      "numerator": 233
+    },
+    {
+      "denominator": 125,
+      "numerator": 61
+    },
+    {
+      "denominator": 100,
+      "numerator": 51
+    },
+    {
+      "denominator": 250,
+      "numerator": 133
+    },
+    {
+      "denominator": 500,
+      "numerator": 277
+    },
+    {
+      "denominator": 125,
+      "numerator": 72
+    },
+    {
+      "denominator": 500,
+      "numerator": 299
+    },
+    {
+      "denominator": 50,
+      "numerator": 31
+    },
+    {
+      "denominator": 500,
+      "numerator": 321
+    },
+    {
+      "denominator": 125,
+      "numerator": 83
+    },
+    {
+      "denominator": 500,
+      "numerator": 343
+    },
+    {
+      "denominator": 250,
+      "numerator": 177
+    },
+    {
+      "denominator": 100,
+      "numerator": 73
+    },
+    {
+      "denominator": 125,
+      "numerator": 94
+    },
+    {
+      "denominator": 500,
+      "numerator": 387
+    },
+    {
+      "denominator": 250,
+      "numerator": 199
+    },
+    {
+      "denominator": 500,
+      "numerator": 409
+    },
+    {
+      "denominator": 25,
+      "numerator": 21
+    },
+    {
+      "denominator": 500,
+      "numerator": 431
+    },
+    {
+      "denominator": 250,
+      "numerator": 221
+    },
+    {
+      "denominator": 500,
+      "numerator": 453
+    },
+    {
+      "denominator": 125,
+      "numerator": 116
+    },
+    {
+      "denominator": 20,
+      "numerator": 19
+    },
+    {
+      "denominator": 250,
+      "numerator": 243
+    },
+    {
+      "denominator": 500,
+      "numerator": 497
+    },
+    {
+      "denominator": 125,
+      "numerator": 127
+    },
+    {
+      "denominator": 500,
+      "numerator": 519
+    },
+    {
+      "denominator": 50,
+      "numerator": 53
+    },
+    {
+      "denominator": 500,
+      "numerator": 541
+    },
+    {
+      "denominator": 125,
+      "numerator": 138
+    },
+    {
+      "denominator": 500,
+      "numerator": 563
+    },
+    {
+      "denominator": 250,
+      "numerator": 287
+    },
+    {
+      "denominator": 100,
+      "numerator": 117
+    },
+    {
+      "denominator": 125,
+      "numerator": 149
+    },
+    {
+      "denominator": 500,
+      "numerator": 607
+    },
+    {
+      "denominator": 250,
+      "numerator": 309
+    },
+    {
+      "denominator": 500,
+      "numerator": 629
+    },
+    {
+      "denominator": 25,
+      "numerator": 32
+    },
+    {
+      "denominator": 500,
+      "numerator": 651
+    },
+    {
+      "denominator": 250,
+      "numerator": 331
+    },
+    {
+      "denominator": 500,
+      "numerator": 673
+    },
+    {
+      "denominator": 125,
+      "numerator": 171
+    },
+    {
+      "denominator": 100,
+      "numerator": 139
+    },
+    {
+      "denominator": 250,
+      "numerator": 353
+    },
+    {
+      "denominator": 500,
+      "numerator": 717
+    },
+    {
+      "denominator": 125,
+      "numerator": 182
+    },
+    {
+      "denominator": 500,
+      "numerator": 739
+    },
+    {
+      "denominator": 2,
+      "numerator": 3
+    },
+    {
+      "denominator": 500,
+      "numerator": 761
+    },
+    {
+      "denominator": 125,
+      "numerator": 193
+    },
+    {
+      "denominator": 500,
+      "numerator": 783
+    },
+    {
+      "denominator": 250,
+      "numerator": 397
+    },
+    {
+      "denominator": 100,
+      "numerator": 161
+    },
+    {
+      "denominator": 125,
+      "numerator": 204
+    },
+    {
+      "denominator": 500,
+      "numerator": 827
+    },
+    {
+      "denominator": 250,
+      "numerator": 419
+    },
+    {
+      "denominator": 500,
+      "numerator": 849
+    },
+    {
+      "denominator": 25,
+      "numerator": 43
+    },
+    {
+      "denominator": 500,
+      "numerator": 871
+    },
+    {
+      "denominator": 500,
+      "numerator": 921
+    }
+  ],
+  "character_codes": [
+    45,
+    22,
+    54,
+    48,
+    46,
+    13,
+    17
+  ],
+  "checksum": 15,
+  "duration": {
+    "denominator": 500,
+    "numerator": 921
+  },
+  "event_count": 64,
+  "events": [
+    {
+      "duration_us": 300000,
+      "frequency_hz": 1500
+    },
+    {
+      "duration_us": 100000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 1900
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 22000,
+      "frequency_hz": 2100
+    },
+    {
+      "duration_us": 100000,
+      "frequency_hz": 1900
+    }
+  ],
+  "frame_counts": {
+    "11025": 20308,
+    "16000": 29472,
+    "176400": 324928,
+    "192000": 353664,
+    "22050": 40616,
+    "32000": 58944,
+    "44100": 81232,
+    "48000": 88416,
+    "8000": 14736,
+    "88200": 162464,
+    "96000": 176832
+  },
+  "identifier": "M6VPN-1"
+}

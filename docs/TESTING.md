@@ -144,6 +144,46 @@ bytes remain exact. ASan and UBSan cover PD120 conversion, paired-line preparati
 scheduling, dispatch, CLI, and image integration. No test plays generated audio or
 accesses radio or PTT hardware.
 
+### M1F optional FSK ID and WAV inspection
+
+The M1F suite retains all M1a through M1E assertions and adds:
+
+- An independent FSK vector for `M6VPN-1` covering its normalized alphabet, six-bit
+  LSB-first codes, leader/start sequence, checksum, trailer, exact event boundaries,
+  duration, event count, and frame count at every supported sample rate.
+- Empty, all-space, oversized, control, NUL, non-ASCII, unsupported-character, and
+  boundary-length identifier validation; lowercase ASCII normalization is explicit.
+- Exact disabled-FSK regression for all four mode streams and exact base-prefix plus suffix
+  comparison when enabled, including block-size-invariant continuous-phase rendering
+  across the composition boundary.
+- Test-pattern and image CLI paths, duplicate and missing options, wrong-command rejection,
+  overwrite refusal, forced replacement, normalized status output, and combined metadata.
+- Generated RIFF fixtures for valid writer output from every mode, unknown and odd-sized
+  chunks, independently calculated sample statistics, truncated and contradictory sizes,
+  duplicate/missing critical chunks, bad padding/alignment/rates/formats, overflow attempts,
+  URLs, directories, symlinks, FIFOs, and resource limits.
+
+The inspector rejects symlinks rather than resolving them. Defaults are 256 MiB per input,
+16 MiB per unknown chunk, and 4096 chunks. These bounds exceed the largest current
+192 kHz PCM16 transmission while bounding traversal and streamed analysis. Sample analysis
+uses 8192-byte blocks. CLI duration, DC mean, and RMS are locale-independent fixed-point
+decimal values in raw PCM16 sample units with six digits after the decimal point. Standard
+classic-locale stream formatting rounds the computed `long double` value to the nearest
+six-decimal representation; integer metadata and counts are printed exactly.
+
+Run the sanitizer presets with:
+
+    cmake --preset asan
+    cmake --build --preset asan
+    ctest --preset asan --output-on-failure
+
+    cmake --preset ubsan
+    cmake --build --preset ubsan
+    ctest --preset ubsan --output-on-failure
+
+Both presets use Clang, retain image integration, and disable the GUI. No M1F test plays
+audio, performs SSTV receive decoding, accesses radio hardware, or keys PTT.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

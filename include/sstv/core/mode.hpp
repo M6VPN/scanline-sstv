@@ -29,6 +29,7 @@ enum class ModeCapability : std::uint32_t {
 	offlineImageTx = 1U << 1U,
 	liveTx = 1U << 2U,
 	receive = 1U << 3U,
+	offlineFskIdTx = 1U << 4U,
 };
 
 enum class OfflineTxStrategy : std::uint8_t {

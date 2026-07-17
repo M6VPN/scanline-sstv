@@ -9,12 +9,14 @@
 #include <sstv/offline/wav_writer.hpp>
 
 #include "image_commands.hpp"
+#include "wav_commands.hpp"
 
 #include <charconv>
 #include <cstdint>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -29,11 +31,13 @@ constexpr std::uint32_t defaultSampleRate = 48'000;
 struct EncodeOptions {
 	std::string mode;
 	std::filesystem::path output;
+	std::optional<sstv::analog::FskIdentifier> fskIdentifier;
 	std::uint32_t sampleRate = defaultSampleRate;
 	bool force = false;
 	bool hasMode = false;
 	bool hasOutput = false;
 	bool hasSampleRate = false;
+	bool hasFskIdentifier = false;
 };
 
 void
@@ -43,25 +47,29 @@ printHelp()
 	    << "Usage:\n"
 	       "  scanline-sstv-cli [--help] [--version] [--list-modes]\n"
 	       "  scanline-sstv-cli encode-test-pattern --mode MODE\n"
-	       "      --output OUTPUT.wav [--sample-rate RATE] [--force]\n"
+	       "      --output OUTPUT.wav [--sample-rate RATE] [--fsk-id TEXT]\n"
+	       "      [--force]\n"
 	       "\n"
 	       "Examples:\n"
 	       "  scanline-sstv-cli encode-test-pattern --mode martin-m1\n"
 	       "      --output martin-m1.wav\n"
 	       "  scanline-sstv-cli encode-test-pattern --mode scottie-s1\n"
 	       "      --output scottie-s1.wav\n"
-		       "  scanline-sstv-cli encode-test-pattern --mode robot-36\n"
-		       "      --output robot-36.wav\n"
-		       "  scanline-sstv-cli encode-test-pattern --mode pd-120\n"
-		       "      --output pd-120.wav\n"
-		       "  scanline-sstv-cli encode-image --mode robot-36 --input source.png\n"
-		       "      --output robot-36.wav\n"
-		       "  scanline-sstv-cli encode-image --mode pd-120 --input source.jpg\n"
-		       "      --output pd-120.wav\n"
+	       "  scanline-sstv-cli encode-test-pattern --mode robot-36\n"
+	       "      --output robot-36.wav\n"
+	       "  scanline-sstv-cli encode-test-pattern --mode pd-120\n"
+	       "      --output pd-120.wav\n"
+	       "  scanline-sstv-cli encode-test-pattern --mode martin-m1\n"
+	       "      --output martin-m1-id.wav --fsk-id M6VPN\n"
+	       "  scanline-sstv-cli encode-image --mode robot-36 --input source.png\n"
+	       "      --output robot-36.wav\n"
+	       "  scanline-sstv-cli encode-image --mode pd-120 --input source.jpg\n"
+	       "      --output pd-120.wav\n"
 	       "\n"
 	       "Offline generation only. These commands do not\n"
 	       "play audio, access a sound card, control a radio, or key PTT.\n";
 	printImageCommandHelp();
+	printWavCommandHelp();
 }
 
 [[nodiscard]] std::string_view
@@ -96,6 +104,9 @@ printModes()
 		if (mode.capabilities.contains(sstv::core::ModeCapability::offlineImageTx)) {
 			std::cout << ",offline-image-tx";
 		}
+		if (mode.capabilities.contains(sstv::core::ModeCapability::offlineFskIdTx)) {
+			std::cout << ",optional-fsk-id";
+		}
 		std::cout << '\t' << colourEncodingName(mode.colour_encoding) << '\n';
 	}
 }
@@ -129,7 +140,7 @@ parseEncodeOptions(const int argc, char* argv[])
 			continue;
 		}
 		if (argument != "--mode" && argument != "--output"
-		    && argument != "--sample-rate") {
+		    && argument != "--sample-rate" && argument != "--fsk-id") {
 			throw std::invalid_argument("unexpected argument: " + std::string(argument));
 		}
 		if (++index >= argc) {
@@ -151,12 +162,25 @@ parseEncodeOptions(const int argc, char* argv[])
 			}
 			options.output = value;
 			options.hasOutput = true;
-		} else {
+		} else if (argument == "--sample-rate") {
 			if (options.hasSampleRate) {
 				throw std::invalid_argument("duplicate option: --sample-rate");
 			}
 			options.sampleRate = parseSampleRate(value);
 			options.hasSampleRate = true;
+		} else {
+			if (options.hasFskIdentifier) {
+				throw std::invalid_argument("duplicate option: --fsk-id");
+			}
+			const sstv::analog::FskIdentifierResult result
+			    = sstv::analog::validateFskIdentifier(value);
+			if (const auto* error
+			    = std::get_if<sstv::analog::FskIdError>(&result)) {
+				throw std::invalid_argument(error->message);
+			}
+			options.fskIdentifier
+			    = std::get<sstv::analog::FskIdentifier>(result);
+			options.hasFskIdentifier = true;
 		}
 	}
 	if (!options.hasMode || !options.hasOutput) {
@@ -181,7 +205,8 @@ encodeTestPattern(const int argc, char* argv[])
 		    = sstv::core::makeDiagnosticPattern(mode->width, mode->height);
 		sstv::analog::OfflineTxResult result = sstv::analog::encodeOfflineTransmission(
 		    options.mode, sstv::core::ModeCapability::offlineTestPatternTx,
-		    frame.view(), 0.8F);
+		    frame.view(), sstv::analog::OfflineTransmissionOptions{
+		        0.8F, options.fskIdentifier});
 		if (const auto* error = std::get_if<sstv::analog::OfflineTxError>(&result)) {
 			throw std::invalid_argument(error->message);
 		}
@@ -194,6 +219,11 @@ encodeTestPattern(const int argc, char* argv[])
 		    / static_cast<long double>(duration.denominator());
 		std::cout << "Mode: " << mode->id << '\n'
 		    << "Dimensions: " << mode->width << 'x' << mode->height << '\n'
+		    << "FSK ID: "
+		    << (options.fskIdentifier.has_value()
+		            ? "appended (" + std::string(options.fskIdentifier->value()) + ")"
+		            : "none")
+		    << '\n'
 		    << "Sample rate: " << metadata.sampleRate << " Hz\n"
 		    << "Frame count: " << metadata.frameCount << '\n'
 		    << "Duration: " << std::fixed << std::setprecision(6)
@@ -223,6 +253,9 @@ main(const int argc, char* argv[])
 	}
 	if (isImageCommand(argument)) {
 		return runImageCommand(argc, argv);
+	}
+	if (isWavCommand(argument)) {
+		return runWavCommand(argc, argv);
 	}
 	if (argc != 2) {
 		std::cerr << "Error: unexpected extra arguments\n";

@@ -181,13 +181,42 @@ Acceptance:
 - Minimal, headless, Qt, ASan, and UBSan verification passes without playback, radio
   access, or PTT.
 
-M1 remains incomplete. FSK ID, GUI TX editing, live paths, receive work, WAV inspection,
-and encode/decode round-trip gates remain later work.
+### M1F - Optional analogue FSK ID and defensive WAV inspection
+
+Status: **complete**
+
+- Record attributable FSK ID protocol and implementation evidence, exact inspected
+  revisions, locations, licences, hashes, wire framing, alphabet, placement, and resolved
+  implementation differences.
+- Add a validated optional FSK identifier to central offline-transmission options and
+  compose one evidence-backed suffix after every accepted analogue mode without changing
+  the base encoders.
+- Add a bounded read-only RIFF/WAVE PCM16 inspector with typed errors, checked chunk
+  arithmetic, fixed-block sample statistics, and strict local-file policy.
+- Expose optional `--fsk-id` on both WAV encoders and `inspect-wav --input FILE` without
+  playback, decoding, mode detection, radio access, or PTT.
+
+Acceptance:
+
+- Independent compact FSK vectors prove framing, LSB-first tones, exact duration, event
+  boundaries, checksum, placement, every supported-rate frame count, and identifier
+  validation.
+- Disabled FSK preserves all four accepted event streams, durations, frame counts,
+  vectors, and PCM paths; enabled streams preserve the exact base prefix and accepted
+  suffix with block-size-invariant continuous-phase rendering.
+- The WAV parser accepts valid generated mono PCM16 files and harmless chunk placement,
+  calculates exact metadata and deterministic statistics, and rejects malformed,
+  unsupported, special-file, symlink, overflow, and resource-limit cases.
+- CLI tests cover both FSK-enabled WAV commands, wrong-command and malformed options,
+  formatted inspection, overwrite behavior, and exit codes.
+- Minimal, headless, Qt, ASan, and UBSan verification passes without playback, radio
+  access, or PTT.
+
+M1 remains incomplete. GUI TX editing, mode-aware preview, live paths, receive work, and
+encode/decode round-trip analysis gates remain later work.
 
 - Build the data-driven mode descriptor schema.
 - Add attributed timing/specification tables and golden vectors.
-- Add optional FSK ID generation.
-- Add WAV inspection commands.
 - Add GUI TX editor foundation and mode-aware preview.
 
 Acceptance:

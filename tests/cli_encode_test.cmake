@@ -12,6 +12,7 @@ set(output "${WORK}/martin-m1.wav")
 set(scottie_output "${WORK}/scottie-s1.wav")
 set(robot_output "${WORK}/robot-36.wav")
 set(pd120_output "${WORK}/pd-120.wav")
+set(fsk_output "${WORK}/martin-m1-fsk.wav")
 
 function(run_expect expected)
 	execute_process(
@@ -124,12 +125,62 @@ run_expect(1 encode-test-pattern --mode pd-120 --output "${pd120_output}"
 run_expect(0 encode-test-pattern --mode pd-120 --output "${pd120_output}"
 	--sample-rate 8000 --force)
 
+foreach(wav IN ITEMS "${output}" "${scottie_output}" "${robot_output}" "${pd120_output}")
+	run_expect(0 inspect-wav --input "${wav}")
+	foreach(expected IN ITEMS
+		"Container: RIFF/WAVE"
+		"Format: linear PCM (1)"
+		"Channels: 1"
+		"Sample rate: 8000 Hz"
+		"Bits per sample: 16"
+		"DC mean:"
+		"RMS level:"
+		"Clipped positive samples:"
+		"Clipped negative samples:")
+		string(FIND "${last_stdout}" "${expected}" found)
+		if(found EQUAL -1)
+			message(FATAL_ERROR "Missing inspect-wav output: ${expected}")
+		endif()
+	endforeach()
+endforeach()
+
+run_expect(0 encode-test-pattern --mode martin-m1 --output "${fsk_output}"
+	--sample-rate 8000 --fsk-id m6vpn-1)
+file(SIZE "${fsk_output}" fsk_size)
+if(NOT fsk_size EQUAL 1872718)
+	message(FATAL_ERROR "Unexpected FSK WAV size: ${fsk_size}")
+endif()
+foreach(expected IN ITEMS
+	"FSK ID: appended (M6VPN-1)"
+	"Frame count: 936337"
+	"Duration: 117.042176 seconds")
+	string(FIND "${last_stdout}" "${expected}" found)
+	if(found EQUAL -1)
+		message(FATAL_ERROR "Missing FSK success output: ${expected}")
+	endif()
+endforeach()
+run_expect(1 encode-test-pattern --mode martin-m1 --output "${fsk_output}"
+	--sample-rate 8000 --fsk-id M6VPN-1)
+run_expect(0 encode-test-pattern --mode martin-m1 --output "${fsk_output}"
+	--sample-rate 8000 --fsk-id M6VPN-1 --force)
+run_expect(2 encode-test-pattern --mode martin-m1 --output "${WORK}/bad-id.wav"
+	--fsk-id "0123456789")
+run_expect(2 encode-test-pattern --mode martin-m1 --output "${WORK}/bad-id.wav"
+	--fsk-id M6VPN --fsk-id TEST)
+run_expect(2 encode-test-pattern --mode martin-m1 --output "${WORK}/bad-id.wav"
+	--fsk-id)
+run_expect(2 inspect-wav --input "${output}" --input "${output}")
+run_expect(2 inspect-wav --input)
+run_expect(2 inspect-wav --output "${output}")
+file(WRITE "${WORK}/short.wav" "x")
+run_expect(1 inspect-wav --input "${WORK}/short.wav")
+
 run_expect(0 --list-modes)
 foreach(expected IN ITEMS
-	"martin-m1\tMartin M1\t320x256\toffline-test-pattern-tx,offline-image-tx"
-		"scottie-s1\tScottie S1\t320x256\toffline-test-pattern-tx,offline-image-tx"
-		"robot-36\tRobot 36\t320x240\toffline-test-pattern-tx,offline-image-tx\tluma-red-blue-difference"
-		"pd-120\tPD120\t640x496\toffline-test-pattern-tx,offline-image-tx\tluma-red-blue-difference")
+	"martin-m1\tMartin M1\t320x256\toffline-test-pattern-tx,offline-image-tx,optional-fsk-id"
+		"scottie-s1\tScottie S1\t320x256\toffline-test-pattern-tx,offline-image-tx,optional-fsk-id"
+		"robot-36\tRobot 36\t320x240\toffline-test-pattern-tx,offline-image-tx,optional-fsk-id\tluma-red-blue-difference"
+		"pd-120\tPD120\t640x496\toffline-test-pattern-tx,offline-image-tx,optional-fsk-id\tluma-red-blue-difference")
 	string(FIND "${last_stdout}" "${expected}" found)
 	if(found EQUAL -1)
 		message(FATAL_ERROR "Missing registered mode output: ${expected}")
@@ -138,7 +189,7 @@ endforeach()
 
 run_expect(0 --help)
 foreach(expected IN ITEMS "--mode MODE" "--mode martin-m1" "--mode scottie-s1"
-		"--mode robot-36" "--mode pd-120")
+		"--mode robot-36" "--mode pd-120" "--fsk-id TEXT" "inspect-wav --input FILE")
 	string(FIND "${last_stdout}" "${expected}" found)
 	if(found EQUAL -1)
 		message(FATAL_ERROR "Missing generic or accepted-mode help: ${expected}")

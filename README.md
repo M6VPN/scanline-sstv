@@ -16,11 +16,12 @@ encoder and central offline TX dispatch. M1D adds evidence-backed Robot 36 offli
 test-pattern and prepared-image WAV generation with deterministic luma and 2 by 2
 subsampled red/blue colour-difference conversion. M1E adds evidence-backed PD120 offline
 test-pattern and prepared-image WAV generation with paired luma rows and full-width,
-vertically averaged red/blue colour-difference components. It does not play audio,
-transmit, receive, decode, control a radio, or key PTT.
+vertically averaged red/blue colour-difference components. M1F adds evidence-backed
+optional analogue FSK ID suffixes and a defensive read-only PCM16 RIFF/WAVE inspector.
+It does not play audio, transmit, receive, decode SSTV, control a radio, or key PTT.
 
-Martin M1, Scottie S1, Robot 36, and PD120 advertise only `offline-test-pattern-tx` and
-`offline-image-tx`. Overall M1 is not complete.
+Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
+`offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
 
 ## Locked stack
 
@@ -81,6 +82,8 @@ Current offline commands:
         --mode robot-36 --output robot-36.wav
     ./build/headless/apps/cli/scanline-sstv-cli encode-test-pattern \
         --mode pd-120 --output pd-120.wav
+    ./build/headless/apps/cli/scanline-sstv-cli encode-test-pattern \
+        --mode martin-m1 --output martin-m1-id.wav --fsk-id M6VPN
     ./build/headless/apps/cli/scanline-sstv-cli prepare-image \
         --mode martin-m1 --input source.png --output prepared.png \
         --fit contain --background 000000
@@ -105,10 +108,19 @@ Current offline commands:
     ./build/headless/apps/cli/scanline-sstv-cli encode-image \
         --mode pd-120 --input source.jpg --output pd-120-image.wav \
         --fit cover --sample-rate 48000
+    ./build/headless/apps/cli/scanline-sstv-cli encode-image \
+        --mode scottie-s1 --input source.png --output scottie-s1-id.wav \
+        --fsk-id M6VPN
+    ./build/headless/apps/cli/scanline-sstv-cli inspect-wav \
+        --input scottie-s1-id.wav
 
 The image and WAV commands refuse to overwrite an existing output unless `--force` is
-supplied.
-Preparation and generation are offline only and never start playback or PTT.
+supplied. FSK identifiers contain one to nine evidence-compatible characters; lowercase
+ASCII letters are normalized to uppercase and invalid input is rejected without
+truncation. `inspect-wav` accepts bounded nonsymlink regular local mono PCM16 files at
+project-supported rates and reports container metadata and sample statistics. It is not
+an SSTV decoder or mode detector. Preparation, generation, and inspection are offline
+only and never start playback or PTT.
 
 ## Repository map
 

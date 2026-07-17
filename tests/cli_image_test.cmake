@@ -21,6 +21,7 @@ set(pd120_png "${WORK}/pd-120-prepared.png")
 set(pd120_wav "${WORK}/pd-120-image.wav")
 set(pd120_jpeg_wav "${WORK}/pd-120-jpeg.wav")
 set(pd120_exact_wav "${WORK}/pd-120-exact.wav")
+set(fsk_wav "${WORK}/martin-m1-fsk-image.wav")
 
 function(run_expect expected)
 	execute_process(
@@ -71,6 +72,26 @@ foreach(expected IN ITEMS "Sample rate: 8000 Hz" "Frame count: 921601")
 		message(FATAL_ERROR "Missing encode-image output: ${expected}")
 	endif()
 endforeach()
+
+run_expect(0 encode-image --mode martin-m1 --input "${INPUT}"
+	--output "${fsk_wav}" --sample-rate 8000 --fsk-id m6vpn-1)
+file(SIZE "${fsk_wav}" fsk_wav_size)
+if(NOT fsk_wav_size EQUAL 1872718)
+	message(FATAL_ERROR "Unexpected FSK image WAV size: ${fsk_wav_size}")
+endif()
+foreach(expected IN ITEMS
+	"FSK ID: appended (M6VPN-1)"
+	"Frame count: 936337"
+	"Duration: 117.042176 seconds")
+	string(FIND "${last_stdout}" "${expected}" found)
+	if(found EQUAL -1)
+		message(FATAL_ERROR "Missing image FSK output: ${expected}")
+	endif()
+endforeach()
+run_expect(2 prepare-image --mode martin-m1 --input "${INPUT}"
+	--output "${WORK}/wrong-command.png" --fsk-id M6VPN)
+run_expect(2 encode-image --mode martin-m1 --input "${INPUT}"
+	--output "${WORK}/duplicate-id.wav" --fsk-id M6VPN --fsk-id TEST)
 
 run_expect(0 prepare-image --mode scottie-s1 --input "${INPUT}"
 	--output "${scottie_png}" --fit contain --background 203040)

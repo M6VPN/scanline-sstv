@@ -35,6 +35,26 @@
       "cacheVariables": {
         "SSTV_BUILD_IMAGE": "OFF"
       }
+    },
+    {
+      "name": "asan",
+      "displayName": "Clang AddressSanitizer",
+      "inherits": "headless",
+      "binaryDir": "${sourceDir}/build/asan",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address -fno-omit-frame-pointer"
+      }
+    },
+    {
+      "name": "ubsan",
+      "displayName": "Clang UndefinedBehaviorSanitizer",
+      "inherits": "headless",
+      "binaryDir": "${sourceDir}/build/ubsan",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
+      }
     }
   ],
   "buildPresets": [
@@ -49,6 +69,14 @@
     {
       "name": "minimal",
       "configurePreset": "minimal"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
+    },
+    {
+      "name": "ubsan",
+      "configurePreset": "ubsan"
     }
   ],
   "testPresets": [
@@ -72,7 +100,26 @@
       "output": {
         "outputOnFailure": true
       }
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1"
+      },
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ubsan",
+      "configurePreset": "ubsan",
+      "environment": {
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "output": {
+        "outputOnFailure": true
+      }
     }
   ]
 }
-
