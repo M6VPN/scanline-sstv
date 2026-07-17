@@ -28,7 +28,7 @@ but is not required merely to share implementation between frontends.
 | `analog` | VIS, FSK ID, analogue encoders and decoders | UI |
 | `digital` | HamDRM and KG-STV framing/modems | UI |
 | `image` | Bounded libvips raster recipes and immutable RGB8 output | Radio control, Qt, audio, protocol constants |
-| `audio` | M2A backend/device discovery; later streams and ring buffers | UI widgets, Qt, rig control |
+| `audio` | Backend/device discovery, bounded rings, and stream lifecycle | UI widgets, Qt, rig control |
 | `rig` | flrig, rigctld, direct Hamlib, manual/VOX providers | DSP implementation |
 | `app` | Session orchestration, settings, gallery, TX state machine | Concrete GUI widgets |
 | `apps/gui` | Qt models, QML, scene-graph renderers | Direct hardware access |
@@ -141,6 +141,33 @@ of host hardware. Refreshes are serialized, build a complete private result, and
 one immutable generation only when at least one real backend succeeds. Cancellation and
 total failure preserve the previous valid snapshot. M2A never creates a `ma_device`,
 stream, callback, playback path, or capture path.
+
+M2B adds a fixed-capacity mono float32 SPSC ring and a typed `AudioStream` lifecycle to
+`sstv_audio`. The producer and consumer publish monotonically increasing positions with
+release stores and acquire loads. Playback underruns preserve timing by filling every
+missing frame with zero. Capture overruns preserve already-buffered ordered frames and
+drop only excess incoming frames. Counters use lock-free 64-bit atomics and wrap modulo
+2^64; snapshots are constructed only on the control thread.
+
+The callback owns no resources. It copies bounded blocks through construction-time
+scratch storage, applies either one selected output channel or explicit all-channel
+duplication, extracts one explicitly selected capture channel, and updates atomic flags
+and counters. It cannot allocate, lock, wait, log, format, throw, access files or
+networks, initialize or stop a device, call UI code, or access radio/PTT state.
+
+`AudioStream` resolves the exact M2A backend, direction, identity, and discovery
+generation before opening. Missing, stale, malformed, wrong-direction, or colliding
+identities fail without default or named-device substitution. Control-thread transitions
+are closed, opening, opened, primed, running, stopping, closed, with typed faulted exits.
+Start requires the configured playback prefill; capture-only priming requires no sample
+data. Stop waits in the private adapter until callbacks cannot run, then close destroys
+the device before its context, rings, and callback state. Disconnect notifications only
+publish atomic fault state and never reopen a device.
+
+Deterministic tests inject an adapter and advance callbacks without clocks or hardware.
+The separately labelled integration test opens only miniaudio's null backend. No CLI or
+GUI operation can open a stream in M2B, and no SSTV encoder, radio control, or PTT path is
+connected to this boundary.
 
 ### Rig worker
 

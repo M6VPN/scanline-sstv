@@ -65,6 +65,16 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CXX_FLAGS": "-fsanitize=undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
       }
+    },
+    {
+      "name": "tsan",
+      "displayName": "Clang ThreadSanitizer audio concurrency",
+      "inherits": "headless",
+      "binaryDir": "${sourceDir}/build/tsan",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=thread -fno-omit-frame-pointer"
+      }
     }
   ],
   "buildPresets": [
@@ -91,6 +101,10 @@
     {
       "name": "ubsan",
       "configurePreset": "ubsan"
+    },
+    {
+      "name": "tsan",
+      "configurePreset": "tsan"
     }
   ],
   "testPresets": [
@@ -137,6 +151,21 @@
       "configurePreset": "ubsan",
       "environment": {
         "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "tsan",
+      "configurePreset": "tsan",
+      "filter": {
+        "include": {
+          "label": "audio-concurrency"
+        }
+      },
+      "environment": {
+        "TSAN_OPTIONS": "halt_on_error=1"
       },
       "output": {
         "outputOnFailure": true

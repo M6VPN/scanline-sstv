@@ -288,8 +288,37 @@ Acceptance:
 - Minimal, headless, dev, audio-disabled, ASan, and UBSan presets pass. Native BSD
   discovery remains a later focused portability check.
 
-M2B is the next intended slice: stream lifecycle, bounded rings, and mock
-playback/capture without PTT.
+### M2B - Deterministic stream lifecycle and bounded sample transport
+
+Status: **complete**
+
+- Add fixed-capacity dependency-free SPSC float32 sample rings with explicit ownership,
+  acquire/release publication, wrap handling, and stopped-only reset.
+- Add project-owned playback, capture, and duplex configurations, exact device identity,
+  negotiated facts, lifecycle state, typed errors, and immutable statistics.
+- Add a bounded `noexcept` callback that zero-fills playback underruns, preserves old
+  capture data on overflow, applies explicit channel mapping, and only copies samples or
+  updates lock-free atomics.
+- Extend the private miniaudio adapter to open exactly selected devices and add injected
+  mock and null-backend stream coverage without exposing a user-facing device-open path.
+
+Acceptance:
+
+- Ring tests cover capacities one and non-power-of-two, partial and wrapped operations,
+  long ordered sequences, invalid sizes, and two-thread exact-sequence stress.
+- Mock tests cover playback/capture/duplex callbacks, prefill, valid and invalid lifecycle
+  transitions, cancellations, operation failures, disconnects, final-callback teardown,
+  exact identity failures, channel policies, and consistent underrun/overrun statistics.
+- The opt-in integration test opens only miniaudio's null backend, observes callbacks,
+  verifies ordered ring consumption, capture silence, underrun silence, and bounded
+  cleanup. Automated tests never open real hardware.
+- Minimal, audio-disabled, headless, dev, ASan, and UBSan presets pass. The focused TSan
+  result is recorded separately when the host runtime supports it.
+- No SSTV stream reaches a device, no user-facing command opens a device, and no PTT or
+  radio-control state exists in the audio boundary.
+
+M2C is the next intended slice: explicit real-device diagnostics, channel selection,
+level calibration, and local loopback without automatic PTT.
 
 - Integrate miniaudio.
 - Enumerate and select Linux/BSD input/output backends and individual devices.

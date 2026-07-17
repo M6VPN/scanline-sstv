@@ -239,6 +239,34 @@ success and failure without libjack. The sanitizer host smoke therefore probes
 PulseAudio and ALSA; non-sanitized manual verification probes JACK with server autostart
 disabled. No sanitizer suppression is used.
 
+### M2B audio transport
+
+`scanline-sstv-audio-stream-tests` uses only an injected synchronous adapter. Ring tests
+cover exact capacity, non-power-of-two wrap, partial operations, long sequences, invalid
+capacity, and a two-thread producer/consumer stress run. Callback tests cover selected
+and duplicated playback mapping, silent non-selected channels, selected interleaved
+capture, arbitrary and zero block sizes, underrun zero fill, preserve-oldest capture
+overflow, and immutable counter snapshots. Lifecycle tests cover exact identity and
+generation validation, prefill, transitions, cancellation, injected operation failures,
+disconnect publication, and a final callback during stop.
+
+`scanline-sstv-audio-null-stream-test` is labelled `audio-null`, has a five-second
+timeout, and initializes only miniaudio's null backend. It neither enumerates nor opens
+real hardware. The test checks playback FIFO consumption, silence after underrun, silent
+null capture, statistics, and teardown. M2A's host discovery smoke remains enumeration
+only.
+
+The focused ThreadSanitizer run is:
+
+```sh
+cmake --preset tsan
+cmake --build --preset tsan
+ctest --preset tsan --output-on-failure
+```
+
+The `tsan` test preset selects only the `audio-concurrency` label. A host runtime failure
+must be reported rather than suppressed or treated as a passing concurrency test.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

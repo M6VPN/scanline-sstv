@@ -18,7 +18,9 @@ rows and full-width vertically averaged colour-difference components. Overall M1
 in progress. M1F adds optional evidence-backed analogue FSK ID suffixes and defensive
 offline PCM16 RIFF/WAVE inspection. M1G adds the Wayland-first offline GUI TX editor and
 mode-aware prepared-image preview. M2A adds pinned miniaudio and read-only backend/device
-discovery while M1 remains incomplete pending the M3 round-trip dependency.
+discovery. M2B adds deterministic bounded sample transport and mock/null stream lifecycle
+without an SSTV live-audio or PTT path. M1 remains incomplete pending the M3 round-trip
+dependency.
 
 ### Added
 
@@ -113,6 +115,15 @@ discovery while M1 remains incomplete pending the M3 round-trip dependency.
 - Deterministic audio discovery, identity, refresh, teardown, CLI, and real-host smoke
   tests that never initialize or start a device.
 - Audio-disabled CMake preset and CI coverage retaining the full offline image/TX path.
+- Fixed-capacity dependency-free mono float32 SPSC ring with acquire/release publication,
+  partial operations, wrap handling, stopped-only reset, and two-thread stress coverage.
+- Project-owned playback, capture, and duplex stream configuration, exact selected-device
+  identity validation, negotiated facts, lifecycle errors, and immutable statistics.
+- Real-time-safe bounded callback handling for explicit channel mapping, playback
+  underrun silence, preserve-oldest capture overflow, fault flags, and counters.
+- Injected deterministic stream adapter tests and a separately labelled miniaudio
+  null-backend lifecycle test that never opens real hardware.
+- Focused ThreadSanitizer preset for the hardware-free audio concurrency suite.
 
 ### Changed
 

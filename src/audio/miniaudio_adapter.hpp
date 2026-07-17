@@ -10,11 +10,14 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace sstv::audio::detail {
 
 [[nodiscard]] std::optional<ma_backend> toMiniaudioBackend(AudioBackend backend);
 [[nodiscard]] std::string serializeDeviceId(
     AudioBackend backend, const ma_device_id& id);
+[[nodiscard]] bool deserializeDeviceId(
+    AudioBackend backend, std::string_view value, ma_device_id& id) noexcept;
 
 } // namespace sstv::audio::detail

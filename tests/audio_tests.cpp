@@ -141,6 +141,21 @@ testMappingsAndSerialization()
 	require(sstv::audio::detail::serializeDeviceId(
 	        AudioBackend::nullDiagnostic, identifier) == "7",
 	    "null initialized integer ID serialization failed");
+	ma_device_id decoded{};
+	require(sstv::audio::detail::deserializeDeviceId(
+	        AudioBackend::alsa, "68773a312c30", decoded)
+	    && sstv::audio::detail::serializeDeviceId(AudioBackend::alsa, decoded)
+	        == "68773a312c30",
+	    "ALSA identity did not round trip through strict decoding");
+	require(!sstv::audio::detail::deserializeDeviceId(
+	        AudioBackend::alsa, "ABC0", decoded)
+	    && !sstv::audio::detail::deserializeDeviceId(
+	        AudioBackend::alsa, "0", decoded)
+	    && !sstv::audio::detail::deserializeDeviceId(
+	        AudioBackend::jack, "-1", decoded)
+	    && !sstv::audio::detail::deserializeDeviceId(
+	        AudioBackend::nullDiagnostic, "1x", decoded),
+	    "malformed backend identity encoding was accepted");
 	const std::string unsafeName("safe\n\x1b\xff", 7U);
 	require(escapeAudioTerminalText(unsafeName) == "safe\\x0A\\x1B\\xFF",
 	    "terminal control or invalid UTF-8 bytes were not escaped");

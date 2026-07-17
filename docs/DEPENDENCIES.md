@@ -89,3 +89,11 @@ audio endpoints, so that backend returns a typed safe-enumeration-unsupported re
 PulseAudio and JACK detail queries use server metadata or a non-activated JACK client;
 JACK server autostart is disabled. Linux PipeWire is represented truthfully through its
 PulseAudio or JACK compatibility service, not as a native miniaudio PipeWire backend.
+
+M2B does not change the pinned files or compile-time facility set. Its private stream
+adapter uses miniaudio's low-level context and device APIs with float32 callback buffers,
+explicit device IDs, fixed requested periods, PulseAudio autospawn disabled, and JACK
+server startup disabled. Decoder, engine, resource-manager, node-graph, and generation
+facilities remain disabled. Only the opt-in null-backend integration test initializes a
+device automatically; deterministic tests use an injected adapter, and no user-facing
+M2B command opens real hardware.

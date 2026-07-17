@@ -7,8 +7,8 @@ through flrig or Hamlib.
 
 ## Status
 
-M1 analogue TX work remains provisionally incomplete, and M2A read-only audio discovery
-is complete. M1a provides the
+M1 analogue TX work remains provisionally incomplete, and M2B audio transport is
+complete. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
 PNG export, and offline Martin M1 image-to-WAV generation. M1C adds evidence-backed
@@ -30,6 +30,12 @@ list playback and capture endpoints but cannot initialize a device, create a str
 play, record, automatically select hardware, or access PTT. M1 remains incomplete because
 its non-live encode/decode round-trip gate depends on the later M3 decoder; that gate has
 not been removed or weakened.
+
+M2B adds fixed-capacity mono float32 SPSC rings, explicit playback/capture/duplex stream
+configuration, exact-device lifecycle control, channel mapping, and immutable stream
+statistics. Automated lifecycle tests use an injected adapter or miniaudio's null backend.
+There is no CLI or GUI action that opens a device, no SSTV live-audio path, and no PTT or
+radio-control integration.
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -57,8 +63,8 @@ Required:
 - Ninja.
 - A C++20 compiler.
 - libvips 8.15 or newer with the `vips-cpp` pkg-config package.
-- POSIX threads and dynamic-loading support used by the pinned miniaudio discovery
-  adapter on supported Linux/BSD systems.
+- POSIX threads and dynamic-loading support used by the pinned miniaudio discovery and
+  stream adapters on supported Linux/BSD systems.
 
 Qt 6.5 or newer with Concurrent, Core, Gui, Qml, Quick, QuickControls2, and Test remains
 optional for headless builds. libvips is required by the normal `dev` and `headless`
@@ -157,6 +163,11 @@ metadata exists, and display-name text is never used to infer USB. Pinned sndio
 enumeration opens endpoints, so M2A reports it as safe-enumeration-unsupported instead of
 opening the device.
 
+M2B's public audio API is under `include/sstv/audio`. `FloatSpscRing` provides bounded
+mono sample transport, while `AudioStream` owns exact-device open, prime, start, stop,
+close, callback, negotiated-format, and statistics state. These APIs are not connected to
+the CLI or GUI in this milestone.
+
 The Qt application provides the same offline image workflow without duplicating protocol
 or image logic:
 
@@ -173,6 +184,7 @@ confirmation. No GUI action opens an audio device or accesses radio control.
 - `src/core` - shared core implementation.
 - `include/sstv/image` and `src/image` - bounded libvips raster preparation.
 - `include/sstv/app` and `src/app` - frontend-independent offline editor workflow.
+- `include/sstv/audio` and `src/audio` - discovery, bounded rings, and stream lifecycle.
 - `include/sstv/audio` and `src/audio` - frontend-independent read-only audio discovery.
 - `apps/cli` - offline and diagnostic command line.
 - `apps/gui` - Qt Quick application.

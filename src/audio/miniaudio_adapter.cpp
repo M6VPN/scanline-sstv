@@ -96,6 +96,55 @@ serializeStringId(const char (&value)[Capacity])
 	return hexEncode(std::span<const char>(value, boundedLength(value, Capacity)));
 }
 
+[[nodiscard]] std::optional<unsigned char>
+decodeHexNibble(const char value) noexcept
+{
+	if (value >= '0' && value <= '9') {
+		return static_cast<unsigned char>(value - '0');
+	}
+	if (value >= 'a' && value <= 'f') {
+		return static_cast<unsigned char>(value - 'a' + 10);
+	}
+	return std::nullopt;
+}
+
+template<std::size_t Capacity>
+[[nodiscard]] bool
+deserializeStringId(const std::string_view value, char (&destination)[Capacity]) noexcept
+{
+	if (value.empty() || (value.size() % 2) != 0
+	    || value.size() / 2 >= Capacity) {
+		return false;
+	}
+	for (std::size_t index = 0; index < value.size(); index += 2) {
+		const std::optional<unsigned char> high = decodeHexNibble(value[index]);
+		const std::optional<unsigned char> low = decodeHexNibble(value[index + 1]);
+		if (!high || !low) {
+			return false;
+		}
+		const unsigned char decoded = static_cast<unsigned char>((*high << 4U) | *low);
+		if (decoded == 0) {
+			return false;
+		}
+		destination[index / 2] = static_cast<char>(decoded);
+	}
+	return true;
+}
+
+[[nodiscard]] bool
+deserializeIntegerId(const std::string_view value, int& destination) noexcept
+{
+	int parsed = 0;
+	const auto [end, error] = std::from_chars(
+	    value.data(), value.data() + value.size(), parsed);
+	if (value.empty() || error != std::errc{} || end != value.data() + value.size()
+	    || parsed < 0) {
+		return false;
+	}
+	destination = parsed;
+	return true;
+}
+
 [[nodiscard]] AudioDirection
 toDirection(const ma_device_type type)
 {
@@ -287,6 +336,24 @@ serializeDeviceId(const AudioBackend backend, const ma_device_id& id)
 	case AudioBackend::nullDiagnostic: return std::to_string(id.nullbackend);
 	}
 	return {};
+}
+
+bool
+deserializeDeviceId(const AudioBackend backend, const std::string_view value,
+    ma_device_id& id) noexcept
+{
+	id = {};
+	switch (backend) {
+	case AudioBackend::pulseAudio: return deserializeStringId(value, id.pulse);
+	case AudioBackend::jack: return deserializeIntegerId(value, id.jack);
+	case AudioBackend::alsa: return deserializeStringId(value, id.alsa);
+	case AudioBackend::oss: return deserializeStringId(value, id.oss);
+	case AudioBackend::sndio: return deserializeStringId(value, id.sndio);
+	case AudioBackend::audio4: return deserializeStringId(value, id.audio4);
+	case AudioBackend::nullDiagnostic:
+		return deserializeIntegerId(value, id.nullbackend);
+	}
+	return false;
 }
 
 } // namespace detail

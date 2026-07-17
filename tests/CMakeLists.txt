@@ -36,6 +36,41 @@ if(SSTV_BUILD_AUDIO)
 	add_test(NAME scanline-sstv-audio-tests COMMAND scanline-sstv-audio-tests)
 	set_tests_properties(scanline-sstv-audio-tests PROPERTIES TIMEOUT 10)
 
+	add_executable(scanline-sstv-audio-stream-tests audio_stream_tests.cpp)
+	target_link_libraries(
+		scanline-sstv-audio-stream-tests
+		PRIVATE
+			sstv::audio
+			sstv_project_options
+			sstv_project_warnings
+	)
+	add_test(NAME scanline-sstv-audio-stream-tests COMMAND scanline-sstv-audio-stream-tests)
+	set_tests_properties(
+		scanline-sstv-audio-stream-tests
+		PROPERTIES
+			LABELS "audio-concurrency"
+			TIMEOUT 20
+	)
+
+	add_executable(scanline-sstv-audio-null-stream-test audio_null_stream_test.cpp)
+	target_link_libraries(
+		scanline-sstv-audio-null-stream-test
+		PRIVATE
+			sstv::audio
+			sstv_project_options
+			sstv_project_warnings
+	)
+	add_test(
+		NAME scanline-sstv-audio-null-stream-test
+		COMMAND scanline-sstv-audio-null-stream-test
+	)
+	set_tests_properties(
+		scanline-sstv-audio-null-stream-test
+		PROPERTIES
+			LABELS "audio-null"
+			TIMEOUT 5
+	)
+
 	add_executable(scanline-sstv-audio-host-smoke audio_host_smoke.cpp)
 	target_link_libraries(
 		scanline-sstv-audio-host-smoke
