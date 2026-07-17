@@ -28,7 +28,7 @@ but is not required merely to share implementation between frontends.
 | `analog` | VIS, FSK ID, analogue encoders and decoders | UI |
 | `digital` | HamDRM and KG-STV framing/modems | UI |
 | `image` | Bounded libvips raster recipes and immutable RGB8 output | Radio control, Qt, audio, protocol constants |
-| `audio` | miniaudio contexts, devices, streams, ring buffers | UI widgets |
+| `audio` | M2A backend/device discovery; later streams and ring buffers | UI widgets, Qt, rig control |
 | `rig` | flrig, rigctld, direct Hamlib, manual/VOX providers | DSP implementation |
 | `app` | Session orchestration, settings, gallery, TX state machine | Concrete GUI widgets |
 | `apps/gui` | Qt models, QML, scene-graph renderers | Direct hardware access |
@@ -130,6 +130,18 @@ in the provider URL with caching and smoothing disabled. QML contains no mode di
 protocol timing, image processing, FSK framing, waveform generation, WAV writing, or WAV
 parsing. M1G has no audio, radio-control, or PTT dependency.
 
+M2A adds `sstv_audio` with alias `sstv::audio`. Its public header contains only project
+backend, direction, identity, capability, transport, diagnostic, and immutable snapshot
+values. Miniaudio and operating-system types stay in the private adapter, and
+`sstv_core`, `sstv_image`, and `sstv_app` do not link the audio target.
+
+Discovery creates one explicit miniaudio context per requested backend. A failed backend
+does not discard another backend's devices. A provider seam makes unit tests independent
+of host hardware. Refreshes are serialized, build a complete private result, and publish
+one immutable generation only when at least one real backend succeeds. Cancellation and
+total failure preserve the previous valid snapshot. M2A never creates a `ma_device`,
+stream, callback, playback path, or capture path.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.
@@ -204,18 +216,34 @@ confirmation is impossible.
 
 ## 7. Audio backends and devices
 
-The audio service creates miniaudio contexts for available APIs and returns a normalised
-list containing:
+The M2A audio service independently probes each requested miniaudio API and returns a
+normalised immutable snapshot containing:
 
 - Backend and server identity.
-- Stable backend-specific device ID plus human name.
-- Input/output capabilities, channel counts, native formats, and sample rates.
-- Best-effort USB/built-in classification.
+- Project-owned backend-and-direction device ID plus human name.
+- Known native formats, channel counts, and sample rates without opening an endpoint.
+- Authoritative transport classification when available, otherwise `unknown`.
 - Current default marker without converting it into an implicit permanent choice.
 
 Linux presents PulseAudio/PipeWire-Pulse, JACK/PipeWire-JACK, and ALSA choices rather
-than hiding them behind one opaque “default”. FreeBSD uses OSS, OpenBSD prefers sndio,
-and NetBSD uses audio(4), subject to what the installed miniaudio build exposes.
+than hiding them behind one opaque default. PipeWire is reported through the
+compatibility API actually used. FreeBSD can expose OSS, OpenBSD can expose sndio and
+audio(4), and NetBSD can expose audio(4), subject to pinned miniaudio platform support.
+The sndio backend is compiled but M2A refuses enumeration because the pinned enumeration
+path opens audio endpoints. BSD runtime behavior remains unverified by Linux CI.
+
+Identity serialization uses only the initialized field for the active backend. Raw union
+storage, padding, pointers, names, and enumeration indices are never identity material.
+Direction is part of identity, so capture and playback endpoints remain distinct.
+Nonempty PulseAudio API names are marked persistent. ALSA, JACK, OSS, sndio, audio(4),
+null, and collisions are conservatively session-only. Exact duplicate identities remain
+visible and are collision-marked. Device names are untrusted bytes and the CLI escapes
+controls and invalid UTF-8 before writing terminal output.
+
+M2A does not automatically select or persist a device. USB is never inferred from a
+display name; the public classifier seam permits later authoritative platform enrichment
+without adding libudev here. The null backend appears only when explicitly requested and
+is labelled diagnostic rather than hardware.
 
 The internal nominal rate is 48 kHz float32 mono. Device conversion is explicit and
 measured; adaptive sample-clock correction belongs to DSP rather than the GUI.

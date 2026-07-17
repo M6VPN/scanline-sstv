@@ -65,6 +65,25 @@ jobs:
       - name: Test
         run: ctest --preset minimal
 
+  audio-disabled:
+    name: Linux offline image build without audio discovery
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Install libvips
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends libvips-dev
+      - name: Configure
+        run: cmake --preset audio-disabled
+      - name: Build
+        run: cmake --build --preset audio-disabled
+      - name: Test
+        run: ctest --preset audio-disabled
+
   gui:
     name: Linux Qt GUI smoke test
     runs-on: ubuntu-24.04

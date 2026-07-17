@@ -7,7 +7,8 @@ through flrig or Hamlib.
 
 ## Status
 
-The project is at **M1: verified analogue TX and image preparation**. M1a provides the
+M1 analogue TX work remains provisionally incomplete, and M2A read-only audio discovery
+is complete. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
 PNG export, and offline Martin M1 image-to-WAV generation. M1C adds evidence-backed
@@ -22,6 +23,13 @@ M1G replaces the GUI placeholder with an asynchronous offline TX editor for exac
 prepared-image preview, recipe control, optional FSK ID, atomic PNG/WAV export, and WAV
 inspection. It does not play audio, transmit over a sound card, receive, decode SSTV,
 control a radio, or key PTT.
+
+M2A adds pinned miniaudio 0.11.25 and read-only discovery for distinct ALSA,
+PulseAudio/PipeWire-Pulse, JACK/PipeWire-JACK, OSS, sndio, and audio(4) backends. It can
+list playback and capture endpoints but cannot initialize a device, create a stream,
+play, record, automatically select hardware, or access PTT. M1 remains incomplete because
+its non-live encode/decode round-trip gate depends on the later M3 decoder; that gate has
+not been removed or weakened.
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -49,6 +57,8 @@ Required:
 - Ninja.
 - A C++20 compiler.
 - libvips 8.15 or newer with the `vips-cpp` pkg-config package.
+- POSIX threads and dynamic-loading support used by the pinned miniaudio discovery
+  adapter on supported Linux/BSD systems.
 
 Qt 6.5 or newer with Concurrent, Core, Gui, Qml, Quick, QuickControls2, and Test remains
 optional for headless builds. libvips is required by the normal `dev` and `headless`
@@ -67,10 +77,17 @@ For a machine without Qt:
     ctest --preset headless
 
 For a core-only build without Qt or libvips:
+
     cmake --preset minimal
 
     cmake --build --preset minimal
     ctest --preset minimal
+
+For the complete offline image/TX path without audio discovery:
+
+    cmake --preset audio-disabled
+    cmake --build --preset audio-disabled
+    ctest --preset audio-disabled
 
 Current offline commands:
 
@@ -117,6 +134,11 @@ Current offline commands:
         --fsk-id M6VPN
     ./build/headless/apps/cli/scanline-sstv-cli inspect-wav \
         --input scottie-s1-id.wav
+    ./build/headless/apps/cli/scanline-sstv-cli list-audio
+    ./build/headless/apps/cli/scanline-sstv-cli list-audio --backend alsa
+    ./build/headless/apps/cli/scanline-sstv-cli list-audio --backend pulseaudio
+    ./build/headless/apps/cli/scanline-sstv-cli list-audio --backend jack
+    ./build/headless/apps/cli/scanline-sstv-cli list-audio --include-null
 
 The image and WAV commands refuse to overwrite an existing output unless `--force` is
 supplied. FSK identifiers contain one to nine evidence-compatible characters; lowercase
@@ -125,6 +147,15 @@ truncation. `inspect-wav` accepts bounded nonsymlink regular local mono PCM16 fi
 project-supported rates and reports container metadata and sample statistics. It is not
 an SSTV decoder or mode detector. Preparation, generation, and inspection are offline
 only and never start playback or PTT.
+
+`list-audio` probes each requested backend independently. Success means at least one real
+backend was enumerated, even if it reported zero devices. Per-backend failures remain in
+the output. Null is opt-in and never counts as hardware success. Device identities include
+backend and direction; PulseAudio API names may be persistent, while other current IDs
+are conservatively session-only. Transport remains `unknown` unless authoritative
+metadata exists, and display-name text is never used to infer USB. Pinned sndio
+enumeration opens endpoints, so M2A reports it as safe-enumeration-unsupported instead of
+opening the device.
 
 The Qt application provides the same offline image workflow without duplicating protocol
 or image logic:
@@ -142,6 +173,7 @@ confirmation. No GUI action opens an audio device or accesses radio control.
 - `src/core` - shared core implementation.
 - `include/sstv/image` and `src/image` - bounded libvips raster preparation.
 - `include/sstv/app` and `src/app` - frontend-independent offline editor workflow.
+- `include/sstv/audio` and `src/audio` - frontend-independent read-only audio discovery.
 - `apps/cli` - offline and diagnostic command line.
 - `apps/gui` - Qt Quick application.
 - `docs` - architecture, milestones, protocol provenance, dependencies, and testing.

@@ -13,6 +13,50 @@ target_link_libraries(
 
 add_test(NAME scanline-sstv-core-smoke COMMAND scanline-sstv-core-smoke)
 
+if(SSTV_BUILD_AUDIO)
+	add_executable(
+		scanline-sstv-audio-tests
+		audio_tests.cpp
+		${PROJECT_SOURCE_DIR}/apps/cli/audio_text.cpp
+	)
+	target_include_directories(
+		scanline-sstv-audio-tests
+		PRIVATE
+			${PROJECT_SOURCE_DIR}/src/audio
+			${PROJECT_SOURCE_DIR}/third_party/miniaudio
+			${PROJECT_SOURCE_DIR}/apps/cli
+	)
+	target_link_libraries(
+		scanline-sstv-audio-tests
+		PRIVATE
+			sstv::audio
+			sstv_project_options
+			sstv_project_warnings
+	)
+	add_test(NAME scanline-sstv-audio-tests COMMAND scanline-sstv-audio-tests)
+	set_tests_properties(scanline-sstv-audio-tests PROPERTIES TIMEOUT 10)
+
+	add_executable(scanline-sstv-audio-host-smoke audio_host_smoke.cpp)
+	target_link_libraries(
+		scanline-sstv-audio-host-smoke
+		PRIVATE
+			sstv::audio
+			sstv_project_options
+			sstv_project_warnings
+	)
+	add_test(NAME scanline-sstv-audio-host-smoke COMMAND scanline-sstv-audio-host-smoke)
+	set_tests_properties(scanline-sstv-audio-host-smoke PROPERTIES TIMEOUT 15)
+
+	add_test(
+		NAME scanline-sstv-cli-audio-test
+		COMMAND
+			${CMAKE_COMMAND}
+			-DCLI=$<TARGET_FILE:scanline-sstv-cli>
+			-P ${CMAKE_CURRENT_SOURCE_DIR}/cli_audio_test.cmake
+	)
+	set_tests_properties(scanline-sstv-cli-audio-test PROPERTIES TIMEOUT 10)
+endif()
+
 add_executable(scanline-sstv-m1a-tests m1a_tests.cpp)
 target_link_libraries(
 	scanline-sstv-m1a-tests

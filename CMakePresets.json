@@ -33,7 +33,17 @@
       "inherits": "headless",
       "binaryDir": "${sourceDir}/build/minimal",
       "cacheVariables": {
-        "SSTV_BUILD_IMAGE": "OFF"
+        "SSTV_BUILD_IMAGE": "OFF",
+        "SSTV_BUILD_AUDIO": "OFF"
+      }
+    },
+    {
+      "name": "audio-disabled",
+      "displayName": "Headless image build without audio discovery",
+      "inherits": "headless",
+      "binaryDir": "${sourceDir}/build/audio-disabled",
+      "cacheVariables": {
+        "SSTV_BUILD_AUDIO": "OFF"
       }
     },
     {
@@ -71,6 +81,10 @@
       "configurePreset": "minimal"
     },
     {
+      "name": "audio-disabled",
+      "configurePreset": "audio-disabled"
+    },
+    {
       "name": "asan",
       "configurePreset": "asan"
     },
@@ -97,6 +111,13 @@
     {
       "name": "minimal",
       "configurePreset": "minimal",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "audio-disabled",
+      "configurePreset": "audio-disabled",
       "output": {
         "outputOnFailure": true
       }

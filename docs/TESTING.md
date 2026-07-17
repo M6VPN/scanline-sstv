@@ -204,6 +204,41 @@ Native Wayland and XCB launches are runtime checks separate from offscreen accep
 Offscreen success does not claim native compositor coverage. No M1G target links an audio
 or radio-control implementation, and no test plays generated WAV files.
 
+### M2A read-only audio discovery
+
+M2A unit tests inject a deterministic provider. They verify backend enum and name
+mappings, compiled and uncompiled results, exactly one attempt per requested backend,
+multiple successes, partial failure, zero-device success, capture/playback direction,
+defaults, duplicate names, exact duplicate IDs, identity collisions, known and unknown
+capabilities, persistence claims, transport classification, immutable generation
+publication, failed-refresh preservation, cancellation, resource limits, and concurrent
+refresh rejection. Instrumentation keeps device initialization, device start, playback,
+capture, callback, and PTT operation counts at zero.
+
+Adapter tests serialize only initialized PulseAudio, ALSA, JACK, and null ID fields.
+They never hash raw `ma_device_id` union storage. CLI tests cover malformed filters,
+missing and duplicate options, filtering, null opt-in, exit classes, and safe output
+formatting. Device names are untrusted; controls and invalid UTF-8 bytes must appear as
+`\\xNN` escapes.
+
+The separately named host smoke test may initialize one context per compiled backend and
+enumerate devices. It accepts zero devices and total backend unavailability, opens no
+device, and makes no hardware-presence assertion. Linux manual checks record whether the
+actual host exposes ALSA, PulseAudio or PipeWire-Pulse, and JACK or PipeWire-JACK. Linux
+results do not establish FreeBSD, OpenBSD, or NetBSD compatibility.
+
+`SSTV_BUILD_AUDIO=OFF` excludes `sstv_audio` and leaves the established offline
+image-to-WAV path available. The `minimal` preset disables both image and audio modules;
+the `audio-disabled` preset retains image support. ASan and UBSan exercise provider,
+refresh, error, cancellation, identity, and teardown paths.
+
+On the current Linux host, the installed libjack client blocks for more than 40 seconds
+when miniaudio probes a missing JACK server under ASan. PulseAudio and ALSA context
+discovery and teardown complete under ASan, and deterministic provider tests cover JACK
+success and failure without libjack. The sanitizer host smoke therefore probes
+PulseAudio and ALSA; non-sanitized manual verification probes JACK with server autostart
+disabled. No sanitizer suppression is used.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:
@@ -280,6 +315,7 @@ Planned required jobs:
 
 All CI uses mock PTT. Integration jobs bind test servers to loopback only.
 
-Current hosted CI runs Linux GCC and Clang with libvips, a separate image-disabled minimal
-build, and Qt with offscreen software rendering. Native FreeBSD, OpenBSD, and NetBSD jobs
-remain later focused portability work; Linux containers are not treated as BSD coverage.
+Current hosted CI runs Linux GCC and Clang with libvips and read-only audio discovery, a
+separate image/audio-disabled minimal build, an audio-disabled offline-image build, and Qt
+with offscreen software rendering. Native FreeBSD, OpenBSD, and NetBSD jobs remain later
+focused portability work; Linux containers are not treated as BSD coverage.

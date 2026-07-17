@@ -7,7 +7,7 @@ procedure, licence copy, checksum, and attribution.
 | Dependency | Purpose | Licence compatibility | Plan |
 | --- | --- | --- | --- |
 | Qt 6 Core/Gui/Qml/Quick/QuickControls2 | GUI and platform integration | LGPL/GPL | Required for GUI only |
-| miniaudio | Cross-platform capture/playback | MIT-0/public-domain choice | Pin source snapshot |
+| miniaudio 0.11.25 | Read-only backend/device discovery in M2A | MIT No Attribution alternative | Pinned source snapshot |
 | liquid-dsp | Streaming DSP/modem/FEC primitives | MIT | System or pinned source |
 | FFTW3 single precision | FFT/STFT/correlation | GPL-2.0-or-later | System package |
 | libvips 8.15+ with `vips-cpp` | M1B raster preparation graph | LGPL-2.1-or-later | Required system package when image support is enabled |
@@ -57,3 +57,35 @@ The byte limit bounds compressed input, the axis and pixel limits stop oversized
 and decompression-bomb-style workloads before full materialization, the single-page limit
 excludes animation and document-like rasters, and the output limit bounds the only pixel
 buffer owned outside libvips. Martin M1 uses 320 by 256 within that output ceiling.
+
+## M2A audio dependency
+
+Miniaudio release 0.11.25 is pinned at commit
+`9634bedb5b5a2ca38c1ee7108a9358a4e233f14d`. The project imports only `miniaudio.h`,
+`miniaudio.c`, and the complete upstream dual-licence text. Scanline SSTV uses the MIT
+No Attribution alternative. Retrieval metadata, SHA-256 hashes, enabled facilities, and
+the update procedure are recorded in `third_party/miniaudio/README.md`.
+
+The build enables ALSA, PulseAudio, JACK, OSS, sndio, audio(4), and null backends only.
+Decoder, encoder, codec, resource-manager, node-graph, engine, and signal-generation
+facilities are disabled. Exactly one implementation translation unit includes the
+vendored `miniaudio.c`. `sstv_audio` links `Threads::Threads` and `${CMAKE_DL_LIBS}`;
+`sstv_core` has no miniaudio dependency.
+
+`SSTV_BUILD_AUDIO` defaults to `ON` for headless, development, ASan, and UBSan builds.
+The `minimal` preset disables image and audio support. The `audio-disabled` preset keeps
+the complete offline image and waveform path while disabling audio discovery:
+
+```sh
+cmake --preset audio-disabled
+cmake --build --preset audio-disabled
+ctest --preset audio-disabled
+```
+
+M2A uses context initialization and read-only enumeration only. It does not initialize,
+start, capture from, or play to a device. ALSA detail queries are intentionally omitted
+because the pinned implementation opens PCM endpoints. Pinned sndio enumeration opens
+audio endpoints, so that backend returns a typed safe-enumeration-unsupported result.
+PulseAudio and JACK detail queries use server metadata or a non-activated JACK client;
+JACK server autostart is disabled. Linux PipeWire is represented truthfully through its
+PulseAudio or JACK compatibility service, not as a native miniaudio PipeWire backend.

@@ -9,6 +9,7 @@
 #include <sstv/offline/wav_writer.hpp>
 
 #include "image_commands.hpp"
+#include "audio_commands.hpp"
 #include "wav_commands.hpp"
 
 #include <charconv>
@@ -70,6 +71,7 @@ printHelp()
 	       "play audio, access a sound card, control a radio, or key PTT.\n";
 	printImageCommandHelp();
 	printWavCommandHelp();
+	printAudioCommandHelp();
 }
 
 [[nodiscard]] std::string_view
@@ -256,6 +258,9 @@ main(const int argc, char* argv[])
 	}
 	if (isWavCommand(argument)) {
 		return runWavCommand(argc, argv);
+	}
+	if (isAudioCommand(argument)) {
+		return runAudioCommand(argc, argv);
 	}
 	if (argc != 2) {
 		std::cerr << "Error: unexpected extra arguments\n";

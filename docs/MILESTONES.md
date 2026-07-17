@@ -254,6 +254,43 @@ Acceptance:
 
 ## M2 — Live audio and safe PTT
 
+Status: **in progress**
+
+### M2A - Pinned audio dependency and read-only discovery
+
+Status: **complete**
+
+- Pin miniaudio 0.11.25 at an exact commit with imported-file hashes, complete licence,
+  enabled-feature record, and update procedure.
+- Add a frontend-independent `sstv_audio` boundary with project-owned backend, device,
+  identity, capability, transport, diagnostic, and immutable snapshot values.
+- Probe each requested backend through an independent context and preserve partial
+  success, zero-device success, unknown devices, and per-backend failures.
+- Add read-only `list-audio` diagnostics for Linux and represented BSD backends, with an
+  explicit opt-in null backend and safe terminal escaping.
+- Keep minimal and audio-disabled builds operational without changing offline image,
+  waveform, GUI, or WAV behavior.
+
+Acceptance:
+
+- The discovery provider seam covers backend mapping, compiled status, independent
+  attempts, partial failure, zero devices, capture/playback identity, duplicates,
+  persistence limits, unknown capabilities, refresh publication, cancellation, resource
+  bounds, and concurrent refresh rejection without requiring host audio hardware.
+- Production discovery creates contexts and enumerates only. No `ma_device` is
+  initialized or started, no callback or stream is created, and no sample is played or
+  captured.
+- PulseAudio/PipeWire-Pulse, JACK/PipeWire-JACK, and ALSA are reported as distinct Linux
+  APIs. Compatibility backends are not called native PipeWire.
+- Sndio enumeration fails closed because the pinned implementation opens endpoints;
+  missing servers, zero devices, and unavailable hardware remain diagnostics rather than
+  false test failures.
+- Minimal, headless, dev, audio-disabled, ASan, and UBSan presets pass. Native BSD
+  discovery remains a later focused portability check.
+
+M2B is the next intended slice: stream lifecycle, bounded rings, and mock
+playback/capture without PTT.
+
 - Integrate miniaudio.
 - Enumerate and select Linux/BSD input/output backends and individual devices.
 - Add latency/buffer controls, channel selection, level calibration, and loopback test.

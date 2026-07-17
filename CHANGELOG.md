@@ -17,7 +17,8 @@ evidence-backed PD120 offline test-pattern and image-to-WAV generation with pair
 rows and full-width vertically averaged colour-difference components. Overall M1 remains
 in progress. M1F adds optional evidence-backed analogue FSK ID suffixes and defensive
 offline PCM16 RIFF/WAVE inspection. M1G adds the Wayland-first offline GUI TX editor and
-mode-aware prepared-image preview.
+mode-aware prepared-image preview. M2A adds pinned miniaudio and read-only backend/device
+discovery while M1 remains incomplete pending the M3 round-trip dependency.
 
 ### Added
 
@@ -101,6 +102,17 @@ mode-aware prepared-image preview.
   parser with typed errors, checked chunk arithmetic, bounded resources, and sample
   statistics.
 - Clang ASan and UBSan CMake presets covering the core, CLI, parser, and image integration.
+- Pinned miniaudio 0.11.25 at commit
+  `9634bedb5b5a2ca38c1ee7108a9358a4e233f14d`, with exact imported-file hashes, complete
+  upstream licence, enabled-facility record, and update procedure.
+- Frontend-independent `sstv_audio` discovery values and service with one context per
+  backend, immutable snapshot publication, partial success, cancellation, collision
+  handling, and injected-provider tests.
+- Read-only `list-audio` CLI filtering for ALSA, PulseAudio, JACK, OSS, sndio, and audio(4),
+  explicit null diagnostics, safe device-name escaping, and typed exit behavior.
+- Deterministic audio discovery, identity, refresh, teardown, CLI, and real-host smoke
+  tests that never initialize or start a device.
+- Audio-disabled CMake preset and CI coverage retaining the full offline image/TX path.
 
 ### Changed
 
@@ -125,6 +137,8 @@ mode-aware prepared-image preview.
   both commands through the existing central offline TX service and frozen WAV writer.
 - Added truthful optional offline FSK ID capability metadata to all four accepted analogue
   modes without adding live TX or receive capability.
+- Enabled read-only audio discovery in normal headless, development, and sanitizer builds
+  while keeping `sstv_core` and audio-disabled offline behavior independent of miniaudio.
 
 ### Fixed
 

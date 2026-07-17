@@ -14,6 +14,7 @@ include(GNUInstallDirs)
 
 option(SSTV_BUILD_GUI "Build the Qt Quick graphical application when Qt is available" ON)
 option(SSTV_BUILD_IMAGE "Build libvips raster image preparation support" ON)
+option(SSTV_BUILD_AUDIO "Build read-only audio backend discovery support" ON)
 option(SSTV_ENABLE_WERROR "Treat compiler warnings as errors" OFF)
 
 add_library(sstv_project_options INTERFACE)
@@ -40,6 +41,11 @@ if(SSTV_ENABLE_WERROR)
 endif()
 
 add_subdirectory(src/core)
+
+if(SSTV_BUILD_AUDIO)
+	find_package(Threads REQUIRED)
+	add_subdirectory(src/audio)
+endif()
 
 if(SSTV_BUILD_IMAGE)
 	find_package(PkgConfig REQUIRED)
