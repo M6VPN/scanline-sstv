@@ -28,8 +28,10 @@ without real flrig, radio, or SSTV playback access. M2F adds a strict loopback-o
 rigctld provider over the shared bounded TCP transport. M2G adds safe rendered-float
 source and exact AudioStream endpoint integration under mock/null-only transmit tests.
 M2H adds a default-disabled, explicitly armed, interactive CLI live-image transmit path
-using exact audio identities and literal-loopback flrig or rigctld endpoints. M1
-remains incomplete pending the M3 round-trip dependency, and M2 remains incomplete.
+using exact audio identities and literal-loopback flrig or rigctld endpoints. M2I adds a
+default-disabled Wayland-first GUI workflow over the shared live application service,
+immutable snapshots, and the same safety coordinator. M1 remains incomplete pending the
+M3 round-trip dependency, and M2 remains incomplete pending physical M2J HIL evidence.
 
 ### Added
 
@@ -45,6 +47,16 @@ remains incomplete pending the M3 round-trip dependency, and M2 remains incomple
   coordinator.
 - A separately gated manual live-TX hardware target requiring both hardware-test CMake
   arms and all explicit image, audio, gain, and PTT settings.
+- Qt-free `LiveTransmitService` shared by CLI and GUI for immutable preparation,
+  revision-bound confirmation, exact resource construction, coordinator ownership,
+  cancellation, PTT checks, and unresolved-hazard cleanup.
+- `live-tx-gui-compile` plus a live-only Qt model and QML panel with exact device/channel,
+  constant gain, loopback PTT, bounded-delay, read-only PTT check, Stop, and Retry unkey
+  controls.
+- A modal single-run GUI safety review requiring three fresh acknowledgements and the
+  exact confirmation phrase before transmit-time audio or PTT acquisition.
+- Hardware-free service, Qt model, default/live QML smoke, signal, CLI compatibility, and
+  stale-revision tests using injected factories and offscreen software rendering.
 
 - Locked C++20, Qt Quick 6, miniaudio, liquid-dsp, FFTW3f, libvips, notcurses, flrig,
   Hamlib, HamDRM, and KG-STV architecture.
@@ -183,6 +195,12 @@ remains incomplete pending the M3 round-trip dependency, and M2 remains incomple
   end-to-end lifecycle test using mock PTT.
 
 ### Changed
+
+- Moved live coordinator, discovery, provider, audio endpoint, cancellation, and shutdown
+  ownership out of the CLI into the shared application service without changing CLI
+  syntax or its foreground-TTY safety review.
+- Shared the signal-safe SIGINT, SIGTERM, and SIGHUP publisher between CLI and GUI live
+  builds; handlers still perform no Qt, audio, network, coordinator, or PTT work.
 
 - Added a definitely-unkeyed PTT preflight before mock transmit audio acquisition and an
   independent `SSTV_BUILD_RIG` boundary.

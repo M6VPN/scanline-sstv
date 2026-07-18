@@ -304,6 +304,33 @@ against SIGKILL, power loss, OS failure, a failed local rig daemon, or physical 
 radio faults. M2H exposes no GUI/TUI action, remote rig endpoint, direct libhamlib path,
 or automatic PTT configuration.
 
+M2I moves live resource ownership and sequencing into `LiveTransmitService`, a Qt-free
+application boundary shared by the CLI and GUI. The service owns the immutable prepared
+snapshot, validated constant gain, exact playback and loopback PTT configuration,
+single-use revision-bound confirmation, coordinator lifetime, cancellation, and retained
+hazard state. Frontends cannot construct an audio adapter or PTT provider before the
+service consumes a current confirmation.
+
+`LiveTransmitModel` is compiled only with `SSTV_ENABLE_LIVE_TX`. It publishes revisioned
+Qt values from immutable service snapshots at 10 Hz. Image preparation, discovery,
+provider construction, socket work, sample rendering, coordinator execution, watchdog
+heartbeats, stop, and unkey cleanup run outside the Qt render thread. Editor changes,
+device refresh, and any live configuration edit invalidate readiness and prior
+confirmation. Device display names remain informational; selection uses the exact
+backend-and-direction identity copied from discovery.
+
+The live QML panel and safety dialog are separate resources included only in live-enabled
+GUI builds. The dialog binds three fresh acknowledgements and the exact phrase to one
+prepared/configuration revision. Rejecting it performs no transmit-time discovery, audio,
+or PTT acquisition. Stop and window close request coordinator cancellation, retain signal
+gating and mandatory unkey ownership, and wait for a terminal immutable snapshot. Retry
+unkey is available only for a retained hazard and cannot key or start audio.
+
+SIGINT, SIGTERM, and SIGHUP use the same shared `sig_atomic_t` publisher in CLI and GUI
+builds. Qt polls that state and initiates normal window-close cancellation; the handler
+does not call Qt, audio, network, coordinator, or rig APIs. SIGKILL, power loss, OS or
+daemon failure, and physical faults remain outside in-process cleanup guarantees.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.

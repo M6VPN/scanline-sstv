@@ -8,7 +8,6 @@
 #include <sstv/app/live_transmit.hpp>
 #include <sstv/rig/flrig.hpp>
 #include <sstv/rig/rigctld.hpp>
-
 #include <array>
 #include <atomic>
 #include <charconv>
@@ -279,31 +278,6 @@ validateRequired(const LiveTransmitOptions& options, const SeenOptions& seen)
 	if (options.input.empty()) throw std::invalid_argument("input path must not be empty");
 }
 
-[[nodiscard]] std::shared_ptr<sstv::rig::PttProvider>
-createPttProvider(const LiveTransmitOptions& options,
-	const std::shared_ptr<sstv::rig::MonotonicClock>& clock)
-{
-	if (options.pttProvider == LivePttProvider::flrig) {
-		sstv::rig::FlrigConfiguration configuration;
-		configuration.address = options.pttAddress;
-		configuration.port = options.pttPort;
-		configuration.path = *options.flrigPath;
-		if (const auto error = sstv::rig::validateFlrigConfiguration(configuration)) {
-			throw std::invalid_argument(error->message);
-		}
-		return std::make_shared<sstv::rig::FlrigPttProvider>(
-			std::move(configuration), clock);
-	}
-	sstv::rig::RigctldConfiguration configuration;
-	configuration.address = options.pttAddress;
-	configuration.port = options.pttPort;
-	if (const auto error = sstv::rig::validateRigctldConfiguration(configuration)) {
-		throw std::invalid_argument(error->message);
-	}
-	return std::make_shared<sstv::rig::RigctldPttProvider>(
-		std::move(configuration), clock);
-}
-
 [[nodiscard]] std::string_view
 providerName(const LivePttProvider provider) noexcept
 {
@@ -428,68 +402,51 @@ runLiveTransmitCommand(const int argc, char* argv[])
 			std::cerr << "Error: live transmission was not interactively confirmed\n";
 			return 2;
 		}
-		auto clock = sstv::rig::createSteadyMonotonicClock();
-		auto scheduler = sstv::rig::createSteadyMonotonicScheduler(clock);
-		auto provider = createPttProvider(options, clock);
-		sstv::audio::AudioDiscoveryService discovery(
-			sstv::audio::createMiniaudioDiscoveryProvider());
-		const auto discoveryResult = discovery.refresh({{options.backend}, false});
-		if (const auto* error = std::get_if<sstv::audio::DiscoveryError>(&discoveryResult)) {
-			throw std::runtime_error(error->message);
-		}
-		const auto snapshot = std::get<std::shared_ptr<const sstv::audio::AudioDiscoverySnapshot>>(
-			discoveryResult);
-		const auto selection = sstv::app::selectLivePlaybackDevice(*snapshot,
-			{options.backend, options.playbackIdentity, options.playbackChannels,
-				options.outputChannel});
-		if (const auto* error = std::get_if<sstv::app::LiveTransmitError>(&selection)) {
+		sstv::app::LiveTransmitService service;
+		sstv::app::LiveTransmitConfiguration configuration;
+		configuration.revision = prepared.snapshot->revision;
+		configuration.playback = {options.backend, options.playbackIdentity,
+			options.playbackChannels, options.outputChannel};
+		configuration.ptt.provider = options.pttProvider == LivePttProvider::flrig
+			? sstv::app::LivePttProviderKind::flrig
+			: sstv::app::LivePttProviderKind::rigctld;
+		configuration.ptt.address = options.pttAddress;
+		configuration.ptt.port = options.pttPort;
+		configuration.ptt.flrigPath = options.flrigPath;
+		configuration.preKeyDelay = options.preKeyDelay;
+		configuration.postAudioTail = options.postAudioTail;
+		if (const auto error = service.configure(prepared, configuration)) {
 			throw std::runtime_error(error->operation + ": " + error->message);
 		}
-		auto sourceResult = sstv::app::createLiveTransmitSource(prepared);
-		if (const auto* error = std::get_if<sstv::app::SampleSourceError>(&sourceResult)) {
-			throw std::runtime_error(error->message);
-		}
-		auto endpointResult = sstv::app::createAudioStreamTransmitEndpoint(
-			{std::get<sstv::audio::AudioStreamConfiguration>(selection), snapshot},
-			sstv::audio::createMiniaudioStreamAdapter());
-		if (const auto* error = std::get_if<sstv::app::TransmitAudioError>(&endpointResult)) {
+		auto confirmationResult = service.confirm({prepared.snapshot->revision,
+			true, true, true, std::string(sstv::app::liveTransmitConfirmationPhrase)});
+		if (const auto* error = std::get_if<sstv::app::LiveTransmitError>(
+			&confirmationResult)) {
 			throw std::runtime_error(error->operation + ": " + error->message);
 		}
-		auto supervisor = std::make_shared<sstv::rig::PttSupervisor>(provider, clock);
-		sstv::app::TransmitCoordinator coordinator(supervisor, clock, scheduler);
-		sstv::app::TransmitRequest request;
-		request.policy.preKeyDelay = options.preKeyDelay;
-		request.policy.postAudioTail = options.postAudioTail;
+		if (const auto error = service.start(
+			std::get<sstv::app::LiveTransmitConfirmation>(confirmationResult))) {
+			throw std::runtime_error(error->operation + ": " + error->message);
+		}
 		LiveTransmitSignalScope signals;
-		sstv::app::TransmitRunResult result;
-		std::exception_ptr workerError;
-		std::atomic<bool> isDone{false};
-		std::jthread worker([&] {
-			try {
-				result = coordinator.run(request,
-					std::get<std::unique_ptr<sstv::app::FiniteSampleSource>>(
-						std::move(sourceResult)),
-					std::get<std::unique_ptr<sstv::app::TransmitAudioEndpoint>>(
-						std::move(endpointResult)));
-			} catch (...) {
-				workerError = std::current_exception();
-				result = coordinator.shutdown();
-			}
-			isDone.store(true, std::memory_order_release);
-		});
 		bool cancellationSent = false;
-		while (!isDone.load(std::memory_order_acquire)) {
+		std::shared_ptr<const sstv::app::LiveTransmitServiceSnapshot> liveSnapshot;
+		for (;;) {
+			liveSnapshot = service.snapshot();
+			if (liveSnapshot->state == sstv::app::LiveServiceState::completed
+				|| liveSnapshot->state == sstv::app::LiveServiceState::cancelled
+				|| liveSnapshot->state == sstv::app::LiveServiceState::faulted
+				|| liveSnapshot->state == sstv::app::LiveServiceState::hazardous) break;
 			if (signals.isCancellationRequested() && !cancellationSent) {
-				coordinator.requestCancel();
+				service.requestCancel();
 				cancellationSent = true;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
-		worker.join();
-		if (workerError) std::rethrow_exception(workerError);
-		if (result->outcome != sstv::app::TransmitOutcome::completed) {
-			std::cerr << "Error: " << result->message << '\n';
-			if (result->ptt.hasHazard) {
+		liveSnapshot = service.shutdown();
+		if (liveSnapshot->state != sstv::app::LiveServiceState::completed) {
+			std::cerr << "Error: " << liveSnapshot->primaryError << '\n';
+			if (liveSnapshot->hasUnresolvedPttHazard) {
 				std::cerr << "HAZARD: PTT could not be confirmed unkeyed\n";
 			}
 			return cancellationSent ? 130 : 1;

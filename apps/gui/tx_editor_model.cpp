@@ -148,6 +148,16 @@ QString TxEditorModel::frameMetadata() const
 }
 QString TxEditorModel::inspectionText() const { return currentInspection; }
 QString TxEditorModel::platformName() const { return QGuiApplication::platformName(); }
+qulonglong TxEditorModel::preparedRevision() const
+{
+	return snapshot ? static_cast<qulonglong>(snapshot->revision) : 0;
+}
+
+std::shared_ptr<const sstv::app::OfflineEditorSnapshot>
+TxEditorModel::preparedSnapshot() const
+{
+	return snapshot;
+}
 
 void
 TxEditorModel::clearPreparedState()

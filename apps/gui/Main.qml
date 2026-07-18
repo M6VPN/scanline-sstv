@@ -19,6 +19,15 @@ ApplicationWindow {
 	property url pendingOverwriteUrl
 	property string pendingOverwriteKind
 	property string pendingAudioDiagnostic
+	property bool liveTxAvailable: typeof liveTransmitModel !== "undefined"
+	property bool liveCloseApproved: false
+
+	onClosing: function(close) {
+		if (liveTxAvailable && !liveCloseApproved
+				&& !liveTransmitModel.requestWindowClose()) {
+			close.accepted = false
+		}
+	}
 
 	function prepareCurrent() {
 		txEditorModel.updateRequest(
@@ -43,6 +52,12 @@ ApplicationWindow {
 				opacity: 0.72
 			}
 			Item { Layout.fillWidth: true }
+			Loader {
+				active: window.liveTxAvailable
+				source: active ? "LiveTransmitPanel.qml" : ""
+				Layout.preferredWidth: active && item ? item.implicitWidth : 0
+				onLoaded: item.hostWindow = window
+			}
 			Button {
 				text: qsTr("Audio diagnostics...")
 				Accessible.name: qsTr("Open audio diagnostics")
@@ -258,7 +273,9 @@ ApplicationWindow {
 						Layout.fillWidth: true
 						wrapMode: Text.WordWrap
 						font.bold: true
-						text: qsTr("SSTV audio playback, radio control, and PTT are unavailable. Audio-interface diagnostics are separate and require explicit arming.")
+						text: window.liveTxAvailable
+							? qsTr("Offline export remains separate. Live TX requires a fresh safety review, exact audio device, loopback PTT provider, and confirmed unkey cleanup.")
+							: qsTr("SSTV audio playback, radio control, and PTT are unavailable. Audio-interface diagnostics are separate and require explicit arming.")
 						Accessible.name: qsTr("Offline safety notice")
 					}
 					Label {
@@ -534,6 +551,13 @@ ApplicationWindow {
 		}
 		function onInspectionChanged() {
 			if (txEditorModel.inspectionText !== "") inspectionResults.open()
+		}
+	}
+	Connections {
+		target: window.liveTxAvailable ? liveTransmitModel : null
+		function onSafeToClose() {
+			window.liveCloseApproved = true
+			window.close()
 		}
 	}
 }

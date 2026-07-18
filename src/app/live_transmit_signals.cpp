@@ -1,8 +1,8 @@
 // Scanline SSTV - Developed by M6VPN (M6VPN@tuta.com)
-// scanline-sstv/apps/cli/live_tx_signals.cpp
+// scanline-sstv/src/app/live_transmit_signals.cpp
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#include "live_tx_signals.hpp"
+#include <sstv/app/live_transmit_signals.hpp>
 
 #include <stdexcept>
 
@@ -17,6 +17,8 @@ handleLiveTransmitSignal(const int) noexcept
 }
 
 } // namespace
+
+namespace sstv::app {
 
 LiveTransmitSignalScope::LiveTransmitSignalScope()
 {
@@ -57,3 +59,5 @@ LiveTransmitSignalScope::isCancellationRequested() const noexcept
 {
 	return signalCancellation != 0;
 }
+
+} // namespace sstv::app

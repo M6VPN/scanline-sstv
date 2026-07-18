@@ -4,20 +4,6 @@
 
 #pragma once
 
-#include <csignal>
+#include <sstv/app/live_transmit_signals.hpp>
 
-class LiveTransmitSignalScope final {
-public:
-	LiveTransmitSignalScope();
-	~LiveTransmitSignalScope();
-	LiveTransmitSignalScope(const LiveTransmitSignalScope&) = delete;
-	LiveTransmitSignalScope& operator=(const LiveTransmitSignalScope&) = delete;
-	[[nodiscard]] bool isCancellationRequested() const noexcept;
-private:
-	struct sigaction oldInterrupt_{};
-	struct sigaction oldTerminate_{};
-	struct sigaction oldHangup_{};
-	bool hasInterrupt_ = false;
-	bool hasTerminate_ = false;
-	bool hasHangup_ = false;
-};
+using LiveTransmitSignalScope = sstv::app::LiveTransmitSignalScope;

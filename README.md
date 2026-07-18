@@ -7,8 +7,8 @@ through flrig or Hamlib.
 
 ## Status
 
-M1 analogue TX work remains provisionally incomplete, and the M2H explicitly armed CLI
-live-transmit slice is complete. M1a provides the
+M1 analogue TX work remains provisionally incomplete, and the M2I hardware-free
+Wayland-first GUI live-transmit slice is complete. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
 PNG export, and offline Martin M1 image-to-WAV generation. M1C adds evidence-backed
@@ -77,6 +77,14 @@ has no defaults or fallback and reuses the M2D safety coordinator. There is no G
 Transmit action, remote rig control, direct libhamlib, WAV playback, batch mode, or
 unattended bypass. Mode capability flags remain protocol metadata and do not claim
 verified physical hardware compatibility.
+
+M2I adds a conditional Qt Quick live-image workflow over the same Qt-free application
+service now used by the CLI. It requires an exact prepared revision, refreshed exact
+device identity, explicit channels and -60 to -6 dBFS gain, explicit literal-loopback
+flrig or rigctld configuration, bounded delays, three fresh acknowledgements, and the
+exact single-use phrase. Stop, window close, and process signals retain coordinator
+unkey cleanup. Normal builds contain no live panel. Automated tests use injected or null
+audio and loopback-only providers; M2 remains incomplete pending M2J physical HIL.
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -258,6 +266,12 @@ Compile the live CLI path without running hardware:
     cmake --build --preset live-tx-compile
     ctest --preset live-tx-compile --output-on-failure
 
+Compile the live CLI and Qt panel for hardware-free offscreen tests:
+
+    CMAKE_PREFIX_PATH=/opt/Qt/6.11.1/gcc_64 cmake --preset live-tx-gui-compile
+    cmake --build --preset live-tx-gui-compile
+    ctest --preset live-tx-gui-compile --output-on-failure
+
 The command syntax in that build is:
 
     ./build/live-tx-compile/apps/cli/scanline-sstv-cli transmit-image \
@@ -272,8 +286,7 @@ This example is syntax only. Software gain is not radio deviation calibration. T
 prepares the full immutable transmission before prompting and makes no audio or PTT
 acquisition unless the exact phrase is entered on a foreground TTY.
 
-The Qt application provides the same offline image workflow without duplicating protocol
-or image logic:
+The normal Qt application provides the offline image workflow without live controls:
 
     ./build/dev/apps/gui/scanline-sstv-gui
 
@@ -281,7 +294,9 @@ Choose a local JPEG or PNG, select the mode and preparation recipe, then export 
 prepared PNG or an offline PCM16 WAV. The editor inspects an exported WAV through the
 same defensive service used by the CLI. Existing destinations require explicit
 confirmation. The separate Audio Diagnostics panel uses the same bounded service and
-fresh arm warning. No GUI action accesses radio control or PTT.
+fresh arm warning. With `SSTV_ENABLE_LIVE_TX=OFF`, no GUI action accesses radio control
+or PTT. A live-enabled build adds the separately gated panel, but compiling it does not
+arm audio or PTT and no unattended or noninteractive bypass exists.
 
 ## Repository map
 

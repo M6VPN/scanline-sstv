@@ -13,7 +13,7 @@ if(SSTV_BUILD_AUDIO AND SSTV_BUILD_RIG)
 	list(APPEND SSTV_APP_PUBLIC_LIBRARIES sstv::audio sstv::core sstv::rig)
 endif()
 if(SSTV_ENABLE_LIVE_TX)
-	list(APPEND SSTV_APP_SOURCES live_transmit.cpp)
+	list(APPEND SSTV_APP_SOURCES live_transmit.cpp live_transmit_signals.cpp)
 endif()
 
 add_library(sstv_app STATIC ${SSTV_APP_SOURCES})

@@ -23,10 +23,17 @@ if(NOT SSTV_ENABLE_LIVE_TX)
 endif()
 
 if(SSTV_ENABLE_LIVE_TX)
+	add_executable(scanline-sstv-m2i-live-service-tests
+		m2i_live_service_tests.cpp)
+	target_link_libraries(scanline-sstv-m2i-live-service-tests
+		PRIVATE sstv::app sstv_project_options sstv_project_warnings)
+	add_test(NAME scanline-sstv-m2i-live-service-tests
+		COMMAND scanline-sstv-m2i-live-service-tests)
+	set_tests_properties(scanline-sstv-m2i-live-service-tests PROPERTIES
+		LABELS "live-tx-mock;audio-concurrency" TIMEOUT 30)
 	add_executable(scanline-sstv-m2h-live-transmit-tests
 		m2h_live_transmit_tests.cpp
-		${PROJECT_SOURCE_DIR}/apps/cli/live_tx_commands.cpp
-		${PROJECT_SOURCE_DIR}/apps/cli/live_tx_signals.cpp)
+		${PROJECT_SOURCE_DIR}/apps/cli/live_tx_commands.cpp)
 	target_include_directories(scanline-sstv-m2h-live-transmit-tests
 		PRIVATE ${PROJECT_SOURCE_DIR}/apps/cli)
 	target_compile_definitions(scanline-sstv-m2h-live-transmit-tests
@@ -37,12 +44,11 @@ if(SSTV_ENABLE_LIVE_TX)
 		COMMAND scanline-sstv-m2h-live-transmit-tests)
 	set_tests_properties(scanline-sstv-m2h-live-transmit-tests PROPERTIES
 		LABELS "live-tx-mock;audio-concurrency" TIMEOUT 30)
-	add_executable(scanline-sstv-m2h-signal-tests m2h_signal_tests.cpp
-		${PROJECT_SOURCE_DIR}/apps/cli/live_tx_signals.cpp)
+	add_executable(scanline-sstv-m2h-signal-tests m2h_signal_tests.cpp)
 	target_include_directories(scanline-sstv-m2h-signal-tests
 		PRIVATE ${PROJECT_SOURCE_DIR}/apps/cli)
 	target_link_libraries(scanline-sstv-m2h-signal-tests
-		PRIVATE sstv_project_options sstv_project_warnings)
+		PRIVATE sstv::app sstv_project_options sstv_project_warnings)
 	add_test(NAME scanline-sstv-m2h-signal-tests
 		COMMAND scanline-sstv-m2h-signal-tests)
 	set_tests_properties(scanline-sstv-m2h-signal-tests PROPERTIES

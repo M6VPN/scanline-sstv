@@ -36,6 +36,7 @@ class TxEditorModel final : public QObject {
 	Q_PROPERTY(QString frameMetadata READ frameMetadata NOTIFY metadataChanged)
 	Q_PROPERTY(QString inspectionText READ inspectionText NOTIFY inspectionChanged)
 	Q_PROPERTY(QString platformName READ platformName CONSTANT)
+	Q_PROPERTY(qulonglong preparedRevision READ preparedRevision NOTIFY metadataChanged)
 
 public:
 	explicit TxEditorModel(PreparedImageProvider*, QObject* = nullptr);
@@ -58,6 +59,9 @@ public:
 	[[nodiscard]] QString frameMetadata() const;
 	[[nodiscard]] QString inspectionText() const;
 	[[nodiscard]] QString platformName() const;
+	[[nodiscard]] qulonglong preparedRevision() const;
+	[[nodiscard]] std::shared_ptr<const sstv::app::OfflineEditorSnapshot>
+		preparedSnapshot() const;
 
 	Q_INVOKABLE void selectInput(const QUrl&);
 	Q_INVOKABLE void updateRequest(const QString&, const QString&, const QString&,

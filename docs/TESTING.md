@@ -448,6 +448,41 @@ Before manual HIL:
 Do not run this target in CI or routine verification. SIGKILL, power loss, daemon failure,
 OS failure, and physical faults cannot be cleaned up by the process signal handler.
 
+### M2I Wayland-first GUI live transmission
+
+Normal `dev`, `headless`, sanitizer, and CI configurations keep
+`SSTV_ENABLE_LIVE_TX=OFF`. The default offscreen smoke test asserts that no live panel or
+enabled Transmit action exists. The hardware-free GUI compile gate is:
+
+    CMAKE_PREFIX_PATH=/opt/Qt/6.11.1/gcc_64 cmake --preset live-tx-gui-compile
+    cmake --build --preset live-tx-gui-compile
+    ctest --preset live-tx-gui-compile --output-on-failure
+
+The prefix example is host-specific; any Qt 6.5+ installation discoverable by CMake is
+valid. This preset leaves both TX hardware-test gates OFF. It runs the shared service,
+Qt model, existing CLI, signal, mock coordinator, null audio, ephemeral-loopback rig, and
+offscreen QML tests. No test selects or opens a physical endpoint.
+
+`scanline-sstv-m2i-live-service-tests` injects resource factories and checks stale and
+single-use confirmation, invalid loopback configuration, no acquisition before accepted
+confirmation, exact failure ordering, and immutable terminal snapshots.
+`scanline-sstv-live-transmit-model-tests` prepares a small project fixture, injects one
+exact discovery identity, verifies refresh retention without replacement, checks editor
+revision invalidation, and proves rejected GUI arming constructs no clock, audio adapter,
+PTT provider, or socket. The live-enabled offscreen smoke test requires the conditional
+panel and an initially disabled Transmit action.
+
+Manual non-transmitting UI checks remain separate from automated acceptance:
+
+- Launch with native Wayland, then XCB/XWayland, without starting a transmission.
+- Check dialog focus, keyboard traversal, accessible names, and high-DPI scaling.
+- Inject/mock an active session and verify Stop, window close, minimized-window, and
+  compositor-stall behavior without physical audio or radio access.
+- Use injected device removal and verify no identity replacement or automatic reopen.
+
+Physical audio, radio, RF, deviation, real-daemon, and final native-compositor evidence
+belong to M2J. Do not run `scanline-sstv-live-tx-hardware-manual` for M2I verification.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

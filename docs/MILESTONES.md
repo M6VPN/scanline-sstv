@@ -502,13 +502,51 @@ Acceptance:
 - No automated test opens physical audio, contacts a non-loopback endpoint, or keys a
   radio. Physical HIL is documented but not performed as M2H verification.
 
-The remaining M2 roadmap includes:
+### M2I - Wayland-first GUI live transmission
 
-- Add a Wayland-first GUI live-TX workflow over the same application service and immutable
-  snapshots without duplicating CLI safety or orchestration logic.
-- Record opt-in physical HIL evidence for specific audio backends, radios, deviation
-  calibration, emergency unkey, disconnect, and shutdown behavior.
+Status: **complete**
+
+- Add a Qt-free `LiveTransmitService` shared by CLI and GUI for preparation snapshots,
+  gain/configuration validation, exact resource construction, confirmation, coordinator
+  lifetime, cancellation, shutdown, PTT checks, and hazard cleanup.
+- Add a live-only Qt model using revisioned immutable snapshots and bounded-rate polling;
+  all preparation, discovery, audio, rendering, watchdog, networking, and cleanup work
+  remains outside the GUI/render thread.
+- Add a conditional Qt Quick panel with exact backend/device/channel and loopback PTT
+  controls, constant gain, bounded delays, read-only PTT check, state/progress reporting,
+  Stop, close deferral, and unresolved-hazard retry.
+- Require three fresh acknowledgements and the exact confirmation phrase in a single-use,
+  revision-bound modal review before transmit-time resource construction.
+- Add `live-tx-gui-compile`; normal presets and CI retain `SSTV_ENABLE_LIVE_TX=OFF`.
+
+Acceptance:
+
+- Default GUI builds contain no live model, panel, action, shortcut, QML resource, or
+  provider factory. The offline editor and audio diagnostics retain their existing tests.
+- Live-enabled service/model tests prove preparation and rejected confirmation acquire no
+  audio or PTT resources, confirmations are stale-safe and single-use, device refresh
+  does not select a replacement, and relevant editor/configuration changes revoke
+  readiness.
+- Offscreen QML startup proves the live panel exists only in the enabled build and its
+  Transmit action begins disabled. Three arms and the exact phrase remain mandatory.
+- Stop, window close, process signals, coordinator faults, and destruction retain signal
+  gating and mandatory unkey ownership. A hazardous final PTT state blocks another run
+  and can only use the unkey/query retry path.
+- Automated verification uses injected providers, mock/null audio, ephemeral loopback,
+  and offscreen software rendering only. It performs no physical HIL and claims no native
+  compositor, backend, radio, deviation, RF, distribution, or BSD compatibility.
+
+### M2J - Opt-in physical HIL evidence and calibration
+
+Status: **not started**
+
+- Record manually armed evidence for specific audio backend/device/radio combinations,
+  deviation and level calibration, emergency unkey, disconnect, shutdown, native Wayland,
+  and XCB/XWayland behavior.
+- Retain exact-device, literal-loopback, fresh arming, watchdog, and mandatory-unkey gates.
 - Keep optional direct libhamlib behind a later evidence and safety gate.
+
+Overall M2 remains in progress until the separately gated M2J evidence is recorded.
 
 Acceptance:
 

@@ -18,7 +18,7 @@ option(SSTV_BUILD_GUI "Build the Qt Quick graphical application when Qt is avail
 option(SSTV_BUILD_IMAGE "Build libvips raster image preparation support" ON)
 option(SSTV_BUILD_AUDIO "Build audio discovery, stream, and diagnostic support" ON)
 option(SSTV_BUILD_RIG "Build mock-safe rig coordination and loopback rig providers" ON)
-option(SSTV_ENABLE_LIVE_TX "Build the explicitly armed CLI live-transmit path" OFF)
+option(SSTV_ENABLE_LIVE_TX "Build explicitly armed CLI and GUI live-transmit paths" OFF)
 option(SSTV_ENABLE_TX_HARDWARE_TESTS "Build the manual live-TX hardware test harness" OFF)
 option(SSTV_ARM_TX_HARDWARE_TESTS "Arm the manual live-TX hardware test harness" OFF)
 option(SSTV_ENABLE_AUDIO_HARDWARE_TESTS "Enable explicitly armed audio hardware tests" OFF)

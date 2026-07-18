@@ -18,7 +18,7 @@ else()
 	list(APPEND SSTV_CLI_SOURCES image_commands_stub.cpp)
 endif()
 if(SSTV_ENABLE_LIVE_TX)
-	list(APPEND SSTV_CLI_SOURCES live_tx_commands.cpp live_tx_signals.cpp)
+	list(APPEND SSTV_CLI_SOURCES live_tx_commands.cpp)
 endif()
 
 add_executable(scanline-sstv-cli ${SSTV_CLI_SOURCES})
