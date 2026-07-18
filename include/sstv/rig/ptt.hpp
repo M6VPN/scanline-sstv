@@ -73,6 +73,8 @@ struct PttOperationResult {
 	MonotonicTime started{};
 	MonotonicTime completed{};
 	std::string message;
+	std::optional<std::int32_t> providerCode;
+	std::uint64_t operationId = 0;
 };
 
 struct PttCleanupPolicy {

@@ -72,11 +72,12 @@ PttSupervisor::execute(const PttAction action, const MonotonicTime deadline,
 		return PttOperationResult{action, PttObservedState::unknown,
 			PttCertainty::indeterminate, PttReadback::unavailable,
 			PttErrorCategory::invalidRequest, false, action == PttAction::key,
-			attempt, started, started, "invalid PTT deadline or attempt"};
+			attempt, started, started, "invalid PTT deadline or attempt", {}, 0};
 	}
 	PttRequest request{action, deadline, attempt,
 		nextOperationId_.fetch_add(1, std::memory_order_relaxed)};
 	PttOperationResult result = provider_->execute(request);
+	result.operationId = request.operationId;
 	result.action = action;
 	result.attempt = attempt;
 	if (result.started == MonotonicTime{}) result.started = started;

@@ -150,11 +150,21 @@ remains incomplete pending the M3 round-trip dependency, and M2 remains incomple
 - Bounded loopback-only flrig HTTP/XML-RPC provider with exact deadlines, mandatory
   readback, conservative certainty mapping, injected transport tests, and an ephemeral
   TCP mock server.
+- Evidence record for Hamlib 4.7.1 rigctld PTT commands, Extended Response Protocol,
+  documented PTT states, error replies, source locations, and inspected artifact hashes.
+- Bounded loopback-only rigctld provider using fixed `+T`/`+t` commands, mandatory
+  readback, conservative certainty mapping, typed `RPRT` codes, and no libhamlib link.
+- Shared private POSIX loopback TCP transport for flrig and rigctld with independent HTTP
+  and line-response framers.
+- Provider-neutral certainty and request-metadata conformance tests for mock, flrig, and
+  rigctld providers plus an ephemeral rigctld TCP coordinator test.
 
 ### Changed
 
 - Added a definitely-unkeyed PTT preflight before mock transmit audio acquisition and an
   independent `SSTV_BUILD_RIG` boundary.
+- Extended PTT operation results with provider error codes and operation IDs while
+  preserving existing M2D and M2E behavior.
 
 - Completed the Scanline SSTV rename in current GUI and CMake identifiers.
 - Centralised the Qt QML module URI in the GUI build definition.

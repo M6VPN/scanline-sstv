@@ -7,7 +7,7 @@ through flrig or Hamlib.
 
 ## Status
 
-M1 analogue TX work remains provisionally incomplete, and the loopback-only M2E flrig
+M1 analogue TX work remains provisionally incomplete, and the loopback-only M2F rigctld
 safety slice is complete. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
@@ -54,6 +54,13 @@ explicit literal loopback address and ephemeral or explicit port, performs manda
 `rig.get_ptt` readback after set operations, and adds a definitely-unkeyed coordinator
 preflight before audio opens. It has no CLI or GUI configuration, no real-flrig or
 real-radio enablement, and no SSTV playback path.
+
+M2F adds a strict Hamlib rigctld provider pinned to Hamlib 4.7.1 protocol evidence. It
+uses only fixed Extended Response Protocol PTT commands against explicit literal
+loopback endpoints and requires `get_ptt` readback after every set. The flrig and rigctld
+providers share private bounded POSIX socket mechanics while retaining separate wire
+parsers. No rigctld process, libhamlib, serial device, real radio, CLI/GUI transmit action,
+or SSTV playback path is enabled.
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -217,6 +224,9 @@ hazard and blocks another session. The watchdog uses injected monotonic time and
 serialized provider, and it remains armed until definite unkey or a recorded hazard.
 M2E connects the same supervisor to a loopback-only flrig provider for tests. It remains
 disconnected from miniaudio, offline SSTV encoders, CLI commands, and GUI controls.
+M2F adds the second explicit provider through the same supervisor and coordinator, using
+only a test server bound to an ephemeral loopback port. It does not add automatic provider
+selection or a conventional rigctld endpoint.
 
 Hardware-in-loop testing is disabled by default. `SSTV_ENABLE_AUDIO_HARDWARE_TESTS=ON`
 does nothing audible unless `SSTV_ARM_AUDIO_HARDWARE_TESTS=ON` and explicit backend,
@@ -241,7 +251,7 @@ fresh arm warning. No GUI action accesses radio control or PTT.
 - `include/sstv/image` and `src/image` - bounded libvips raster preparation.
 - `include/sstv/app` and `src/app` - offline editor and mock transmit orchestration.
 - `include/sstv/audio` and `src/audio` - discovery, bounded rings, streams, and diagnostics.
-- `include/sstv/rig` and `src/rig` - PTT safety plus bounded loopback flrig XML-RPC.
+- `include/sstv/rig` and `src/rig` - PTT safety plus bounded loopback flrig and rigctld providers.
 - `apps/cli` - offline and diagnostic command line.
 - `apps/gui` - Qt Quick application.
 - `docs` - architecture, milestones, protocol provenance, dependencies, and testing.

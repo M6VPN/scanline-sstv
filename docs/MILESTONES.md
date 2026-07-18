@@ -411,9 +411,39 @@ Acceptance:
   No test contacts real flrig, opens physical audio, renders SSTV, or accesses radio/PTT
   hardware.
 
-M2F is the next intended slice: a rigctld TCP PTT provider tested against a loopback-only
-mock server and the same M2D coordinator. Direct libhamlib and real-radio enablement
-remain later work.
+### M2F - Loopback-only rigctld TCP PTT provider
+
+Status: **complete**
+
+- Pin Hamlib 4.7.1 commit `d042479a9f8095ba1a8e103a977c3614d7233cb2` as factual
+  protocol evidence without copying code, linking libhamlib, or launching rigctld.
+- Select only the newline Extended Response Protocol with fixed `+T 1`, `+T 0`, and `+t`
+  commands and complete `RPRT`-terminated responses.
+- Add a bounded `RigctldPttProvider` restricted to explicit literal IPv4 or IPv6
+  loopback endpoints with no conventional-port default, DNS, fallback, or persistence.
+- Share M2E's private nonblocking POSIX transport while retaining separate HTTP and
+  rigctld line-framing grammars.
+- Require readback after every set. Treat values `1`, `2`, and `3` as keyed and only `0`
+  as definitely unkeyed; preserve all other outcomes as failures or indeterminate state.
+
+Acceptance:
+
+- Configuration rejects hostnames, URLs, non-loopback literals, mapped addresses, zone
+  identifiers, zero ports, excessive timeouts, and invalid parser limits before sockets.
+- Codec tests cover exact command and response bytes, all documented PTT values, negative
+  `RPRT` codes, fragmentation, overflow, controls, unsupported response modes, and
+  unexpected records.
+- Mock, flrig, and rigctld providers pass one high-level certainty, deadline, attempt,
+  operation-ID, and diagnostic-bound conformance suite.
+- An ephemeral TCP server binds only loopback and drives M2D preflight, finite mock audio,
+  mandatory readback, and final confirmed unkeying without external processes or hardware.
+- M2D and M2E regressions remain unchanged. Minimal, audio-disabled, normal, GUI, and
+  sanitizer builds preserve their existing boundaries.
+
+M2G is the next intended slice: adapt the accepted offline SSTV event renderer and M2B
+`AudioStream` into the M2D coordinator using only miniaudio null/mock audio and
+mock/loopback PTT providers. It will add no user-facing or real-radio transmit action.
+Direct libhamlib and real-radio enablement remain later work.
 
 The remaining M2 roadmap includes:
 

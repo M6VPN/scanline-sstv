@@ -362,6 +362,26 @@ unkey before audio acquisition, then verifies key and final unkey readbacks. The
 opens physical audio, renders or plays SSTV, resolves DNS, or accesses serial/radio/PTT
 hardware.
 
+### M2F loopback-only rigctld provider
+
+`scanline-sstv-m2f-rigctld-tests` exercises exact Extended Response Protocol commands,
+bounded line framing, every documented PTT state, negative `RPRT` results, checked integer
+parsing, fragmented input, unsupported response modes, controls, line/byte limits, and
+injected transport failures. Configuration tests prove that invalid endpoints and limits
+fail before the POSIX transport is constructed.
+
+One provider-neutral conformance runner applies the same query, confirmed key, confirmed
+unkey, ambiguous-key, request-attempt, operation-ID, timestamp, and diagnostic-bound
+assertions to mock, flrig, and rigctld providers. Existing M2D and M2E tests remain
+separate regression gates.
+
+The M2F TCP server binds only an ephemeral `127.0.0.1` or `::1` endpoint, supports
+byte-fragmented responses, records exact command order, and drives the existing M2D
+coordinator with mock audio. The `rig-loopback` and `audio-concurrency` labels keep the
+suite in normal sanitizer and focused TSan runs. No external rigctld or flrig process is
+spawned, and no Hamlib library, serial device, physical audio device, radio, hardware PTT,
+or SSTV playback path is reachable.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

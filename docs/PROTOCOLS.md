@@ -137,9 +137,17 @@ default.
   `e2058cbd5bf6dc4e471d60a077a2ee65289a50a2` and uses only documented
   `rig.set_ptt` and `rig.get_ptt` methods. Set acknowledgement is followed by mandatory
   integer readback. See `docs/protocols/rig/flrig-xmlrpc.md`.
-- rigctld uses extended responses where practical and parses complete `RPRT` results.
+- M2F rigctld is pinned to Hamlib 4.7.1 commit
+  `d042479a9f8095ba1a8e103a977c3614d7233cb2`. It uses only fixed `+T 1`,
+  `+T 0`, and `+t` Extended Response Protocol commands and complete newline-delimited
+  `RPRT` response blocks. See `docs/protocols/rig/rigctld.md`.
+- rigctld readback `0` is unkeyed; documented values `1`, `2`, and `3` are keyed. Every
+  other value and every Default Protocol response is rejected rather than treated as a
+  boolean or alternate grammar.
 - M2E accepts only explicit literal `127.0.0.1` or `::1` endpoints and provides no
   enabled default. Remote flrig access is outside this slice.
+- M2F applies the same literal-loopback-only and no-default policy to rigctld. flrig and
+  rigctld share private bounded POSIX TCP mechanics but retain independent wire parsers.
 - PTT commands have request IDs/deadlines in the application layer even when the external
   protocol lacks them.
 

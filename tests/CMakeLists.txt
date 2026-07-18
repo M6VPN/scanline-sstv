@@ -29,6 +29,21 @@ if(SSTV_BUILD_AUDIO AND SSTV_BUILD_RIG)
 		PROPERTIES LABELS "rig-loopback;audio-concurrency" TIMEOUT 20
 	)
 
+	add_executable(scanline-sstv-m2f-rigctld-tests m2f_rigctld_tests.cpp)
+	target_include_directories(
+		scanline-sstv-m2f-rigctld-tests
+		PRIVATE ${PROJECT_SOURCE_DIR}/src/rig
+	)
+	target_link_libraries(
+		scanline-sstv-m2f-rigctld-tests
+		PRIVATE sstv::app sstv_project_options sstv_project_warnings
+	)
+	add_test(NAME scanline-sstv-m2f-rigctld-tests COMMAND scanline-sstv-m2f-rigctld-tests)
+	set_tests_properties(
+		scanline-sstv-m2f-rigctld-tests
+		PROPERTIES LABELS "rig-loopback;audio-concurrency" TIMEOUT 20
+	)
+
 	add_executable(scanline-sstv-m2d-transmit-tests m2d_transmit_tests.cpp)
 	target_link_libraries(
 		scanline-sstv-m2d-transmit-tests

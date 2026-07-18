@@ -2,7 +2,15 @@
 # scanline-sstv/src/rig/CMakeLists.txt
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-add_library(sstv_rig STATIC flrig.cpp flrig_codec.cpp ptt.cpp)
+add_library(
+	sstv_rig STATIC
+	flrig.cpp
+	flrig_codec.cpp
+	loopback_tcp.cpp
+	ptt.cpp
+	rigctld.cpp
+	rigctld_codec.cpp
+)
 add_library(sstv::rig ALIAS sstv_rig)
 target_include_directories(
 	sstv_rig PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

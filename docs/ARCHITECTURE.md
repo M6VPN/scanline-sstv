@@ -243,6 +243,20 @@ keyed or unknown. Audio remains unopened unless definite unkeyed state is establ
 M2E tests use injected transports or a test server bound to ephemeral loopback; no
 production frontend exposes flrig configuration or transmit control.
 
+M2F adds `RigctldPttProvider` without linking libhamlib or launching rigctld. It accepts
+only an explicit literal loopback address and port, sends fixed Extended Response
+Protocol `+T` and `+t` commands, and parses exact newline-delimited response blocks ending
+in `RPRT`. PTT values `1`, `2`, and `3` are keyed; only `0` is definitely unkeyed.
+Every set operation uses a separate query under the original request deadline before
+reporting definite certainty.
+
+flrig and rigctld share one private POSIX loopback TCP transport for nonblocking connect,
+bounded partial I/O, absolute deadlines, close-on-exec, SIGPIPE protection, and descriptor
+cleanup. Protocol-specific framing remains separate: flrig supplies HTTP Content-Length
+completion and rigctld supplies bounded `RPRT` line completion. The shared transport is
+not a public networking API, performs no DNS or fallback, and retains no connection after
+an operation.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.
@@ -291,8 +305,9 @@ Cancelling or faulting jumps to the unkey path; it never jumps directly to idle.
 ```mermaid
 stateDiagram-v2
   [*] --> Idle
-  Idle --> Preparing: transmit request
-  Preparing --> OpeningAudio: validated
+  Idle --> CheckingPtt: transmit request
+  CheckingPtt --> Preparing: definitely unkeyed
+  Preparing --> OpeningAudio: request validated
   OpeningAudio --> PrimingAudio: exact mock endpoint open
   PrimingAudio --> ArmingWatchdog: silence prefilled
   ArmingWatchdog --> Keying: watchdog confirmed
@@ -303,6 +318,7 @@ stateDiagram-v2
   PostAudioTail --> Unkeying: tail complete
   Unkeying --> Completed: definitely unkeyed
   Completed --> Idle
+  CheckingPtt --> Faulting: state unresolved
   Preparing --> Faulting: setup failure
   Keying --> Faulting: key failure or ambiguity
   Transmitting --> Faulting: cancel or stream fault
@@ -314,7 +330,7 @@ stateDiagram-v2
 Provider order is user-configurable:
 
 1. flrig XML-RPC (`rig.set_ptt`/`rig.get_ptt`).
-2. Hamlib `rigctld` TCP (`T`/`t` commands).
+2. Hamlib `rigctld` TCP Extended Response Protocol (`+T`/`+t` commands).
 3. Direct libhamlib.
 4. Manual indication or VOX with no software PTT.
 

@@ -83,7 +83,7 @@ keyedResult(const sstv::rig::PttReadback readback = sstv::rig::PttReadback::unav
 {
 	return {sstv::rig::PttAction::key, sstv::rig::PttObservedState::keyed,
 		sstv::rig::PttCertainty::definitelyKeyed, readback,
-		sstv::rig::PttErrorCategory::none, false, true, 0, {}, {}, {}};
+		sstv::rig::PttErrorCategory::none, false, true, 0, {}, {}, {}, {}, 0};
 }
 
 [[nodiscard]] sstv::rig::PttOperationResult
@@ -91,7 +91,7 @@ unkeyedResult()
 {
 	return {sstv::rig::PttAction::unkey, sstv::rig::PttObservedState::unkeyed,
 		sstv::rig::PttCertainty::definitelyUnkeyed, sstv::rig::PttReadback::available,
-		sstv::rig::PttErrorCategory::none, false, false, 0, {}, {}, {}};
+		sstv::rig::PttErrorCategory::none, false, false, 0, {}, {}, {}, {}, 0};
 }
 
 [[nodiscard]] sstv::rig::PttOperationResult
@@ -99,7 +99,7 @@ failedUnkeyResult()
 {
 	return {sstv::rig::PttAction::unkey, sstv::rig::PttObservedState::unknown,
 		sstv::rig::PttCertainty::indeterminate, sstv::rig::PttReadback::unavailable,
-		sstv::rig::PttErrorCategory::timeout, true, false, 0, {}, {}, "unkey timeout"};
+		sstv::rig::PttErrorCategory::timeout, true, false, 0, {}, {}, "unkey timeout", {}, 0};
 }
 
 class MockPttProvider final : public sstv::rig::PttProvider {
@@ -476,7 +476,7 @@ testReadbackAndSafeRejection()
 	mismatch.provider->queryResult = {sstv::rig::PttAction::query,
 		sstv::rig::PttObservedState::unknown, sstv::rig::PttCertainty::indeterminate,
 		sstv::rig::PttReadback::unavailable, sstv::rig::PttErrorCategory::timeout,
-		true, false, 0, {}, {}, "unknown preflight"};
+		true, false, 0, {}, {}, "unknown preflight", {}, 0};
 	mismatch.provider->unkeyResults = {
 		failedUnkeyResult(), failedUnkeyResult(), failedUnkeyResult()};
 	const auto mismatchResult = mismatch.coordinator->run(
@@ -490,7 +490,7 @@ testReadbackAndSafeRejection()
 	rejected.provider->keyResult = {sstv::rig::PttAction::key,
 		sstv::rig::PttObservedState::unkeyed, sstv::rig::PttCertainty::definitelyUnkeyed,
 		sstv::rig::PttReadback::available, sstv::rig::PttErrorCategory::rejected,
-		false, false, 0, {}, {}, "rejected"};
+		false, false, 0, {}, {}, "rejected", {}, 0};
 	const auto failed = rejected.coordinator->run(fastRequest(), makeSource(), makeEndpoint(rejected));
 	expect(failed->outcome == sstv::app::TransmitOutcome::faulted,
 		"definite-unkeyed key rejection faults safely");
@@ -507,7 +507,7 @@ testAmbiguousKeyAndRetries()
 	ambiguous.provider->keyResult = {sstv::rig::PttAction::key,
 		sstv::rig::PttObservedState::unknown, sstv::rig::PttCertainty::indeterminate,
 		sstv::rig::PttReadback::unavailable, sstv::rig::PttErrorCategory::timeout,
-		true, true, 0, {}, {}, "ambiguous key timeout"};
+		true, true, 0, {}, {}, "ambiguous key timeout", {}, 0};
 	ambiguous.provider->unkeyResults = {failedUnkeyResult(), failedUnkeyResult(), unkeyedResult()};
 	const auto result = ambiguous.coordinator->run(
 		fastRequest(), makeSource(), makeEndpoint(ambiguous));
