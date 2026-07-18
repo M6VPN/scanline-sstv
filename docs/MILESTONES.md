@@ -380,16 +380,46 @@ Acceptance:
   sanitizer configurations compile the mock coordinator tests without real devices,
   sockets, serial ports, radios, SSTV waveforms, or hardware PTT.
 
-M2E is the next intended slice: a flrig XML-RPC PTT provider tested against a loopback-only
-mock server and the proven M2D coordinator. It still cannot access a real radio or play
-SSTV audio. rigctld integration remains after flrig.
+### M2E - Loopback-only flrig XML-RPC PTT provider
+
+Status: **complete**
+
+- Record flrig 2.0.11 PTT evidence at tag `v2.0.11`, commit
+  `e2058cbd5bf6dc4e471d60a077a2ee65289a50a2`, including method signatures,
+  implementation response behavior, file hashes, and the documentation disagreement.
+- Add a bounded `FlrigPttProvider` over one nonblocking POSIX TCP connection per RPC,
+  restricted to explicit literal IPv4 or IPv6 loopback endpoints.
+- Accept only the required HTTP/1.1 Content-Length and XML-RPC scalar subset. Reject
+  redirects, chunking, compression, upgrades, unsafe XML, unsupported values, malformed
+  UTF-8, and responses outside configured limits.
+- Require separate `rig.get_ptt` readback after every set operation and map lost,
+  malformed, timed-out, or mismatched results conservatively into M2D certainty.
+- Add `checkingPtt` before audio acquisition. Keying cannot proceed until preflight or
+  bounded cleanup confirms definitely unkeyed state.
+
+Acceptance:
+
+- Configuration rejects hostnames, DNS, non-loopback literals, mapped addresses, zone
+  identifiers, malformed paths, zero ports, and invalid resource limits before sockets.
+- Deterministic codec and injected-transport tests cover exact requests, fragmentation,
+  HTTP/XML failures, unsafe constructs, deadlines, confirmed state, and ambiguous key.
+- A real TCP test server binds only ephemeral loopback, records request order, supports
+  fragmented responses, and drives the proven coordinator with injected mock audio.
+- Preflight failure opens no audio. Every possibly keyed coordinator path retains M2D
+  mandatory unkey behavior and unresolved hazards continue to block later sessions.
+- Minimal, audio-disabled, normal, GUI, and sanitizer builds retain their boundaries.
+  No test contacts real flrig, opens physical audio, renders SSTV, or accesses radio/PTT
+  hardware.
+
+M2F is the next intended slice: a rigctld TCP PTT provider tested against a loopback-only
+mock server and the same M2D coordinator. Direct libhamlib and real-radio enablement
+remain later work.
 
 The remaining M2 roadmap includes:
 
 - Integrate miniaudio.
 - Enumerate and select Linux/BSD input/output backends and individual devices.
 - Add latency/buffer controls, channel selection, level calibration, and loopback test.
-- Implement flrig XML-RPC PTT.
 - Implement rigctld PTT and optional direct libhamlib.
 - Implement the transmit state machine, watchdog, cancellation, and shutdown unkey guard.
 

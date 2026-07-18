@@ -82,6 +82,12 @@ cmake --build --preset audio-disabled
 ctest --preset audio-disabled
 ```
 
+`SSTV_BUILD_RIG` defaults to `ON` when normal audio builds are configured. Setting it to
+`OFF` excludes the M2D coordinator and M2E loopback provider while retaining audio
+discovery/diagnostics and all offline image and waveform functions. M2E adds no HTTP or
+XML library: its narrow client uses bounded C++20 and POSIX socket facilities on Linux
+and BSD.
+
 M2A uses context initialization and read-only enumeration only. It does not initialize,
 start, capture from, or play to a device. ALSA detail queries are intentionally omitted
 because the pinned implementation opens PCM endpoints. Pinned sndio enumeration opens

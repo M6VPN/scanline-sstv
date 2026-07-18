@@ -7,8 +7,8 @@ through flrig or Hamlib.
 
 ## Status
 
-M1 analogue TX work remains provisionally incomplete, and the mock-only M2D transmit
-safety foundation is complete. M1a provides the
+M1 analogue TX work remains provisionally incomplete, and the loopback-only M2E flrig
+safety slice is complete. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
 PNG export, and offline Martin M1 image-to-WAV generation. M1C adds evidence-backed
@@ -48,6 +48,12 @@ a mock-only application coordinator. Audio must be open, silently prefilled, and
 before the watchdog can arm or keying can begin. Only generated test values can reach its
 injected mock endpoint, and no CLI or GUI Transmit action exists. M2D provides no real
 audio adapter, PTT provider, socket, serial access, radio path, or SSTV playback.
+
+M2E adds a strict flrig XML-RPC provider pinned to flrig 2.0.11. It accepts only an
+explicit literal loopback address and ephemeral or explicit port, performs mandatory
+`rig.get_ptt` readback after set operations, and adds a definitely-unkeyed coordinator
+preflight before audio opens. It has no CLI or GUI configuration, no real-flrig or
+real-radio enablement, and no SSTV playback path.
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -209,8 +215,8 @@ indeterminate state. Once keying may have begun, cancellation, failure, shutdown
 destruction all retain mandatory unkey ownership. Failed confirmation remains a visible
 hazard and blocks another session. The watchdog uses injected monotonic time and a
 serialized provider, and it remains armed until definite unkey or a recorded hazard.
-These interfaces are test seams only in M2D and are not connected to miniaudio, offline
-SSTV encoders, CLI commands, or GUI controls.
+M2E connects the same supervisor to a loopback-only flrig provider for tests. It remains
+disconnected from miniaudio, offline SSTV encoders, CLI commands, and GUI controls.
 
 Hardware-in-loop testing is disabled by default. `SSTV_ENABLE_AUDIO_HARDWARE_TESTS=ON`
 does nothing audible unless `SSTV_ARM_AUDIO_HARDWARE_TESTS=ON` and explicit backend,
@@ -235,7 +241,7 @@ fresh arm warning. No GUI action accesses radio control or PTT.
 - `include/sstv/image` and `src/image` - bounded libvips raster preparation.
 - `include/sstv/app` and `src/app` - offline editor and mock transmit orchestration.
 - `include/sstv/audio` and `src/audio` - discovery, bounded rings, streams, and diagnostics.
-- `include/sstv/rig` and `src/rig` - PTT certainty, supervision, watchdog, and lease values.
+- `include/sstv/rig` and `src/rig` - PTT safety plus bounded loopback flrig XML-RPC.
 - `apps/cli` - offline and diagnostic command line.
 - `apps/gui` - Qt Quick application.
 - `docs` - architecture, milestones, protocol provenance, dependencies, and testing.

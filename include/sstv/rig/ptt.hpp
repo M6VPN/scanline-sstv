@@ -48,6 +48,8 @@ enum class PttErrorCategory {
 	rejected,
 	timeout,
 	disconnected,
+	protocolFault,
+	malformedResponse,
 	providerFailure,
 	invalidRequest,
 };

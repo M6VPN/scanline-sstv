@@ -153,7 +153,7 @@ public:
 	}
 
 	sstv::rig::PttOperationResult keyResult = keyedResult();
-	sstv::rig::PttOperationResult queryResult = keyedResult(sstv::rig::PttReadback::available);
+	sstv::rig::PttOperationResult queryResult = unkeyedResult();
 	std::deque<sstv::rig::PttOperationResult> unkeyResults;
 	std::atomic<bool> isKeyed{false};
 	std::function<void(sstv::rig::PttAction)> onOperation;
@@ -435,6 +435,7 @@ testNormalSequence()
 	const auto result = harness.coordinator->run(fastRequest(), makeSource(), makeEndpoint(harness));
 	const std::vector expected{
 		sstv::app::TransmitState::preparing,
+		sstv::app::TransmitState::checkingPtt,
 		sstv::app::TransmitState::openingAudio,
 		sstv::app::TransmitState::primingAudio,
 		sstv::app::TransmitState::armingWatchdog,
@@ -454,31 +455,37 @@ testNormalSequence()
 	expect(result->audioStopWasAttempted && result->audioCloseWasAttempted,
 		"normal completion stops and closes audio");
 	expect(harness.provider->operationSnapshot() == std::vector{
-		sstv::rig::PttAction::key, sstv::rig::PttAction::unkey},
-		"normal PTT sequence is key then unkey");
+		sstv::rig::PttAction::query, sstv::rig::PttAction::key,
+		sstv::rig::PttAction::unkey}, "normal PTT sequence preflights, keys, then unkeys");
 }
 
 void
 testReadbackAndSafeRejection()
 {
-	Harness readback;
-	readback.provider->keyResult = keyedResult(sstv::rig::PttReadback::available);
-	const auto completed = readback.coordinator->run(
-		fastRequest(), makeSource(), makeEndpoint(readback));
+	Harness initiallyKeyed;
+	initiallyKeyed.provider->queryResult = keyedResult(sstv::rig::PttReadback::available);
+	const auto completed = initiallyKeyed.coordinator->run(
+		fastRequest(), makeSource(), makeEndpoint(initiallyKeyed));
 	expect(completed->outcome == sstv::app::TransmitOutcome::completed,
-		"available keyed readback completes");
-	expect(readback.provider->operationSnapshot() == std::vector{
-		sstv::rig::PttAction::key, sstv::rig::PttAction::query,
-		sstv::rig::PttAction::unkey}, "readback query precedes unkey");
+		"initially keyed preflight cleans up before proceeding");
+	expect(initiallyKeyed.provider->operationSnapshot() == std::vector{
+		sstv::rig::PttAction::query, sstv::rig::PttAction::unkey,
+		sstv::rig::PttAction::key, sstv::rig::PttAction::unkey},
+		"preflight cleanup precedes audio keying");
 	Harness mismatch;
-	mismatch.provider->keyResult = keyedResult(sstv::rig::PttReadback::available);
-	mismatch.provider->queryResult = unkeyedResult();
+	mismatch.provider->queryResult = {sstv::rig::PttAction::query,
+		sstv::rig::PttObservedState::unknown, sstv::rig::PttCertainty::indeterminate,
+		sstv::rig::PttReadback::unavailable, sstv::rig::PttErrorCategory::timeout,
+		true, false, 0, {}, {}, "unknown preflight"};
+	mismatch.provider->unkeyResults = {
+		failedUnkeyResult(), failedUnkeyResult(), failedUnkeyResult()};
 	const auto mismatchResult = mismatch.coordinator->run(
 		fastRequest(), makeSource(), makeEndpoint(mismatch));
-	expect(mismatchResult->error == sstv::app::TransmitErrorCode::keyFailure,
-		"keyed command with unkeyed readback fails closed");
+	expect(mismatchResult->error == sstv::app::TransmitErrorCode::unresolvedPttHazard,
+		"unknown preflight blocks the session");
+	expect(mismatch.audio->operations.empty(), "failed preflight opens no audio");
 	expect(!mismatchResult->nonSilentAudioWasReleased,
-		"readback mismatch releases no signal");
+		"failed preflight releases no signal");
 	Harness rejected;
 	rejected.provider->keyResult = {sstv::rig::PttAction::key,
 		sstv::rig::PttObservedState::unkeyed, sstv::rig::PttCertainty::definitelyUnkeyed,
@@ -487,7 +494,8 @@ testReadbackAndSafeRejection()
 	const auto failed = rejected.coordinator->run(fastRequest(), makeSource(), makeEndpoint(rejected));
 	expect(failed->outcome == sstv::app::TransmitOutcome::faulted,
 		"definite-unkeyed key rejection faults safely");
-	expect(rejected.provider->operationSnapshot() == std::vector{sstv::rig::PttAction::key},
+	expect(rejected.provider->operationSnapshot() == std::vector{
+		sstv::rig::PttAction::query, sstv::rig::PttAction::key},
 		"definite-unkeyed rejection needs no redundant unkey");
 	expect(!failed->nonSilentAudioWasReleased, "rejected key releases no signal");
 }

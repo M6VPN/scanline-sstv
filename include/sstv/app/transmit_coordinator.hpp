@@ -30,6 +30,7 @@ inline constexpr std::size_t maximumTransmitTraceEntries = 1'024;
 enum class TransmitState {
 	idle,
 	preparing,
+	checkingPtt,
 	openingAudio,
 	primingAudio,
 	armingWatchdog,

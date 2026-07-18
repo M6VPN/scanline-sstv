@@ -133,10 +133,13 @@ default.
 
 ## Rig-control protocols
 
-- flrig XML-RPC uses introspection where available and the documented `rig.set_ptt` and
-  `rig.get_ptt` methods.
+- M2E flrig XML-RPC is pinned to flrig 2.0.11 commit
+  `e2058cbd5bf6dc4e471d60a077a2ee65289a50a2` and uses only documented
+  `rig.set_ptt` and `rig.get_ptt` methods. Set acknowledgement is followed by mandatory
+  integer readback. See `docs/protocols/rig/flrig-xmlrpc.md`.
 - rigctld uses extended responses where practical and parses complete `RPRT` results.
-- Network endpoints default to loopback. Remote endpoints require explicit user action.
+- M2E accepts only explicit literal `127.0.0.1` or `::1` endpoints and provides no
+  enabled default. Remote flrig access is outside this slice.
 - PTT commands have request IDs/deadlines in the application layer even when the external
   protocol lacks them.
 

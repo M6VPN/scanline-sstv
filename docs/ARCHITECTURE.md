@@ -226,6 +226,23 @@ renders SSTV, reads WAV files, creates sockets, accesses serial devices, or reac
 hardware. RAII and watchdog cleanup cannot guarantee recovery from `SIGKILL`, power loss,
 kernel failure, or a provider that violates its bounded-call contract.
 
+M2E adds `FlrigPttProvider` inside `sstv::rig`. Its public configuration and results are
+dependency-free; POSIX socket, HTTP, and XML-RPC details remain private. Construction
+requires an explicit `127.0.0.1` or `::1` literal, nonzero port, and validated path.
+There is no enabled flrig endpoint default. One nonblocking TCP connection carries one
+bounded request, and the absolute `PttRequest` deadline caps connect, write, response,
+set, and readback work. The adapter accepts only HTTP/1.1 200 with Content-Length and the
+small XML-RPC scalar subset needed by `rig.set_ptt` and `rig.get_ptt`.
+
+Set acknowledgement is never treated as PTT confirmation. Key and unkey operations use
+a separate get-PTT readback and report definite certainty only for exact integer `1` or
+`0`. Lost, timed-out, malformed, or mismatched responses remain indeterminate where a
+side effect may have occurred. Before audio acquisition, the coordinator enters
+`checkingPtt`, queries the provider, and performs bounded unkey cleanup when state is
+keyed or unknown. Audio remains unopened unless definite unkeyed state is established.
+M2E tests use injected transports or a test server bound to ephemeral loopback; no
+production frontend exposes flrig configuration or transmit control.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.

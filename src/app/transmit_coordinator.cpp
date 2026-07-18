@@ -227,6 +227,25 @@ TransmitCoordinator::run(const TransmitRequest& request,
 		setState(TransmitState::faulted, context.snapshot.message);
 		return finishActive();
 	}
+	setState(TransmitState::checkingPtt, "confirming PTT is unkeyed before audio open");
+	const rig::PttOperationResult preflight = supervisor_->execute(rig::PttAction::query,
+		clock_->now() + request.policy.readbackTimeout);
+	const bool isDefinitelyUnkeyed = preflight.error == rig::PttErrorCategory::none
+		&& preflight.certainty == rig::PttCertainty::definitelyUnkeyed
+		&& preflight.observed == rig::PttObservedState::unkeyed;
+	if (!isDefinitelyUnkeyed) {
+		const rig::PttCleanupPolicy cleanup{request.policy.unkeyTimeout,
+			request.policy.unkeyAttempts, request.policy.retryDelay};
+		const rig::PttCleanupResult cleanupResult = supervisor_->unkey(cleanup, *scheduler_);
+		safetyRecord_->recordCleanup(cleanupResult, false);
+		if (cleanupResult.hasHazard) {
+			context.snapshot.error = TransmitErrorCode::unresolvedPttHazard;
+			context.snapshot.message = "PTT preflight could not confirm an unkeyed state";
+			context.snapshot.outcome = TransmitOutcome::hazardous;
+			setState(TransmitState::faulted, context.snapshot.message);
+			return finishActive();
+		}
+	}
 	std::vector<float> block(request.blockFrames);
 	auto fail = [&context, &setState](const TransmitErrorCode code, std::string message) {
 		context.hasFault = true;
@@ -309,16 +328,8 @@ TransmitCoordinator::run(const TransmitRequest& request,
 		rig::PttOperationResult key = supervisor_->execute(rig::PttAction::key,
 			clock_->now() + request.policy.keyTimeout);
 		context.lease->recordKeyResult(key);
-		bool isKeyed = key.error == rig::PttErrorCategory::none
+		const bool isKeyed = key.error == rig::PttErrorCategory::none
 			&& key.certainty == rig::PttCertainty::definitelyKeyed;
-		if (isKeyed && key.readback == rig::PttReadback::available) {
-			const rig::PttOperationResult query = supervisor_->execute(rig::PttAction::query,
-				clock_->now() + request.policy.readbackTimeout);
-			isKeyed = query.error == rig::PttErrorCategory::none
-				&& query.certainty == rig::PttCertainty::definitelyKeyed
-				&& query.readback == rig::PttReadback::available
-				&& query.observed == rig::PttObservedState::keyed;
-		}
 		if (!isKeyed) fail(TransmitErrorCode::keyFailure,
 			"PTT key was not accepted with sufficient certainty");
 	}

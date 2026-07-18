@@ -13,7 +13,22 @@ target_link_libraries(
 
 add_test(NAME scanline-sstv-core-smoke COMMAND scanline-sstv-core-smoke)
 
-if(SSTV_BUILD_AUDIO)
+if(SSTV_BUILD_AUDIO AND SSTV_BUILD_RIG)
+	add_executable(scanline-sstv-m2e-flrig-tests m2e_flrig_tests.cpp)
+	target_include_directories(
+		scanline-sstv-m2e-flrig-tests
+		PRIVATE ${PROJECT_SOURCE_DIR}/src/rig
+	)
+	target_link_libraries(
+		scanline-sstv-m2e-flrig-tests
+		PRIVATE sstv::app sstv_project_options sstv_project_warnings
+	)
+	add_test(NAME scanline-sstv-m2e-flrig-tests COMMAND scanline-sstv-m2e-flrig-tests)
+	set_tests_properties(
+		scanline-sstv-m2e-flrig-tests
+		PROPERTIES LABELS "rig-loopback;audio-concurrency" TIMEOUT 20
+	)
+
 	add_executable(scanline-sstv-m2d-transmit-tests m2d_transmit_tests.cpp)
 	target_link_libraries(
 		scanline-sstv-m2d-transmit-tests
@@ -30,6 +45,10 @@ if(SSTV_BUILD_AUDIO)
 		scanline-sstv-m2d-transmit-tests
 		PROPERTIES LABELS "audio-concurrency" TIMEOUT 20
 	)
+
+endif()
+
+if(SSTV_BUILD_AUDIO)
 
 	add_executable(
 		scanline-sstv-audio-tests

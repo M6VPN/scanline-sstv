@@ -345,6 +345,23 @@ device, render an SSTV waveform, access a socket or serial port, or key hardware
 provider that ignores its deadline is outside the in-process guarantee; `SIGKILL`, power
 loss, and kernel failure also remain unrecoverable by RAII or the watchdog.
 
+### M2E flrig loopback safety
+
+`scanline-sstv-m2e-flrig-tests` first exercises HTTP/XML-RPC request generation and
+parsing through deterministic in-memory fixtures and an injected transport. Coverage
+includes address/path rejection before transport use, exact key/unkey/query bodies,
+Content-Length framing, response fragmentation, redirects, transfer encodings, unsafe
+XML constructs, invalid PTT scalars, expired deadlines, confirmed readback, and lost key
+responses.
+
+The integration server binds only `127.0.0.1` on an ephemeral port and records every RPC.
+It drives `FlrigPttProvider` and the M2D coordinator with a finite generated source and
+mock audio endpoint. The coordinator test begins with keyed readback, confirms preflight
+unkey before audio acquisition, then verifies key and final unkey readbacks. The
+`rig-loopback` label has a bounded timeout. No test contacts an installed flrig process,
+opens physical audio, renders or plays SSTV, resolves DNS, or accesses serial/radio/PTT
+hardware.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

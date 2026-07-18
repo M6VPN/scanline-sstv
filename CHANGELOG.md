@@ -22,7 +22,9 @@ discovery. M2B adds deterministic bounded sample transport and mock/null stream 
 without an SSTV live-audio or PTT path. M2C adds explicitly armed real-device metering,
 calibration, and local loopback diagnostics without SSTV playback or PTT. M2D adds
 mock-only transmit orchestration, explicit PTT certainty, mandatory unkey cleanup, an
-RAII lease, and an independent watchdog without a real audio, radio, or PTT path. M1
+RAII lease, and an independent watchdog without a real audio, radio, or PTT path. M2E
+adds a pinned, strict, loopback-only flrig XML-RPC provider and preflight PTT verification
+without real flrig, radio, or SSTV playback access. M1
 remains incomplete pending the M3 round-trip dependency, and M2 remains incomplete.
 
 ### Added
@@ -143,8 +145,16 @@ remains incomplete pending the M3 round-trip dependency, and M2 remains incomple
 - Virtual-time fault-matrix tests covering audio readiness, watchdog gating, key
   ambiguity, readback, mandatory retries, unresolved hazards, signal gating, cancellation,
   running faults, cleanup failures, watchdog expiry, and lease destruction.
+- Evidence record for flrig 2.0.11 PTT methods, response behavior, source locations, and
+  inspected artifact hashes.
+- Bounded loopback-only flrig HTTP/XML-RPC provider with exact deadlines, mandatory
+  readback, conservative certainty mapping, injected transport tests, and an ephemeral
+  TCP mock server.
 
 ### Changed
+
+- Added a definitely-unkeyed PTT preflight before mock transmit audio acquisition and an
+  independent `SSTV_BUILD_RIG` boundary.
 
 - Completed the Scanline SSTV rename in current GUI and CMake identifiers.
 - Centralised the Qt QML module URI in the GUI build definition.
