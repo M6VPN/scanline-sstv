@@ -470,13 +470,45 @@ The next slice is separately gated, disabled-by-default hardware-in-loop and liv
 enablement. It must require explicit device, provider, endpoint, arming, and radio-safety
 controls. Direct libhamlib remains optional and out of scope for M2G.
 
+### M2H - Explicitly armed CLI live transmission
+
+Status: **complete**
+
+- Add `SSTV_ENABLE_LIVE_TX`, default OFF in every normal preset, so the CLI command is
+  absent unless a separate build explicitly includes it.
+- Add one interactive `transmit-image` path over the accepted image preparation,
+  tone-event renderer, exact AudioStream endpoint, coordinator, watchdog, and explicit
+  flrig or rigctld provider.
+- Require exact backend/device/channel selection, literal-loopback PTT configuration,
+  explicit pre/post delays, explicit -60 to -6 dBFS constant gain, three runtime arm
+  flags, and the exact foreground-TTY confirmation phrase.
+- Publish SIGINT, SIGTERM, and SIGHUP cancellation with signal-safe state only; perform
+  gating, unkeying, and teardown on the owning control thread.
+- Add separately gated manual HIL configuration that ordinary presets, CTest, CI, and
+  sanitizer runs cannot execute.
+
+Acceptance:
+
+- Complete preparation and gain/clipping validation occur before confirmation and before
+  discovery, audio adapter, provider, or socket acquisition.
+- The fresh discovery snapshot must contain exactly one non-colliding requested playback
+  identity. No default, name, index, fallback, replacement, or automatic reopen is used.
+- The M2D coordinator retains definite-unkeyed preflight, silent audio startup before
+  watchdog/key, the callback signal gate, bounded delays/drain, mandatory unkey, hazard
+  reporting, and independent audio cleanup.
+- Default-disabled and live-enabled tests cover command registration, parser/arm rules,
+  loopback policy, confirmation, exact gain samples, clipping, immutable preparation,
+  exact device selection, and all pre-existing coordinator/provider fault matrices.
+- No automated test opens physical audio, contacts a non-loopback endpoint, or keys a
+  radio. Physical HIL is documented but not performed as M2H verification.
+
 The remaining M2 roadmap includes:
 
-- Integrate miniaudio.
-- Enumerate and select Linux/BSD input/output backends and individual devices.
-- Add latency/buffer controls, channel selection, level calibration, and loopback test.
-- Implement rigctld PTT and optional direct libhamlib.
-- Implement the transmit state machine, watchdog, cancellation, and shutdown unkey guard.
+- Add a Wayland-first GUI live-TX workflow over the same application service and immutable
+  snapshots without duplicating CLI safety or orchestration logic.
+- Record opt-in physical HIL evidence for specific audio backends, radios, deviation
+  calibration, emergency unkey, disconnect, and shutdown behavior.
+- Keep optional direct libhamlib behind a later evidence and safety gate.
 
 Acceptance:
 

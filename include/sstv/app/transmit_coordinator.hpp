@@ -96,7 +96,7 @@ struct SampleSourceError {
 
 using SampleReadResult = std::variant<std::size_t, SampleSourceError>;
 
-/** Finite mock/test sample source. M2D does not provide an SSTV implementation. */
+/** Finite producer-thread sample source for injected tests or prepared transmissions. */
 class FiniteSampleSource {
 public:
 	virtual ~FiniteSampleSource() = default;

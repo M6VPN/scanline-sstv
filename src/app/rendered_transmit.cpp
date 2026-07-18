@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cstddef>
 #include <cmath>
 #include <exception>
 #include <memory>
@@ -22,16 +23,21 @@ namespace {
 class ToneEventSampleSource final : public FiniteSampleSource {
 public:
 	ToneEventSampleSource(analog::OfflineTransmission transmission,
-		const std::uint32_t sampleRate)
+		const std::uint32_t sampleRate, const float gain)
 		: transmission_(std::move(transmission)),
 		  renderer_(transmission_.events, sampleRate),
-		  facts_{sampleRate, renderer_.frameCount(), hasSignal(transmission_.events)} {}
+		  facts_{sampleRate, renderer_.frameCount(), hasSignal(transmission_.events)},
+		  gain_(gain) {}
 	[[nodiscard]] FiniteSourceFacts facts() const noexcept override { return facts_; }
 	[[nodiscard]] SampleReadResult read(
 		const std::span<float> destination) noexcept override
 	{
 		if (isCancelled_.load(std::memory_order_acquire)) return std::size_t{0};
-		return renderer_.render(destination);
+		const std::size_t rendered = renderer_.render(destination);
+		std::transform(destination.begin(), destination.begin()
+			+ static_cast<std::ptrdiff_t>(rendered), destination.begin(),
+			[this](const float sample) { return sample * gain_; });
+		return rendered;
 	}
 	[[nodiscard]] bool isExhausted() const noexcept override
 	{
@@ -52,6 +58,7 @@ private:
 	const analog::OfflineTransmission transmission_;
 	dsp::ToneRenderer renderer_;
 	FiniteSourceFacts facts_;
+	float gain_ = 1.0F;
 	std::atomic<bool> isCancelled_{false};
 };
 
@@ -212,10 +219,21 @@ private:
 FiniteSampleSourceCreateResult
 createToneEventSampleSource(analog::OfflineTransmission transmission,
 	const std::uint32_t sampleRate)
+
+{
+	return createToneEventSampleSource(std::move(transmission), sampleRate, 1.0F);
+}
+
+FiniteSampleSourceCreateResult
+createToneEventSampleSource(analog::OfflineTransmission transmission,
+	const std::uint32_t sampleRate, const float gain)
 {
 	try {
 		if (!offline::isSupportedSampleRate(sampleRate)) {
 			return SampleSourceError{"unsupported rendered source sample rate"};
+		}
+		if (!std::isfinite(gain) || gain <= 0.0F) {
+			return SampleSourceError{"rendered source gain must be finite and positive"};
 		}
 		core::Duration duration(0, 1);
 		for (const core::ToneEvent& event : transmission.events) {
@@ -223,13 +241,16 @@ createToneEventSampleSource(analog::OfflineTransmission transmission,
 				|| !std::isfinite(event.amplitude())) {
 				return SampleSourceError{"tone event contains a non-finite value"};
 			}
+			if (std::abs(event.amplitude()) * gain > 1.0F) {
+				return SampleSourceError{"rendered source gain can clip a tone event"};
+			}
 			duration = duration + event.duration();
 		}
 		if (!(duration == transmission.duration)) {
 			return SampleSourceError{"tone-event duration does not match transmission duration"};
 		}
 		auto source = std::make_unique<ToneEventSampleSource>(
-			std::move(transmission), sampleRate);
+			std::move(transmission), sampleRate, gain);
 		if (source->facts().frameCount == 0
 			|| source->facts().frameCount > maximumTransmitSourceFrames) {
 			return SampleSourceError{"rendered source frame count exceeds transmit limits"};

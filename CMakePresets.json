@@ -15,7 +15,10 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "BUILD_TESTING": "ON",
-        "SSTV_BUILD_GUI": "ON"
+        "SSTV_BUILD_GUI": "ON",
+        "SSTV_ENABLE_LIVE_TX": "OFF",
+        "SSTV_ENABLE_TX_HARDWARE_TESTS": "OFF",
+        "SSTV_ARM_TX_HARDWARE_TESTS": "OFF"
       }
     },
     {
@@ -25,6 +28,17 @@
       "binaryDir": "${sourceDir}/build/headless",
       "cacheVariables": {
         "SSTV_BUILD_GUI": "OFF"
+      }
+    },
+    {
+      "name": "live-tx-compile",
+      "displayName": "Live TX compiled with hardware tests disabled",
+      "inherits": "headless",
+      "binaryDir": "${sourceDir}/build/live-tx-compile",
+      "cacheVariables": {
+        "SSTV_ENABLE_LIVE_TX": "ON",
+        "SSTV_ENABLE_TX_HARDWARE_TESTS": "OFF",
+        "SSTV_ARM_TX_HARDWARE_TESTS": "OFF"
       }
     },
     {
@@ -87,6 +101,10 @@
       "configurePreset": "headless"
     },
     {
+      "name": "live-tx-compile",
+      "configurePreset": "live-tx-compile"
+    },
+    {
       "name": "minimal",
       "configurePreset": "minimal"
     },
@@ -118,6 +136,13 @@
     {
       "name": "headless",
       "configurePreset": "headless",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "live-tx-compile",
+      "configurePreset": "live-tx-compile",
       "output": {
         "outputOnFailure": true
       }

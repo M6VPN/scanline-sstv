@@ -7,8 +7,8 @@ through flrig or Hamlib.
 
 ## Status
 
-M1 analogue TX work remains provisionally incomplete, and the M2G rendered-audio safety
-slice is complete. M1a provides the
+M1 analogue TX work remains provisionally incomplete, and the M2H explicitly armed CLI
+live-transmit slice is complete. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
 PNG export, and offline Martin M1 image-to-WAV generation. M1C adds evidence-backed
@@ -66,8 +66,17 @@ M2G connects the canonical offline tone-event renderer to the M2D coordinator th
 exact-device M2B AudioStream adapter. Automated end-to-end tests use injected audio,
 miniaudio's null backend, mock PTT, and the existing loopback-only rig-provider suites.
 The callback has a one-way fault gate that silences and discards queued signal from the
-next callback boundary. No real device or radio endpoint is enabled, no mode advertises
-live TX, and there is still no CLI or GUI transmit action.
+next callback boundary. M2G itself enabled no real device or radio endpoint and added no
+CLI or GUI transmit action.
+
+M2H adds the first user-invocable live path as a separately compiled `transmit-image`
+command. Normal builds omit it. A live-enabled build requires an exact device and channel,
+explicit -60 to -6 dBFS software gain, an explicit literal-loopback flrig or rigctld
+endpoint, three fresh arm flags, and a foreground interactive confirmation. The command
+has no defaults or fallback and reuses the M2D safety coordinator. There is no GUI/TUI
+Transmit action, remote rig control, direct libhamlib, WAV playback, batch mode, or
+unattended bypass. Mode capability flags remain protocol metadata and do not claim
+verified physical hardware compatibility.
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -242,6 +251,26 @@ Hardware-in-loop testing is disabled by default. `SSTV_ENABLE_AUDIO_HARDWARE_TES
 does nothing audible unless `SSTV_ARM_AUDIO_HARDWARE_TESTS=ON` and explicit backend,
 playback/capture IDs, channel indices, and channel counts are also configured. CI never
 sets these values. See [the testing guide](docs/TESTING.md) for the manual checklist.
+
+Compile the live CLI path without running hardware:
+
+    cmake --preset live-tx-compile
+    cmake --build --preset live-tx-compile
+    ctest --preset live-tx-compile --output-on-failure
+
+The command syntax in that build is:
+
+    ./build/live-tx-compile/apps/cli/scanline-sstv-cli transmit-image \
+        --mode martin-m1 --input source.png \
+        --backend alsa --playback-id ID --output-channel 0 \
+        --playback-channels 2 --ptt-provider flrig \
+        --ptt-address 127.0.0.1 --ptt-port PORT --flrig-path /RPC2 \
+        --pre-key-ms 250 --post-audio-ms 250 --gain-dbfs -30 \
+        --arm-real-audio --arm-automatic-ptt --arm-live-tx
+
+This example is syntax only. Software gain is not radio deviation calibration. The command
+prepares the full immutable transmission before prompting and makes no audio or PTT
+acquisition unless the exact phrase is entered on a foreground TTY.
 
 The Qt application provides the same offline image workflow without duplicating protocol
 or image logic:

@@ -18,6 +18,9 @@ option(SSTV_BUILD_GUI "Build the Qt Quick graphical application when Qt is avail
 option(SSTV_BUILD_IMAGE "Build libvips raster image preparation support" ON)
 option(SSTV_BUILD_AUDIO "Build audio discovery, stream, and diagnostic support" ON)
 option(SSTV_BUILD_RIG "Build mock-safe rig coordination and loopback rig providers" ON)
+option(SSTV_ENABLE_LIVE_TX "Build the explicitly armed CLI live-transmit path" OFF)
+option(SSTV_ENABLE_TX_HARDWARE_TESTS "Build the manual live-TX hardware test harness" OFF)
+option(SSTV_ARM_TX_HARDWARE_TESTS "Arm the manual live-TX hardware test harness" OFF)
 option(SSTV_ENABLE_AUDIO_HARDWARE_TESTS "Enable explicitly armed audio hardware tests" OFF)
 option(SSTV_ARM_AUDIO_HARDWARE_TESTS "Arm the configured audio hardware test run" OFF)
 set(SSTV_AUDIO_HARDWARE_BACKEND "" CACHE STRING "Explicit hardware-test backend")
@@ -27,7 +30,30 @@ set(SSTV_AUDIO_HARDWARE_OUTPUT_CHANNEL "" CACHE STRING "Explicit hardware-test o
 set(SSTV_AUDIO_HARDWARE_INPUT_CHANNEL "" CACHE STRING "Explicit hardware-test input channel")
 set(SSTV_AUDIO_HARDWARE_PLAYBACK_CHANNELS "" CACHE STRING "Hardware-test playback channel count")
 set(SSTV_AUDIO_HARDWARE_CAPTURE_CHANNELS "" CACHE STRING "Hardware-test capture channel count")
+set(SSTV_TX_HARDWARE_MODE "" CACHE STRING "Manual live-TX mode")
+set(SSTV_TX_HARDWARE_INPUT "" CACHE FILEPATH "Manual live-TX source image")
+set(SSTV_TX_HARDWARE_BACKEND "" CACHE STRING "Manual live-TX audio backend")
+set(SSTV_TX_HARDWARE_PLAYBACK_ID "" CACHE STRING "Manual live-TX playback identity")
+set(SSTV_TX_HARDWARE_OUTPUT_CHANNEL "" CACHE STRING "Manual live-TX output channel")
+set(SSTV_TX_HARDWARE_PLAYBACK_CHANNELS "" CACHE STRING "Manual live-TX playback channels")
+set(SSTV_TX_HARDWARE_GAIN_DBFS "" CACHE STRING "Manual live-TX software gain")
+set(SSTV_TX_HARDWARE_PTT_PROVIDER "" CACHE STRING "Manual live-TX PTT provider")
+set(SSTV_TX_HARDWARE_PTT_ADDRESS "" CACHE STRING "Manual live-TX literal-loopback address")
+set(SSTV_TX_HARDWARE_PTT_PORT "" CACHE STRING "Manual live-TX PTT port")
+set(SSTV_TX_HARDWARE_FLRIG_PATH "" CACHE STRING "Manual live-TX flrig path")
 option(SSTV_ENABLE_WERROR "Treat compiler warnings as errors" OFF)
+
+if(SSTV_ENABLE_LIVE_TX AND (NOT SSTV_BUILD_IMAGE OR NOT SSTV_BUILD_AUDIO OR NOT SSTV_BUILD_RIG))
+	message(FATAL_ERROR
+		"SSTV_ENABLE_LIVE_TX requires SSTV_BUILD_IMAGE, SSTV_BUILD_AUDIO, and SSTV_BUILD_RIG."
+	)
+endif()
+if((SSTV_ENABLE_TX_HARDWARE_TESTS OR SSTV_ARM_TX_HARDWARE_TESTS)
+		AND NOT SSTV_ENABLE_LIVE_TX)
+	message(FATAL_ERROR
+		"Live-TX hardware-test gates require SSTV_ENABLE_LIVE_TX=ON."
+	)
+endif()
 
 add_library(sstv_project_options INTERFACE)
 target_compile_features(sstv_project_options INTERFACE cxx_std_20)
@@ -80,6 +106,51 @@ if(SSTV_BUILD_IMAGE OR SSTV_BUILD_AUDIO)
 endif()
 
 add_subdirectory(apps/cli)
+
+if(SSTV_ENABLE_TX_HARDWARE_TESTS AND SSTV_ARM_TX_HARDWARE_TESTS)
+	if(SSTV_TX_HARDWARE_MODE STREQUAL ""
+			OR SSTV_TX_HARDWARE_INPUT STREQUAL ""
+			OR SSTV_TX_HARDWARE_BACKEND STREQUAL ""
+			OR SSTV_TX_HARDWARE_PLAYBACK_ID STREQUAL ""
+			OR SSTV_TX_HARDWARE_OUTPUT_CHANNEL STREQUAL ""
+			OR SSTV_TX_HARDWARE_PLAYBACK_CHANNELS STREQUAL ""
+			OR SSTV_TX_HARDWARE_GAIN_DBFS STREQUAL ""
+			OR SSTV_TX_HARDWARE_PTT_PROVIDER STREQUAL ""
+			OR SSTV_TX_HARDWARE_PTT_ADDRESS STREQUAL ""
+			OR SSTV_TX_HARDWARE_PTT_PORT STREQUAL "")
+		message(FATAL_ERROR
+			"Armed live-TX hardware testing requires explicit image, mode, audio, "
+			"channel, gain, provider, and loopback endpoint cache values."
+		)
+	endif()
+	set(SSTV_TX_HARDWARE_FLRIG_ARGUMENTS)
+	if(SSTV_TX_HARDWARE_PTT_PROVIDER STREQUAL "flrig")
+		if(SSTV_TX_HARDWARE_FLRIG_PATH STREQUAL "")
+			message(FATAL_ERROR "Armed flrig live-TX testing requires an explicit path.")
+		endif()
+		list(APPEND SSTV_TX_HARDWARE_FLRIG_ARGUMENTS
+			--flrig-path "${SSTV_TX_HARDWARE_FLRIG_PATH}")
+	endif()
+	add_custom_target(scanline-sstv-live-tx-hardware-manual
+		COMMAND $<TARGET_FILE:scanline-sstv-cli> transmit-image
+			--mode "${SSTV_TX_HARDWARE_MODE}"
+			--input "${SSTV_TX_HARDWARE_INPUT}"
+			--backend "${SSTV_TX_HARDWARE_BACKEND}"
+			--playback-id "${SSTV_TX_HARDWARE_PLAYBACK_ID}"
+			--output-channel "${SSTV_TX_HARDWARE_OUTPUT_CHANNEL}"
+			--playback-channels "${SSTV_TX_HARDWARE_PLAYBACK_CHANNELS}"
+			--ptt-provider "${SSTV_TX_HARDWARE_PTT_PROVIDER}"
+			--ptt-address "${SSTV_TX_HARDWARE_PTT_ADDRESS}"
+			--ptt-port "${SSTV_TX_HARDWARE_PTT_PORT}"
+			${SSTV_TX_HARDWARE_FLRIG_ARGUMENTS}
+			--pre-key-ms 250 --post-audio-ms 250
+			--gain-dbfs "${SSTV_TX_HARDWARE_GAIN_DBFS}"
+			--arm-real-audio --arm-automatic-ptt --arm-live-tx
+		DEPENDS scanline-sstv-cli
+		USES_TERMINAL
+		COMMENT "Manual armed live-TX hardware test; requires interactive confirmation"
+	)
+endif()
 
 if(SSTV_BUILD_GUI)
 	if(NOT SSTV_BUILD_IMAGE)

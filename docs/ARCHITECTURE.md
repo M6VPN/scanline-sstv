@@ -282,6 +282,28 @@ completion and rigctld supplies bounded `RPRT` line completion. The shared trans
 not a public networking API, performs no DNS or fallback, and retains no connection after
 an operation.
 
+M2H adds a default-excluded CLI adapter over the existing application boundaries.
+`prepareLiveTransmit` completes bounded image preparation, immutable tone-event creation,
+exact duration/frame calculation, and constant software-gain validation before a TTY
+prompt, discovery context, audio adapter, or rig socket can exist. The gain scalar is
+`10^(dBFS/20)`, is required per invocation, and is limited to -60 through -6 dBFS. It is
+applied to rendered float samples on the producer thread without changing protocol event
+amplitudes, phase, timing, or callback behavior.
+
+After the exact confirmation phrase, the CLI constructs only the named loopback PTT
+provider, refreshes only the named real audio backend, and resolves one exact playback
+identity and channel mapping from the fresh snapshot. The unchanged coordinator performs
+PTT preflight, silent stream open/prefill/prime/start, watchdog arming, confirmed keying,
+pre-key delay, finite rendering, drain, post-audio tail, confirmed unkey, and audio close.
+There is no default device, provider, endpoint, channel, or gain and no fallback or reopen.
+
+SIGINT, SIGTERM, and SIGHUP handlers only set a `sig_atomic_t` cancellation indication.
+The owning control thread observes it and requests coordinator cancellation; signal
+gating and mandatory unkey remain outside the handler. In-process cleanup cannot protect
+against SIGKILL, power loss, OS failure, a failed local rig daemon, or physical cable and
+radio faults. M2H exposes no GUI/TUI action, remote rig endpoint, direct libhamlib path,
+or automatic PTT configuration.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.

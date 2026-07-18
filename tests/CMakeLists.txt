@@ -13,6 +13,49 @@ target_link_libraries(
 
 add_test(NAME scanline-sstv-core-smoke COMMAND scanline-sstv-core-smoke)
 
+if(NOT SSTV_ENABLE_LIVE_TX)
+	add_test(
+		NAME scanline-sstv-cli-live-tx-disabled
+		COMMAND ${CMAKE_COMMAND}
+			-DCLI=$<TARGET_FILE:scanline-sstv-cli>
+			-P ${CMAKE_CURRENT_SOURCE_DIR}/cli_live_tx_disabled_test.cmake
+	)
+endif()
+
+if(SSTV_ENABLE_LIVE_TX)
+	add_executable(scanline-sstv-m2h-live-transmit-tests
+		m2h_live_transmit_tests.cpp
+		${PROJECT_SOURCE_DIR}/apps/cli/live_tx_commands.cpp
+		${PROJECT_SOURCE_DIR}/apps/cli/live_tx_signals.cpp)
+	target_include_directories(scanline-sstv-m2h-live-transmit-tests
+		PRIVATE ${PROJECT_SOURCE_DIR}/apps/cli)
+	target_compile_definitions(scanline-sstv-m2h-live-transmit-tests
+		PRIVATE SSTV_IMAGE_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/image")
+	target_link_libraries(scanline-sstv-m2h-live-transmit-tests
+		PRIVATE sstv::app sstv::rig sstv_project_options sstv_project_warnings)
+	add_test(NAME scanline-sstv-m2h-live-transmit-tests
+		COMMAND scanline-sstv-m2h-live-transmit-tests)
+	set_tests_properties(scanline-sstv-m2h-live-transmit-tests PROPERTIES
+		LABELS "live-tx-mock;audio-concurrency" TIMEOUT 30)
+	add_executable(scanline-sstv-m2h-signal-tests m2h_signal_tests.cpp
+		${PROJECT_SOURCE_DIR}/apps/cli/live_tx_signals.cpp)
+	target_include_directories(scanline-sstv-m2h-signal-tests
+		PRIVATE ${PROJECT_SOURCE_DIR}/apps/cli)
+	target_link_libraries(scanline-sstv-m2h-signal-tests
+		PRIVATE sstv_project_options sstv_project_warnings)
+	add_test(NAME scanline-sstv-m2h-signal-tests
+		COMMAND scanline-sstv-m2h-signal-tests)
+	set_tests_properties(scanline-sstv-m2h-signal-tests PROPERTIES
+		LABELS "live-tx-mock;audio-concurrency" TIMEOUT 5)
+	add_test(NAME scanline-sstv-cli-live-tx-noninteractive
+		COMMAND ${CMAKE_COMMAND}
+			-DCLI=$<TARGET_FILE:scanline-sstv-cli>
+			-DINPUT=${CMAKE_CURRENT_SOURCE_DIR}/fixtures/image/marker.png
+			-P ${CMAKE_CURRENT_SOURCE_DIR}/cli_live_tx_noninteractive_test.cmake)
+	set_tests_properties(scanline-sstv-cli-live-tx-noninteractive PROPERTIES
+		LABELS "live-tx-mock" TIMEOUT 10)
+endif()
+
 if(SSTV_BUILD_AUDIO AND SSTV_BUILD_RIG)
 	add_executable(scanline-sstv-m2g-rendered-transmit-tests
 		m2g_rendered_transmit_tests.cpp)

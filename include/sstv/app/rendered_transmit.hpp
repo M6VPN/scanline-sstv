@@ -21,6 +21,10 @@ using FiniteSampleSourceCreateResult
 [[nodiscard]] FiniteSampleSourceCreateResult createToneEventSampleSource(
 	analog::OfflineTransmission, std::uint32_t);
 
+/** Create a bounded source with one validated constant software gain. */
+[[nodiscard]] FiniteSampleSourceCreateResult createToneEventSampleSource(
+	analog::OfflineTransmission, std::uint32_t, float);
+
 struct AudioStreamTransmitEndpointRequest {
 	audio::AudioStreamConfiguration configuration;
 	std::shared_ptr<const audio::AudioDiscoverySnapshot> discovery;

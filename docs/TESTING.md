@@ -408,6 +408,46 @@ No M2G test selects a real audio backend, contacts a non-loopback address, keys 
 or exposes a GUI/CLI transmit action. Sanitizer runs cover source bounds, ring gating,
 partial queues, coordinator cleanup, and the existing concurrency labels.
 
+### M2H explicitly armed CLI live transmission
+
+Normal presets set `SSTV_ENABLE_LIVE_TX=OFF`. The
+`scanline-sstv-cli-live-tx-disabled` test proves `transmit-image` is not registered. The
+`live-tx-compile` preset enables compilation while leaving both hardware-test gates OFF:
+
+    cmake --preset live-tx-compile
+    cmake --build --preset live-tx-compile
+    ctest --preset live-tx-compile --output-on-failure
+
+`scanline-sstv-m2h-live-transmit-tests` uses no physical device or external daemon. It
+checks duplicate/missing arms, loopback-only endpoint validation, exact TTY phrase,
+noninteractive refusal, immutable image/event preparation, exact dB scalar application,
+clipping rejection, fresh discovery generation, exact identity, collision rejection, and
+no fallback. Existing M2D, M2E, M2F, and M2G suites remain the authoritative coordinator,
+watchdog, provider fault, signal-gate race, loopback-server, and null-backend coverage.
+The focused live-enabled TSan run excludes libvips preparation because the host libvips
+runtime does not complete under TSan. Parser, gain, exact-device, and subprocess signal
+tests remain enabled there; preparation runs under normal, ASan, and UBSan builds.
+
+The manual target is generated only when all of these are explicitly configured:
+`SSTV_ENABLE_LIVE_TX=ON`, `SSTV_ENABLE_TX_HARDWARE_TESTS=ON`, and
+`SSTV_ARM_TX_HARDWARE_TESTS=ON`, plus every `SSTV_TX_HARDWARE_*` value. It is excluded
+from ordinary builds and is not registered with CTest. A user must explicitly build
+`scanline-sstv-live-tx-hardware-manual` in a foreground terminal and still type the fresh
+runtime confirmation phrase.
+
+Before manual HIL:
+
+- Use a dummy load or another recorded safe RF arrangement and the lowest practical power.
+- Disable VOX and verify a hardware PTT release method.
+- Enable the radio timeout/TOT where supported; the application does not configure it.
+- Verify the exact sound interface, output channel, and minimized initial audio gain.
+- Test flrig or rigctld PTT readback and final unkey before sending SSTV audio.
+- Verify emergency cancellation and device-removal behavior.
+- Confirm the final radio state is unkeyed.
+
+Do not run this target in CI or routine verification. SIGKILL, power loss, daemon failure,
+OS failure, and physical faults cannot be cleaned up by the process signal handler.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

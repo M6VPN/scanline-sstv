@@ -24,11 +24,27 @@ calibration, and local loopback diagnostics without SSTV playback or PTT. M2D ad
 mock-only transmit orchestration, explicit PTT certainty, mandatory unkey cleanup, an
 RAII lease, and an independent watchdog without a real audio, radio, or PTT path. M2E
 adds a pinned, strict, loopback-only flrig XML-RPC provider and preflight PTT verification
-without real flrig, radio, or SSTV playback access. M2G adds safe rendered-float source
-and exact AudioStream endpoint integration under mock/null-only transmit tests. M1
+without real flrig, radio, or SSTV playback access. M2F adds a strict loopback-only
+rigctld provider over the shared bounded TCP transport. M2G adds safe rendered-float
+source and exact AudioStream endpoint integration under mock/null-only transmit tests.
+M2H adds a default-disabled, explicitly armed, interactive CLI live-image transmit path
+using exact audio identities and literal-loopback flrig or rigctld endpoints. M1
 remains incomplete pending the M3 round-trip dependency, and M2 remains incomplete.
 
 ### Added
+
+- `SSTV_ENABLE_LIVE_TX=OFF` build exclusion plus a separate hardware-free
+  `live-tx-compile` preset.
+- Frontend-independent live preparation, constant-gain validation, and exact playback
+  identity selection over the accepted immutable editor and rendered-source services.
+- Interactive-only `transmit-image` CLI orchestration requiring three fresh arm flags,
+  an exact device/channel configuration, explicit -60 to -6 dBFS software gain, and an
+  explicit literal-loopback flrig or rigctld endpoint.
+- Signal-safe SIGINT, SIGTERM, and SIGHUP cancellation publication with control-thread
+  signal gating, mandatory unkey cleanup, and audio teardown through the existing
+  coordinator.
+- A separately gated manual live-TX hardware target requiring both hardware-test CMake
+  arms and all explicit image, audio, gain, and PTT settings.
 
 - Locked C++20, Qt Quick 6, miniaudio, liquid-dsp, FFTW3f, libvips, notcurses, flrig,
   Hamlib, HamDRM, and KG-STV architecture.

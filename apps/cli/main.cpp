@@ -11,6 +11,9 @@
 #include "image_commands.hpp"
 #include "audio_commands.hpp"
 #include "wav_commands.hpp"
+#if defined(SSTV_ENABLE_LIVE_TX)
+#include "live_tx_commands.hpp"
+#endif
 
 #include <charconv>
 #include <cstdint>
@@ -72,6 +75,9 @@ printHelp()
 	printImageCommandHelp();
 	printWavCommandHelp();
 	printAudioCommandHelp();
+#if defined(SSTV_ENABLE_LIVE_TX)
+	printLiveTransmitCommandHelp();
+#endif
 }
 
 [[nodiscard]] std::string_view
@@ -262,6 +268,11 @@ main(const int argc, char* argv[])
 	if (isAudioCommand(argument)) {
 		return runAudioCommand(argc, argv);
 	}
+#if defined(SSTV_ENABLE_LIVE_TX)
+	if (argument == "transmit-image") {
+		return runLiveTransmitCommand(argc, argv);
+	}
+#endif
 	if (argc != 2) {
 		std::cerr << "Error: unexpected extra arguments\n";
 		return 2;
