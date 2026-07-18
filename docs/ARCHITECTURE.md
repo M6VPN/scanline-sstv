@@ -331,6 +331,26 @@ builds. Qt polls that state and initiates normal window-close cancellation; the 
 does not call Qt, audio, network, coordinator, or rig APIs. SIGKILL, power loss, OS or
 daemon failure, and physical faults remain outside in-process cleanup guarantees.
 
+M2J-A adds a dependency-light HIL evidence boundary to `sstv::app`. Versioned project
+values distinguish not-run, passed, failed, inconclusive, and skipped stages, and keep
+operator observations separate from automatic measurements. Unknown negotiated facts
+remain null. Deterministic JSON and Markdown views share one validated record; atomic
+publication accepts only an explicit existing nonsymlink directory and never uploads.
+
+The stage planner assigns exact resource classes. Manifest has no resources; discovery
+cannot open audio or PTT; audio calibration cannot construct PTT; PTT-unkey cannot key or
+open audio; keyed silence cannot release SSTV; and full SSTV is the only stage permitted
+to release the accepted reference source. Configuration-digest permits are stage-specific,
+fresh, single-use, and invalidated by edits. A keyed stage cannot pass unless automatic
+readback is definitely unkeyed. An operator-observed physical release remains separate
+and cannot convert indeterminate automatic certainty into success.
+
+The old all-at-once manual CMake target is removed. The triple build gates can create only
+a stage-selected planning target that names the evidence directory and runbook; it does
+not execute a device, socket, PTT, or SSTV action. Physical execution remains M2J work.
+The live Qt model exposes immutable stage/resource metadata only, without acquiring a
+runtime provider.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.

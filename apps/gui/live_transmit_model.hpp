@@ -7,6 +7,7 @@
 #include "tx_editor_model.hpp"
 
 #include <sstv/app/live_transmit.hpp>
+#include <sstv/app/hil_evidence.hpp>
 
 #include <QObject>
 #include <QThreadPool>
@@ -20,6 +21,7 @@
 class LiveTransmitModel final : public QObject {
 	Q_OBJECT
 	Q_PROPERTY(QVariantList backends READ backends CONSTANT)
+	Q_PROPERTY(QVariantList hilStages READ hilStages CONSTANT)
 	Q_PROPERTY(QVariantList playbackDevices READ playbackDevices NOTIFY devicesChanged)
 	Q_PROPERTY(QString selectedPlaybackIdentity READ selectedPlaybackIdentity NOTIFY devicesChanged)
 	Q_PROPERTY(QString state READ state NOTIFY snapshotChanged)
@@ -42,6 +44,7 @@ public:
 		QObject* = nullptr);
 	~LiveTransmitModel() override;
 	[[nodiscard]] QVariantList backends() const;
+	[[nodiscard]] QVariantList hilStages() const;
 	[[nodiscard]] QVariantList playbackDevices() const;
 	[[nodiscard]] QString selectedPlaybackIdentity() const;
 	[[nodiscard]] QString state() const;

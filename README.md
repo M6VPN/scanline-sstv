@@ -7,8 +7,8 @@ through flrig or Hamlib.
 
 ## Status
 
-M1 analogue TX work remains provisionally incomplete, and the M2I hardware-free
-Wayland-first GUI live-transmit slice is complete. M1a provides the
+M1 analogue TX work remains provisionally incomplete. M2I is complete, and M2J-A adds a
+hardware-free staged evidence harness for later supervised physical HIL. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
 PNG export, and offline Martin M1 image-to-WAV generation. M1C adds evidence-backed
@@ -85,6 +85,12 @@ flrig or rigctld configuration, bounded delays, three fresh acknowledgements, an
 exact single-use phrase. Stop, window close, and process signals retain coordinator
 unkey cleanup. Normal builds contain no live panel. Automated tests use injected or null
 audio and loopback-only providers; M2 remains incomplete pending M2J physical HIL.
+
+M2J-A adds versioned JSON/Markdown evidence, explicit result and evidence-source states,
+stage/resource isolation, single-use configuration-bound permits, atomic local output,
+and a frozen Robot 36 reference fixture. The old all-at-once manual target is removed.
+No physical stage was run, no physical evidence is included, and overall M2 remains in
+progress. See [the M2J runbook](docs/hil/M2J_RUNBOOK.md).
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -259,6 +265,15 @@ Hardware-in-loop testing is disabled by default. `SSTV_ENABLE_AUDIO_HARDWARE_TES
 does nothing audible unless `SSTV_ARM_AUDIO_HARDWARE_TESTS=ON` and explicit backend,
 playback/capture IDs, channel indices, and channel counts are also configured. CI never
 sets these values. See [the testing guide](docs/TESTING.md) for the manual checklist.
+
+Stage 0 manifest generation is hardware-free and available in image-capable builds:
+
+    scanline-sstv-cli hil-manifest --output-dir HIL_DIRECTORY [explicit metadata]
+
+It writes versioned JSON and Markdown atomically to an existing nonsymlink directory and
+records zero resource acquisitions. Required fields and placeholder-only command shape
+are documented in [the M2J runbook](docs/hil/M2J_RUNBOOK.md). Do not store real arm values
+in a reusable command.
 
 Compile the live CLI path without running hardware:
 

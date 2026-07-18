@@ -428,12 +428,8 @@ The focused live-enabled TSan run excludes libvips preparation because the host 
 runtime does not complete under TSan. Parser, gain, exact-device, and subprocess signal
 tests remain enabled there; preparation runs under normal, ASan, and UBSan builds.
 
-The manual target is generated only when all of these are explicitly configured:
-`SSTV_ENABLE_LIVE_TX=ON`, `SSTV_ENABLE_TX_HARDWARE_TESTS=ON`, and
-`SSTV_ARM_TX_HARDWARE_TESTS=ON`, plus every `SSTV_TX_HARDWARE_*` value. It is excluded
-from ordinary builds and is not registered with CTest. A user must explicitly build
-`scanline-sstv-live-tx-hardware-manual` in a foreground terminal and still type the fresh
-runtime confirmation phrase.
+M2J-A supersedes the original all-at-once M2H manual target with the stage-selected
+planning gate described below. It remains excluded from ordinary builds and CTest.
 
 Before manual HIL:
 
@@ -481,7 +477,35 @@ Manual non-transmitting UI checks remain separate from automated acceptance:
 - Use injected device removal and verify no identity replacement or automatic reopen.
 
 Physical audio, radio, RF, deviation, real-daemon, and final native-compositor evidence
-belong to M2J. Do not run `scanline-sstv-live-tx-hardware-manual` for M2I verification.
+belong to M2J. Do not run a manual physical stage for M2I verification.
+
+### M2J-A staged HIL evidence framework
+
+`scanline-sstv-m2j-hil-tests` and `scanline-sstv-cli-hil-test` are hardware-free. They
+cover evidence states and sources, explicit unknowns, deterministic JSON/Markdown and
+SHA-256, atomic publication and overwrite refusal, nonsymlink path policy, resource
+limits, stage prerequisites, resource-class isolation, stale and single-use permits,
+unresolved hazards, and prevention of keyed-stage false success.
+
+The test fixture under `tests/fixtures/hil` is the project diagnostic pattern at Robot 36
+dimensions. Its raw RGB8 SHA-256 is
+`2ab0388b27325de68bdb3246cb4eaa043ba85bf27d65f3aebb5d0ba164cbc9d2`.
+The test encodes it through accepted offline dispatch and compares every streamed float
+sample with the existing `ToneRenderer` sample times the explicit gain. Frame count and
+source exhaustion must match exactly.
+
+The CLI Stage 0 manifest command creates no discovery, audio, PTT, or socket object. The
+live Qt model exposes stage names and resource masks only; its injected test verifies zero
+runtime-provider construction. Schema and templates live under `docs/hil`. Local records
+and optional bounded raw captures belong under ignored `hil-evidence/` paths.
+
+The former `scanline-sstv-live-tx-hardware-manual` target no longer exists. When all
+three HIL build gates are deliberately enabled, configure also requires one explicit
+stage and an existing nonsymlink evidence directory. The resulting
+`scanline-sstv-m2j-hil-manual-plan` target prints the selected plan and runbook location
+but performs no hardware operation. Do not build or execute a physical stage during
+ordinary verification. The complete later operator procedure is in
+`docs/hil/M2J_RUNBOOK.md`.
 
 ### Impairment corpus
 

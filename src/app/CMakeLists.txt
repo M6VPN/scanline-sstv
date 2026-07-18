@@ -2,7 +2,7 @@
 # scanline-sstv/src/app/CMakeLists.txt
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-set(SSTV_APP_SOURCES)
+set(SSTV_APP_SOURCES hil_evidence.cpp)
 set(SSTV_APP_PUBLIC_LIBRARIES sstv_project_options)
 if(SSTV_BUILD_IMAGE)
 	list(APPEND SSTV_APP_SOURCES offline_tx_editor.cpp)

@@ -89,6 +89,7 @@ class LiveTransmitModelTests final : public QObject {
 private slots:
 	void readinessAndConfirmationGate();
 	void editorChangeInvalidatesReadiness();
+	void hilStageModelIsResourceFree();
 };
 
 void
@@ -151,6 +152,25 @@ LiveTransmitModelTests::editorChangeInvalidatesReadiness()
 		QStringLiteral("000000"), false, 0, 0, 1, 1, 48'000, false, {});
 	QVERIFY(!model.isReady());
 	QCOMPARE(model.revision(), qulonglong(0));
+}
+
+void
+LiveTransmitModelTests::hilStageModelIsResourceFree()
+{
+	PreparedImageProvider imageProvider;
+	TxEditorModel editor(&imageProvider);
+	auto runtime = std::make_shared<ModelRuntime>();
+	LiveTransmitModel model(&editor,
+		std::make_shared<sstv::app::LiveTransmitService>(runtime));
+	const QVariantList stages = model.hilStages();
+	QCOMPARE(stages.size(), 8);
+	const QVariantMap manifest = stages.front().toMap();
+	QCOMPARE(manifest.value(QStringLiteral("id")).toString(),
+		QStringLiteral("manifest"));
+	QCOMPARE(manifest.value(QStringLiteral("resources")).toULongLong(), 0ULL);
+	QCOMPARE(runtime->discoveryCreations.load(), std::size_t(0));
+	QCOMPARE(runtime->audioCreations.load(), std::size_t(0));
+	QCOMPARE(runtime->pttCreations.load(), std::size_t(0));
 }
 
 QTEST_MAIN(LiveTransmitModelTests)

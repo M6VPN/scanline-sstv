@@ -135,6 +135,19 @@ if(SSTV_BUILD_AUDIO AND SSTV_BUILD_RIG)
 		PROPERTIES LABELS "audio-concurrency" TIMEOUT 20
 	)
 
+	add_executable(scanline-sstv-m2j-hil-tests m2j_hil_tests.cpp)
+	target_link_libraries(
+		scanline-sstv-m2j-hil-tests
+		PRIVATE sstv::app sstv_project_options sstv_project_warnings
+	)
+	target_compile_definitions(scanline-sstv-m2j-hil-tests PRIVATE
+		SSTV_HIL_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/hil")
+	add_test(NAME scanline-sstv-m2j-hil-tests COMMAND scanline-sstv-m2j-hil-tests)
+	set_tests_properties(
+		scanline-sstv-m2j-hil-tests
+		PROPERTIES LABELS "hil-hardware-free" TIMEOUT 30
+	)
+
 endif()
 
 if(SSTV_BUILD_AUDIO)
@@ -336,6 +349,14 @@ add_test(
 )
 
 if(SSTV_BUILD_IMAGE)
+	add_test(
+		NAME scanline-sstv-cli-hil-test
+		COMMAND ${CMAKE_COMMAND} -DCLI=$<TARGET_FILE:scanline-sstv-cli>
+			-P ${CMAKE_CURRENT_SOURCE_DIR}/cli_hil_test.cmake
+	)
+	set_tests_properties(scanline-sstv-cli-hil-test
+		PROPERTIES LABELS "hil-hardware-free" TIMEOUT 10)
+
 	add_executable(scanline-sstv-m1g-app-tests m1g_app_tests.cpp)
 	target_link_libraries(
 		scanline-sstv-m1g-app-tests

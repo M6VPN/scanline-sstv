@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "m2j-evidence-v1.schema.json",
+  "title": "Scanline SSTV M2J HIL evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "build", "configuration", "stages", "artifacts", "limitations", "operator_notes"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["utc_started", "utc_ended", "git_commit", "dirty_worktree", "compiler", "compiler_version", "cmake_preset", "cmake_options", "miniaudio_version", "qt_version", "operating_system", "kernel", "architecture", "redacted_host_id", "session_platform"],
+      "properties": {
+        "utc_started": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "utc_ended": {"type": ["string", "null"], "maxLength": 16384},
+        "git_commit": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "dirty_worktree": {"type": "boolean"},
+        "compiler": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "compiler_version": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "cmake_preset": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "cmake_options": {"type": "object", "additionalProperties": {"type": "string", "maxLength": 16384}},
+        "miniaudio_version": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "qt_version": {"type": ["string", "null"], "maxLength": 16384},
+        "operating_system": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "kernel": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "architecture": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "redacted_host_id": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "session_platform": {"enum": ["cli", "wayland", "xcb-xwayland", "offscreen-test"]}
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["audio_backend", "playback_identity", "identity_persistence", "identity_collision", "selected_channel", "channel_count", "negotiated_rate", "negotiated_format", "negotiated_channels", "negotiated_period_frames", "ptt_provider", "ptt_address", "ptt_port", "flrig_path", "radio_manufacturer", "radio_model", "radio_firmware", "audio_interface", "cabling", "test_arrangement", "radio_mode", "frequency", "power", "vox_state", "compressor_state", "timeout_state", "antenna_state", "sstv_mode", "fixture_sha256", "fsk_id_enabled", "duration_nanoseconds", "frame_count", "gain_dbfs", "pre_key_ms", "post_audio_ms", "instrument", "calibration_method"],
+      "properties": {
+        "audio_backend": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "playback_identity": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "identity_persistence": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "identity_collision": {"type": "boolean"},
+        "selected_channel": {"type": "integer", "minimum": 0},
+        "channel_count": {"type": "integer", "minimum": 1},
+        "negotiated_rate": {"type": ["integer", "null"], "minimum": 1},
+        "negotiated_format": {"type": ["string", "null"], "maxLength": 16384},
+        "negotiated_channels": {"type": ["integer", "null"], "minimum": 1},
+        "negotiated_period_frames": {"type": ["integer", "null"], "minimum": 1},
+        "ptt_provider": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "ptt_address": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "ptt_port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "flrig_path": {"type": ["string", "null"], "maxLength": 16384},
+        "radio_manufacturer": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "radio_model": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "radio_firmware": {"type": ["string", "null"], "maxLength": 16384},
+        "audio_interface": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "cabling": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "test_arrangement": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "radio_mode": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "frequency": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "power": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "vox_state": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "compressor_state": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "timeout_state": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "antenna_state": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "sstv_mode": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "fixture_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "fsk_id_enabled": {"type": "boolean"},
+        "duration_nanoseconds": {"type": "integer", "minimum": 0},
+        "frame_count": {"type": "integer", "minimum": 0},
+        "gain_dbfs": {"type": "number", "minimum": -60, "maximum": -6},
+        "pre_key_ms": {"type": "integer", "minimum": 0},
+        "post_audio_ms": {"type": "integer", "minimum": 0},
+        "instrument": {"type": ["string", "null"], "maxLength": 16384},
+        "calibration_method": {"type": ["string", "null"], "maxLength": 16384}
+      }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/stage"}
+    },
+    "artifacts": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/artifact"}
+    },
+    "limitations": {"type": "array", "items": {"type": "string", "maxLength": 16384}},
+    "operator_notes": {"type": ["string", "null"], "maxLength": 16384}
+  },
+  "$defs": {
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "state", "source", "started_utc", "ended_utc", "skipped_reason", "primary_error", "cleanup_errors", "final_ptt_certainty", "measurements", "operator_radio_state"],
+      "properties": {
+        "stage": {"enum": ["manifest", "discovery", "audio-calibration", "ptt-unkey", "keyed-silence", "full-sstv", "controlled-fault", "gui-compositor"]},
+        "state": {"enum": ["not-run", "passed", "failed", "inconclusive", "skipped"]},
+        "source": {"enum": ["not-measured", "operator-observed", "automatically-measured"]},
+        "started_utc": {"type": ["string", "null"], "maxLength": 16384},
+        "ended_utc": {"type": ["string", "null"], "maxLength": 16384},
+        "skipped_reason": {"type": ["string", "null"], "maxLength": 16384},
+        "primary_error": {"type": ["string", "null"], "maxLength": 16384},
+        "cleanup_errors": {"type": "array", "items": {"type": "string", "maxLength": 16384}},
+        "final_ptt_certainty": {"type": ["string", "null"], "maxLength": 16384},
+        "measurements": {"type": "object", "additionalProperties": {"type": ["string", "null"], "maxLength": 16384}},
+        "operator_radio_state": {"type": ["string", "null"], "maxLength": 16384}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sha256", "bytes", "raw_audio"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 16384},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "bytes": {"type": "integer", "minimum": 0},
+        "raw_audio": {"type": "boolean"}
+      }
+    }
+  }
+}

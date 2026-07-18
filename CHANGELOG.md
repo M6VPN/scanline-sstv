@@ -31,9 +31,19 @@ M2H adds a default-disabled, explicitly armed, interactive CLI live-image transm
 using exact audio identities and literal-loopback flrig or rigctld endpoints. M2I adds a
 default-disabled Wayland-first GUI workflow over the shared live application service,
 immutable snapshots, and the same safety coordinator. M1 remains incomplete pending the
-M3 round-trip dependency, and M2 remains incomplete pending physical M2J HIL evidence.
+M3 round-trip dependency. M2J-A adds the hardware-free staged HIL evidence framework;
+physical M2J remains not started and overall M2 remains in progress.
 
 ### Added
+
+- Versioned M2J HIL evidence values with explicit result/source states, unknowns,
+  deterministic JSON/Markdown, SHA-256, resource bounds, and atomic local publication.
+- Stage 0 through Stage 7 resource policies, prerequisite checks, configuration-digest
+  confirmation phrases, single-use permits, and unresolved-PTT hazard blocking.
+- Hardware-free `hil-manifest` CLI generation, Qt stage metadata, schema/template,
+  operator runbook, and emergency-unkey procedure.
+- Callsign-neutral Robot 36 reference fixture with frozen PNG/RGB hashes and exact
+  event/frame/sample proof through the accepted offline renderer.
 
 - `SSTV_ENABLE_LIVE_TX=OFF` build exclusion plus a separate hardware-free
   `live-tx-compile` preset.
@@ -45,8 +55,8 @@ M3 round-trip dependency, and M2 remains incomplete pending physical M2J HIL evi
 - Signal-safe SIGINT, SIGTERM, and SIGHUP cancellation publication with control-thread
   signal gating, mandatory unkey cleanup, and audio teardown through the existing
   coordinator.
-- A separately gated manual live-TX hardware target requiring both hardware-test CMake
-  arms and all explicit image, audio, gain, and PTT settings.
+- A separately gated stage-selected M2J planning target that performs no hardware action
+  and directs the operator to the runbook.
 - Qt-free `LiveTransmitService` shared by CLI and GUI for immutable preparation,
   revision-bound confirmation, exact resource construction, coordinator ownership,
   cancellation, PTT checks, and unresolved-hazard cleanup.

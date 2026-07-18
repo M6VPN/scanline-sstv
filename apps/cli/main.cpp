@@ -9,6 +9,9 @@
 #include <sstv/offline/wav_writer.hpp>
 
 #include "image_commands.hpp"
+#if defined(SSTV_BUILD_IMAGE)
+#include "hil_commands.hpp"
+#endif
 #include "audio_commands.hpp"
 #include "wav_commands.hpp"
 #if defined(SSTV_ENABLE_LIVE_TX)
@@ -73,6 +76,9 @@ printHelp()
 	       "Offline generation only. These commands do not\n"
 	       "play audio, access a sound card, control a radio, or key PTT.\n";
 	printImageCommandHelp();
+#if defined(SSTV_BUILD_IMAGE)
+	printHilCommandHelp();
+#endif
 	printWavCommandHelp();
 	printAudioCommandHelp();
 #if defined(SSTV_ENABLE_LIVE_TX)
@@ -262,6 +268,11 @@ main(const int argc, char* argv[])
 	if (isImageCommand(argument)) {
 		return runImageCommand(argc, argv);
 	}
+#if defined(SSTV_BUILD_IMAGE)
+	if (isHilCommand(argument)) {
+		return runHilCommand(argc, argv);
+	}
+#endif
 	if (isWavCommand(argument)) {
 		return runWavCommand(argc, argv);
 	}

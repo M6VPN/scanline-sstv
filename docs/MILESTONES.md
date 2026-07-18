@@ -540,6 +540,37 @@ Acceptance:
 
 Status: **not started**
 
+#### M2J-A - Staged HIL evidence harness and calibration framework
+
+Status: **complete**
+
+- Add versioned dependency-light HIL evidence values, deterministic JSON and Markdown,
+  explicit unknowns, operator/automatic evidence sources, artifact hashes, and bounded
+  atomic local publication.
+- Replace the all-at-once manual target with a stage-selected fail-closed planning target.
+  No CMake target automatically advances or executes a physical stage.
+- Define exact Stage 0 through Stage 7 resource boundaries, prerequisite ordering,
+  configuration-digest authorization, fresh single-use stage permits, and unresolved-PTT
+  hazard blocking.
+- Add a callsign-neutral 320 by 240 Robot 36 reference fixture with frozen image/pixel
+  hashes and sample-equivalence proof through the accepted offline renderer.
+- Add a schema, template, runbook, emergency-unkey procedure, redaction policy, and
+  hardware-free CLI/model tests.
+
+Acceptance:
+
+- Schema, every result state, unknown values, deterministic serialization, hashes,
+  resource limits, atomic overwrite policy, path rejection, stage order, permit isolation,
+  stale/single-use confirmation, false-success prevention, and hazard blocking pass.
+- Stage 0 manifest generation records zero resource acquisitions and CLI parser tests
+  reject duplicate, missing, malformed, and unknown options.
+- The frozen Robot 36 source event/frame projection remains accepted, and streamed float
+  samples equal the existing renderer samples times the explicit gain for every frame.
+- Default, live-enabled, GUI, and sanitizer tests remain hardware-free. No physical audio
+  device, real daemon, radio, PTT hardware, or key request is used.
+- No manual stage is marked passed and no physical evidence is claimed. Physical M2J
+  execution remains not started.
+
 - Record manually armed evidence for specific audio backend/device/radio combinations,
   deviation and level calibration, emergency unkey, disconnect, shutdown, native Wayland,
   and XCB/XWayland behavior.

@@ -104,6 +104,20 @@ LiveTransmitModel::~LiveTransmitModel()
 }
 
 QVariantList LiveTransmitModel::backends() const { return backendValues; }
+QVariantList LiveTransmitModel::hilStages() const
+{
+	QVariantList values;
+	for (std::uint32_t index = 0U; index < 8U; ++index) {
+		const auto stage = static_cast<sstv::app::HilStage>(index);
+		QVariantMap value;
+		value.insert(QStringLiteral("id"), QString::fromStdString(
+			std::string(sstv::app::hilStageName(stage))));
+		value.insert(QStringLiteral("resources"),
+			static_cast<qulonglong>(sstv::app::hilStageResources(stage).bits()));
+		values.push_back(value);
+	}
+	return values;
+}
 QVariantList LiveTransmitModel::playbackDevices() const { return playbackValues; }
 QString LiveTransmitModel::selectedPlaybackIdentity() const
 {

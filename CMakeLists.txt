@@ -41,6 +41,8 @@ set(SSTV_TX_HARDWARE_PTT_PROVIDER "" CACHE STRING "Manual live-TX PTT provider")
 set(SSTV_TX_HARDWARE_PTT_ADDRESS "" CACHE STRING "Manual live-TX literal-loopback address")
 set(SSTV_TX_HARDWARE_PTT_PORT "" CACHE STRING "Manual live-TX PTT port")
 set(SSTV_TX_HARDWARE_FLRIG_PATH "" CACHE STRING "Manual live-TX flrig path")
+set(SSTV_TX_HARDWARE_STAGE "" CACHE STRING "Explicit M2J manual HIL stage")
+set(SSTV_TX_HARDWARE_EVIDENCE_DIR "" CACHE PATH "Explicit M2J evidence directory")
 option(SSTV_ENABLE_WERROR "Treat compiler warnings as errors" OFF)
 
 if(SSTV_ENABLE_LIVE_TX AND (NOT SSTV_BUILD_IMAGE OR NOT SSTV_BUILD_AUDIO OR NOT SSTV_BUILD_RIG))
@@ -108,47 +110,28 @@ endif()
 add_subdirectory(apps/cli)
 
 if(SSTV_ENABLE_TX_HARDWARE_TESTS AND SSTV_ARM_TX_HARDWARE_TESTS)
-	if(SSTV_TX_HARDWARE_MODE STREQUAL ""
-			OR SSTV_TX_HARDWARE_INPUT STREQUAL ""
-			OR SSTV_TX_HARDWARE_BACKEND STREQUAL ""
-			OR SSTV_TX_HARDWARE_PLAYBACK_ID STREQUAL ""
-			OR SSTV_TX_HARDWARE_OUTPUT_CHANNEL STREQUAL ""
-			OR SSTV_TX_HARDWARE_PLAYBACK_CHANNELS STREQUAL ""
-			OR SSTV_TX_HARDWARE_GAIN_DBFS STREQUAL ""
-			OR SSTV_TX_HARDWARE_PTT_PROVIDER STREQUAL ""
-			OR SSTV_TX_HARDWARE_PTT_ADDRESS STREQUAL ""
-			OR SSTV_TX_HARDWARE_PTT_PORT STREQUAL "")
+	set(SSTV_M2J_HIL_STAGES manifest discovery audio-calibration ptt-unkey
+		keyed-silence full-sstv controlled-fault gui-compositor)
+	if(NOT SSTV_TX_HARDWARE_STAGE IN_LIST SSTV_M2J_HIL_STAGES)
 		message(FATAL_ERROR
-			"Armed live-TX hardware testing requires explicit image, mode, audio, "
-			"channel, gain, provider, and loopback endpoint cache values."
+			"Armed M2J HIL requires one explicit SSTV_TX_HARDWARE_STAGE."
 		)
 	endif()
-	set(SSTV_TX_HARDWARE_FLRIG_ARGUMENTS)
-	if(SSTV_TX_HARDWARE_PTT_PROVIDER STREQUAL "flrig")
-		if(SSTV_TX_HARDWARE_FLRIG_PATH STREQUAL "")
-			message(FATAL_ERROR "Armed flrig live-TX testing requires an explicit path.")
-		endif()
-		list(APPEND SSTV_TX_HARDWARE_FLRIG_ARGUMENTS
-			--flrig-path "${SSTV_TX_HARDWARE_FLRIG_PATH}")
+	if(SSTV_TX_HARDWARE_EVIDENCE_DIR STREQUAL ""
+			OR NOT IS_DIRECTORY "${SSTV_TX_HARDWARE_EVIDENCE_DIR}"
+			OR IS_SYMLINK "${SSTV_TX_HARDWARE_EVIDENCE_DIR}")
+		message(FATAL_ERROR
+			"Armed M2J HIL requires an existing nonsymlink evidence directory."
+		)
 	endif()
-	add_custom_target(scanline-sstv-live-tx-hardware-manual
-		COMMAND $<TARGET_FILE:scanline-sstv-cli> transmit-image
-			--mode "${SSTV_TX_HARDWARE_MODE}"
-			--input "${SSTV_TX_HARDWARE_INPUT}"
-			--backend "${SSTV_TX_HARDWARE_BACKEND}"
-			--playback-id "${SSTV_TX_HARDWARE_PLAYBACK_ID}"
-			--output-channel "${SSTV_TX_HARDWARE_OUTPUT_CHANNEL}"
-			--playback-channels "${SSTV_TX_HARDWARE_PLAYBACK_CHANNELS}"
-			--ptt-provider "${SSTV_TX_HARDWARE_PTT_PROVIDER}"
-			--ptt-address "${SSTV_TX_HARDWARE_PTT_ADDRESS}"
-			--ptt-port "${SSTV_TX_HARDWARE_PTT_PORT}"
-			${SSTV_TX_HARDWARE_FLRIG_ARGUMENTS}
-			--pre-key-ms 250 --post-audio-ms 250
-			--gain-dbfs "${SSTV_TX_HARDWARE_GAIN_DBFS}"
-			--arm-real-audio --arm-automatic-ptt --arm-live-tx
-		DEPENDS scanline-sstv-cli
-		USES_TERMINAL
-		COMMENT "Manual armed live-TX hardware test; requires interactive confirmation"
+	add_custom_target(scanline-sstv-m2j-hil-manual-plan
+		COMMAND ${CMAKE_COMMAND} -E echo
+			"M2J stage selected: ${SSTV_TX_HARDWARE_STAGE}"
+		COMMAND ${CMAKE_COMMAND} -E echo
+			"Evidence directory: ${SSTV_TX_HARDWARE_EVIDENCE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E echo
+			"No hardware action is automated. Follow docs/hil/M2J_RUNBOOK.md."
+		COMMENT "Validate one explicit M2J stage plan without acquiring hardware"
 	)
 endif()
 
