@@ -11,9 +11,9 @@ flowchart TD
   TUI["notcurses TUI"] --> APP
   CLI["Offline CLI"] --> APP
   APP --> CORE["SSTV core"]
-  CORE --> AUDIO["Audio adapters"]
-  CORE --> RIG["Rig adapters"]
-  CORE --> IMAGE["Image pipeline"]
+  APP --> AUDIO["Audio adapters"]
+  APP --> RIG["Rig adapters"]
+  APP --> IMAGE["Image pipeline"]
 ```
 
 The code remains a modular monolith through 1.0. A daemon/RPC split can be added later,
@@ -133,7 +133,8 @@ parsing. M1G has no audio, radio-control, or PTT dependency.
 M2A adds `sstv_audio` with alias `sstv::audio`. Its public header contains only project
 backend, direction, identity, capability, transport, diagnostic, and immutable snapshot
 values. Miniaudio and operating-system types stay in the private adapter, and
-`sstv_core`, `sstv_image`, and `sstv_app` do not link the audio target.
+`sstv_core` and `sstv_image` do not link the audio target. M2D conditionally links the
+application target to public audio value types when audio support is enabled.
 
 Discovery creates one explicit miniaudio context per requested backend. A failed backend
 does not discard another backend's devices. A provider seam makes unit tests independent
@@ -196,6 +197,35 @@ or completed result. Cancellation propagates through discovery, opening, priming
 worker loop, which then stops and closes the stream before reporting cancellation. No
 M2C type can reach SSTV encoders, radio state, rig control, or PTT.
 
+M2D adds `sstv::rig`, a frontend-independent boundary containing project-owned PTT
+actions, observed state, certainty, readback, deadline, error, provider, supervisor,
+watchdog, and lease values. Provider calls are serialized on control/watchdog workers and
+must honor injected monotonic deadlines. A failed or timed-out key is not assumed safe:
+once keying begins, only explicit definitely-unkeyed evidence clears the lease. Bounded
+unkey retries record an unresolved hazard if confirmation cannot be obtained.
+
+The application target adds a mock-only `TransmitCoordinator`. Its finite sample source
+and audio endpoint are injected interfaces; M2D supplies no concrete source, real audio
+adapter, PTT adapter, or production factory joining the two. The coordinator validates
+all bounds before resource acquisition, opens and silently prefills audio, primes it,
+arms and confirms the independent watchdog, then requests key. Signal samples remain
+gated until accepted keying and the configured pre-key delay. Cancellation or fault gates
+new signal blocks immediately and skips normal drain and tail processing.
+
+Normal completion drains bounded audio, applies the post-audio tail, unkeys, and then
+stops and closes audio. Fault cleanup independently attempts PTT unkey and audio
+stop/close even when either operation fails. An unresolved PTT hazard is retained in the
+immutable snapshot and blocks another session until explicit cleanup confirms unkeyed.
+The watchdog owns the same serialized provider lifetime, receives control-worker
+heartbeats, and requests unkey when its lease expires. It remains armed until definite
+unkey or recorded hazard. It never runs in the audio callback.
+
+M2D tests use a virtual monotonic clock, deterministic scheduler, scriptable provider,
+finite generated values, and mock endpoint. No M2D executable path opens miniaudio,
+renders SSTV, reads WAV files, creates sockets, accesses serial devices, or reaches radio
+hardware. RAII and watchdog cleanup cannot guarantee recovery from `SIGKILL`, power loss,
+kernel failure, or a provider that violates its bounded-call contract.
+
 ### Rig worker
 
 - Owns XML-RPC, TCP, or libhamlib calls.
@@ -245,16 +275,23 @@ Cancelling or faulting jumps to the unkey path; it never jumps directly to idle.
 stateDiagram-v2
   [*] --> Idle
   Idle --> Preparing: transmit request
-  Preparing --> Keying: audio primed
-  Keying --> Transmitting: PTT accepted
+  Preparing --> OpeningAudio: validated
+  OpeningAudio --> PrimingAudio: exact mock endpoint open
+  PrimingAudio --> ArmingWatchdog: silence prefilled
+  ArmingWatchdog --> Keying: watchdog confirmed
+  Keying --> PreKeyDelay: PTT accepted
+  PreKeyDelay --> Transmitting: delay complete
   Transmitting --> Draining: final sample queued
-  Draining --> Unkeying: audio drained
-  Unkeying --> Idle: PTT released
-  Preparing --> Fault: setup failure
-  Keying --> Fault: key failure
-  Transmitting --> Fault: cancel or stream fault
-  Draining --> Fault: drain fault
-  Fault --> Unkeying: mandatory cleanup
+  Draining --> PostAudioTail: audio drained
+  PostAudioTail --> Unkeying: tail complete
+  Unkeying --> Completed: definitely unkeyed
+  Completed --> Idle
+  Preparing --> Faulting: setup failure
+  Keying --> Faulting: key failure or ambiguity
+  Transmitting --> Faulting: cancel or stream fault
+  Draining --> Faulting: drain fault
+  Faulting --> Unkeying: mandatory cleanup
+  Unkeying --> Faulted: failed session or unresolved hazard
 ```
 
 Provider order is user-configurable:
@@ -264,9 +301,10 @@ Provider order is user-configurable:
 3. Direct libhamlib.
 4. Manual indication or VOX with no software PTT.
 
-An RAII transmit lease and process-level shutdown guard both request unkeying. The rig
-worker retries according to a bounded policy and presents an unresolved-PTT warning if
-confirmation is impossible.
+An RAII transmit lease and explicit coordinator shutdown both request unkeying. The rig
+supervisor retries according to a bounded policy and preserves an unresolved PTT hazard
+if confirmation is impossible. Cancellation never cancels mandatory unkey cleanup, and
+no keyed or maybe-keyed state transitions directly to idle.
 
 ## 7. Audio backends and devices
 

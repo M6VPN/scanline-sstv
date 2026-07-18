@@ -348,8 +348,43 @@ Acceptance:
 - Automated verification opens no physical device. No SSTV waveform, WAV playback,
   radio-control, VOX, or PTT path is reachable.
 
-M2D is the next intended slice: mock-only transmit orchestration and the mandatory unkey
-state machine/watchdog, before flrig or rigctld networking and before any on-air path.
+### M2D - Mock-only transmit orchestration and mandatory unkeying
+
+Status: **complete**
+
+- Add a dependency-free `sstv::rig` provider boundary with explicit key, unkey, query,
+  readback, observed state, certainty, deadline, recoverability, and typed errors.
+- Add a serialized provider supervisor, bounded mandatory-unkey retries, non-copyable
+  transmit lease, shared safety record, and independent heartbeat watchdog.
+- Add an application-layer coordinator over injected finite sample-source and mock audio
+  endpoint interfaces without a real adapter or protocol-waveform implementation.
+- Enforce the complete preparing, audio-open, prime, watchdog-arm, key, delay, finite
+  sample, drain, tail, unkey, and terminal state sequence.
+- Preserve unresolved PTT hazards across sessions and require explicit confirmed cleanup
+  before another session can start.
+
+Acceptance:
+
+- Audio is open, negotiated, silently prefilled, and primed before the watchdog is armed;
+  keying occurs only after successful watchdog arming.
+- No non-silent mock sample is queued before accepted keying and the pre-key delay.
+  Cancellation and faults gate further signal samples and cannot cancel mandatory unkey.
+- Ambiguous key results, start/source/underrun/disconnect/drain faults, shutdown, and
+  cleanup failures all attempt unkey and audio shutdown independently.
+- Definite key rejection requires no speculative unkey, while maybe-keyed paths use the
+  bounded retry policy and expose indeterminate final state as a hazard, never success.
+- Virtual-time mock tests cover exact normal transitions, readback, key ambiguity,
+  retry success, permanent hazard, watchdog-arm and expiry paths, pre-key audio failures,
+  post-key faults, cancellation, lease destruction, and second-session rejection.
+- Minimal and audio-disabled builds retain their previous boundaries. Normal builds and
+  sanitizer configurations compile the mock coordinator tests without real devices,
+  sockets, serial ports, radios, SSTV waveforms, or hardware PTT.
+
+M2E is the next intended slice: a flrig XML-RPC PTT provider tested against a loopback-only
+mock server and the proven M2D coordinator. It still cannot access a real radio or play
+SSTV audio. rigctld integration remains after flrig.
+
+The remaining M2 roadmap includes:
 
 - Integrate miniaudio.
 - Enumerate and select Linux/BSD input/output backends and individual devices.

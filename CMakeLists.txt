@@ -56,6 +56,7 @@ add_subdirectory(src/core)
 if(SSTV_BUILD_AUDIO)
 	find_package(Threads REQUIRED)
 	add_subdirectory(src/audio)
+	add_subdirectory(src/rig)
 endif()
 
 if(SSTV_BUILD_IMAGE)
@@ -69,6 +70,9 @@ if(SSTV_BUILD_IMAGE)
 		)
 	endif()
 	add_subdirectory(src/image)
+endif()
+
+if(SSTV_BUILD_IMAGE OR SSTV_BUILD_AUDIO)
 	add_subdirectory(src/app)
 endif()
 

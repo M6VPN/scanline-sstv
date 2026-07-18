@@ -7,8 +7,8 @@ through flrig or Hamlib.
 
 ## Status
 
-M1 analogue TX work remains provisionally incomplete, and M2C audio diagnostics are
-complete. M1a provides the
+M1 analogue TX work remains provisionally incomplete, and the mock-only M2D transmit
+safety foundation is complete. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
 PNG export, and offline Martin M1 image-to-WAV generation. M1C adds evidence-backed
@@ -41,6 +41,13 @@ M2C adds explicitly selected real-device diagnostics: bounded input metering, a 
 armed low-level 1 kHz interface-calibration signal, and deterministic local cable
 loopback. It never plays SSTV or WAV content. Output defaults to -30 dBFS, is limited to
 -6 dBFS, and cannot run longer than 10 seconds. M1 and M2 remain incomplete.
+
+M2D adds dependency-free PTT certainty values, a serialized injected provider boundary,
+mandatory unkey retries, an RAII transmit lease, an independent heartbeat watchdog, and
+a mock-only application coordinator. Audio must be open, silently prefilled, and primed
+before the watchdog can arm or keying can begin. Only generated test values can reach its
+injected mock endpoint, and no CLI or GUI Transmit action exists. M2D provides no real
+audio adapter, PTT provider, socket, serial access, radio path, or SSTV playback.
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -196,6 +203,15 @@ and results are not laboratory-grade frequency-response measurements. Silence, a
 peaks, missing samples, underruns, and drops are reported rather than automatically
 changing gain, periods, or channels.
 
+M2D's public PTT API is under `include/sstv/rig`; mock transmit orchestration is under
+`include/sstv/app`. A provider result distinguishes definite keyed, definite unkeyed, and
+indeterminate state. Once keying may have begun, cancellation, failure, shutdown, and
+destruction all retain mandatory unkey ownership. Failed confirmation remains a visible
+hazard and blocks another session. The watchdog uses injected monotonic time and a
+serialized provider, and it remains armed until definite unkey or a recorded hazard.
+These interfaces are test seams only in M2D and are not connected to miniaudio, offline
+SSTV encoders, CLI commands, or GUI controls.
+
 Hardware-in-loop testing is disabled by default. `SSTV_ENABLE_AUDIO_HARDWARE_TESTS=ON`
 does nothing audible unless `SSTV_ARM_AUDIO_HARDWARE_TESTS=ON` and explicit backend,
 playback/capture IDs, channel indices, and channel counts are also configured. CI never
@@ -217,8 +233,9 @@ fresh arm warning. No GUI action accesses radio control or PTT.
 - `include/sstv/core` - stable, frontend-independent public interfaces.
 - `src/core` - shared core implementation.
 - `include/sstv/image` and `src/image` - bounded libvips raster preparation.
-- `include/sstv/app` and `src/app` - frontend-independent offline editor workflow.
+- `include/sstv/app` and `src/app` - offline editor and mock transmit orchestration.
 - `include/sstv/audio` and `src/audio` - discovery, bounded rings, streams, and diagnostics.
+- `include/sstv/rig` and `src/rig` - PTT certainty, supervision, watchdog, and lease values.
 - `apps/cli` - offline and diagnostic command line.
 - `apps/gui` - Qt Quick application.
 - `docs` - architecture, milestones, protocol provenance, dependencies, and testing.

@@ -14,6 +14,23 @@ target_link_libraries(
 add_test(NAME scanline-sstv-core-smoke COMMAND scanline-sstv-core-smoke)
 
 if(SSTV_BUILD_AUDIO)
+	add_executable(scanline-sstv-m2d-transmit-tests m2d_transmit_tests.cpp)
+	target_link_libraries(
+		scanline-sstv-m2d-transmit-tests
+		PRIVATE
+			sstv::app
+			sstv_project_options
+			sstv_project_warnings
+	)
+	add_test(
+		NAME scanline-sstv-m2d-transmit-tests
+		COMMAND scanline-sstv-m2d-transmit-tests
+	)
+	set_tests_properties(
+		scanline-sstv-m2d-transmit-tests
+		PROPERTIES LABELS "audio-concurrency" TIMEOUT 20
+	)
+
 	add_executable(
 		scanline-sstv-audio-tests
 		audio_tests.cpp

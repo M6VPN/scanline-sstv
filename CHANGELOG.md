@@ -20,8 +20,10 @@ offline PCM16 RIFF/WAVE inspection. M1G adds the Wayland-first offline GUI TX ed
 mode-aware prepared-image preview. M2A adds pinned miniaudio and read-only backend/device
 discovery. M2B adds deterministic bounded sample transport and mock/null stream lifecycle
 without an SSTV live-audio or PTT path. M2C adds explicitly armed real-device metering,
-calibration, and local loopback diagnostics without SSTV playback or PTT. M1 remains
-incomplete pending the M3 round-trip dependency.
+calibration, and local loopback diagnostics without SSTV playback or PTT. M2D adds
+mock-only transmit orchestration, explicit PTT certainty, mandatory unkey cleanup, an
+RAII lease, and an independent watchdog without a real audio, radio, or PTT path. M1
+remains incomplete pending the M3 round-trip dependency, and M2 remains incomplete.
 
 ### Added
 
@@ -134,6 +136,13 @@ incomplete pending the M3 round-trip dependency.
   controls, meter, fresh output warning, negotiated results, and emergency Stop.
 - Hardware-free signal/statistics/correlation fixtures, injected arming tests, bounded
   null-backend meter/output integration, and a disabled-by-default audio hardware gate.
+- Dependency-free PTT action, observed-state, certainty, readback, deadline, error,
+  provider, serialized supervisor, safety-record, watchdog, and lease APIs.
+- Mock-only application transmit coordinator with finite generated sample and audio
+  endpoint seams, validated timing/retry bounds, immutable snapshots, and exact traces.
+- Virtual-time fault-matrix tests covering audio readiness, watchdog gating, key
+  ambiguity, readback, mandatory retries, unresolved hazards, signal gating, cancellation,
+  running faults, cleanup failures, watchdog expiry, and lease destruction.
 
 ### Changed
 
@@ -170,6 +179,8 @@ incomplete pending the M3 round-trip dependency.
 
 - Established real-time callback and fail-safe PTT invariants before radio-control code is
   introduced.
+- Enforced audio-open/prime and watchdog-arm gates before keying, signal gating until
+  accepted key plus pre-key delay, and mandatory unkey cleanup for every maybe-keyed path.
 - Image inputs fail closed for special files, URLs, disallowed loaders, animation,
   contradictory metadata, corrupt ICC profiles, unprofiled CMYK, and configured resource
   limits before any output is published.

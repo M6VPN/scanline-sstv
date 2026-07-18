@@ -315,6 +315,36 @@ VOX, verify external PTT is inactive, reduce monitor/headphone volume, connect o
 chosen output to the chosen input or dummy audio load, start at -60 dBFS, verify Stop,
 then verify device-removal cleanup. Hardware tests are never run in CI.
 
+### M2D mock transmit safety
+
+`scanline-sstv-m2d-transmit-tests` uses only injected mocks. Its source contains a short
+finite sequence of generated float values, not an analogue encoder, `ToneRenderer`, VIS,
+FSK ID, image, or WAV data. The mock endpoint records open, silent prefill, prime, start,
+queue, gate, stop, and close operations but cannot construct miniaudio or select a device.
+The scriptable PTT provider contains no network, serial, GPIO, process, or radio access.
+
+All safety timing uses an injected monotonic clock and scheduler. Tests advance virtual
+time explicitly; no state assertion depends on `sleep` or wall-clock deadlines. The
+normal trace is checked exactly from preparing through audio opening/priming, watchdog
+arming, keying, pre-key delay, finite sample release, drain, tail, unkey, completion, and
+idle. Fault cases verify the exact PTT action sequence, signal gate, unkey attempts, final
+certainty, audio stop/close attempts, outcome, and retained hazard.
+
+Coverage includes invalid policy before acquisition, audio open/prefill/prime failure,
+watchdog-arm failure, definite-unkeyed key rejection, readback confirmation, ambiguous
+key timeout, readback mismatch, bounded unkey retry success, permanent unkey failure,
+running underrun, bounded drain timeout, coordinator-stall watchdog expiry,
+disconnect/removal, source failure, start and cleanup failures, cancellation before key,
+every active coordinator phase, shutdown during opening, watchdog expiry, lease
+destruction, and second-session rejection while a hazard remains.
+The `audio-concurrency` label includes M2D so the focused TSan preset exercises provider
+serialization, shared safety snapshots, watchdog teardown, and coordinator cancellation.
+
+M2D has no CLI or GUI transmit action. The tests must not open a real or null miniaudio
+device, render an SSTV waveform, access a socket or serial port, or key hardware. A
+provider that ignores its deadline is outside the in-process guarantee; `SIGKILL`, power
+loss, and kernel failure also remain unrecoverable by RAII or the watchdog.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:
