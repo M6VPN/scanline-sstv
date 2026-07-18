@@ -145,6 +145,7 @@ struct AudioStream::CallbackState {
 	std::atomic<std::uint64_t> playbackFramesRequested{0};
 	std::atomic<std::uint64_t> playbackFramesDelivered{0};
 	std::atomic<std::uint64_t> playbackFramesZeroFilled{0};
+	std::atomic<std::uint64_t> playbackFramesDiscardedByGate{0};
 	std::atomic<std::uint64_t> underrunCallbacks{0};
 	std::atomic<std::uint64_t> underrunFrames{0};
 	std::atomic<std::uint64_t> captureFramesReceived{0};
@@ -162,6 +163,7 @@ struct AudioStream::CallbackState {
 	    static_cast<std::uint32_t>(StreamFaultReason::none)};
 	std::atomic<std::uint32_t> activeCallbacks{0};
 	std::atomic<bool> stopRequested{false};
+	std::atomic<bool> isPlaybackSignalGated{false};
 };
 
 void
@@ -438,13 +440,23 @@ AudioStream::resetRings()
 	}
 	playbackRing_.reset();
 	captureRing_.reset();
+	callbackState_->isPlaybackSignalGated.store(false, std::memory_order_release);
 	return std::nullopt;
+}
+
+void
+AudioStream::gatePlaybackSignal() noexcept
+{
+	callbackState_->isPlaybackSignalGated.store(true, std::memory_order_release);
 }
 
 std::size_t
 AudioStream::queuePlayback(const std::span<const float> samples) noexcept
 {
 	if (!callbackState_->hasPlayback) {
+		return 0;
+	}
+	if (callbackState_->isPlaybackSignalGated.load(std::memory_order_acquire)) {
 		return 0;
 	}
 	const std::size_t written = playbackRing_.push(samples);
@@ -487,6 +499,7 @@ AudioStream::statistics() const
 	    state.playbackFramesRequested.load(std::memory_order_relaxed),
 	    state.playbackFramesDelivered.load(std::memory_order_relaxed),
 	    state.playbackFramesZeroFilled.load(std::memory_order_relaxed),
+	    state.playbackFramesDiscardedByGate.load(std::memory_order_relaxed),
 	    state.underrunCallbacks.load(std::memory_order_relaxed),
 	    state.underrunFrames.load(std::memory_order_relaxed),
 	    state.captureFramesReceived.load(std::memory_order_relaxed),
@@ -502,7 +515,8 @@ AudioStream::statistics() const
 	    state.stopCount.load(std::memory_order_relaxed),
 	    state.faultCount.load(std::memory_order_relaxed),
 	    static_cast<StreamFaultReason>(state.faultReason.load(std::memory_order_relaxed)),
-	    negotiated_};
+	    negotiated_,
+	    state.isPlaybackSignalGated.load(std::memory_order_acquire)};
 }
 
 const AudioStreamConfiguration&
@@ -520,6 +534,8 @@ AudioStream::processCallback(void* const opaqueState, float* const output,
 	state.callbacksExecuted.fetch_add(1, std::memory_order_relaxed);
 	if (state.hasPlayback) {
 		state.playbackFramesRequested.fetch_add(frameCount, std::memory_order_relaxed);
+		const bool isSignalGated
+		    = state.isPlaybackSignalGated.load(std::memory_order_acquire);
 		if (output != nullptr) {
 			for (std::uint32_t frame = 0; frame < frameCount; ++frame) {
 				for (std::uint32_t channel = 0; channel < state.playbackChannels; ++channel) {
@@ -535,7 +551,8 @@ AudioStream::processCallback(void* const opaqueState, float* const output,
 			    frameCount - processed, state.playbackScratch.size());
 			const std::size_t popped = state.playbackRing->pop(
 			    std::span<float>(state.playbackScratch.data(), chunk));
-			for (std::size_t frame = 0; frame < popped; ++frame) {
+			for (std::size_t frame = 0; output != nullptr && !isSignalGated
+			     && frame < popped; ++frame) {
 				const std::size_t outputFrame = processed + frame;
 				if (state.playbackMapping == PlaybackMappingPolicy::duplicateAllChannels) {
 					for (std::uint32_t channel = 0;
@@ -548,7 +565,12 @@ AudioStream::processCallback(void* const opaqueState, float* const output,
 					    + state.selectedPlaybackChannel] = state.playbackScratch[frame];
 				}
 			}
-			delivered += popped;
+			if (isSignalGated) {
+				state.playbackFramesDiscardedByGate.fetch_add(
+				    popped, std::memory_order_relaxed);
+			} else if (output != nullptr) {
+				delivered += popped;
+			}
 			processed += static_cast<std::uint32_t>(chunk);
 			if (popped < chunk) {
 				break;
@@ -557,10 +579,13 @@ AudioStream::processCallback(void* const opaqueState, float* const output,
 		const std::uint64_t zeroFilled = frameCount - delivered;
 		state.playbackFramesDelivered.fetch_add(delivered, std::memory_order_relaxed);
 		state.playbackFramesZeroFilled.fetch_add(zeroFilled, std::memory_order_relaxed);
-		if (zeroFilled != 0) {
+		if (zeroFilled != 0 && !isSignalGated) {
 			state.underrunCallbacks.fetch_add(1, std::memory_order_relaxed);
 			state.underrunFrames.fetch_add(zeroFilled, std::memory_order_relaxed);
 			state.discontinuityGeneration.fetch_add(1, std::memory_order_relaxed);
+		}
+		if (output == nullptr && frameCount != 0) {
+			notifyCallbackFault(&state, StreamFaultReason::callbackContract);
 		}
 	}
 	if (state.hasCapture) {

@@ -226,6 +226,31 @@ renders SSTV, reads WAV files, creates sockets, accesses serial devices, or reac
 hardware. RAII and watchdog cleanup cannot guarantee recovery from `SIGKILL`, power loss,
 kernel failure, or a provider that violates its bounded-call contract.
 
+M2G adds two production application adapters without adding a frontend transmit action.
+`ToneEventSampleSource` owns an immutable copy of the canonical `OfflineTransmission`
+payload and pulls bounded float32 blocks through the accepted `ToneRenderer`. Its frame
+count comes from the same cumulative rational scheduler used by offline WAV output. It
+does not create a WAV, quantize to PCM16, resample, normalize, or render in the callback.
+
+`AudioStreamTransmitEndpoint` owns one exact playback-only M2B `AudioStream`, its selected
+device configuration, and the immutable discovery generation used to validate that
+identity. The coordinator retains each pulled source block and offset until partial or
+zero ring writes have accepted every frame. Backpressure waits remain on the producer
+thread, where cancellation, stream faults, and watchdog heartbeats are observed.
+
+The M2B callback has a one-way per-run signal gate. The control thread publishes the gate
+with a release store; each callback acquires it once at its boundary. A callback already
+in progress may complete its current bounded block, while the next callback outputs only
+silence and discards queued samples through preallocated scratch storage. Producers reject
+new playback writes after the gate is published. Only stopped `resetRings()` clears the
+gate, establishing a new detached lifecycle before signal can be accepted again.
+
+The coordinator now starts the silently prefilled stream before watchdog arming and PTT
+keying. Signal rendering begins only after confirmed keying and the pre-key delay. Source
+exhaustion is declared before bounded draining; faults gate signal before mandatory
+unkeying. The first operation failure remains primary and cleanup failures are retained as
+secondary diagnostics.
+
 M2E adds `FlrigPttProvider` inside `sstv::rig`. Its public configuration and results are
 dependency-free; POSIX socket, HTTP, and XML-RPC details remain private. Construction
 requires an explicit `127.0.0.1` or `::1` literal, nonzero port, and validated path.
@@ -293,8 +318,8 @@ must not destabilise a locked decoder.
 3. Composite template layers and convert to exact mode dimensions/colour encoding.
 4. Produce an immutable TX frame and duration/bandwidth preview.
 5. Generate a WAV or in-memory sample stream using the same encoder.
-6. Open and prime the selected output device.
-7. Request PTT, wait the configured pre-key interval, then release audio to the callback.
+6. Open, silently prefill, prime, and start the selected output device.
+7. Arm the watchdog, request PTT, wait the configured pre-key interval, then release audio.
 8. Drain the final audio and configured tail.
 9. Unkey and confirm/read back when the provider supports it.
 
@@ -309,7 +334,7 @@ stateDiagram-v2
   CheckingPtt --> Preparing: definitely unkeyed
   Preparing --> OpeningAudio: request validated
   OpeningAudio --> PrimingAudio: exact mock endpoint open
-  PrimingAudio --> ArmingWatchdog: silence prefilled
+  PrimingAudio --> ArmingWatchdog: silence prefilled and stream started
   ArmingWatchdog --> Keying: watchdog confirmed
   Keying --> PreKeyDelay: PTT accepted
   PreKeyDelay --> Transmitting: delay complete

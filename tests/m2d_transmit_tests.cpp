@@ -546,7 +546,8 @@ void
 testResourceAndWatchdogGates()
 {
 	for (const AudioFailurePoint point : {AudioFailurePoint::open,
-		AudioFailurePoint::prefill, AudioFailurePoint::prime}) {
+		AudioFailurePoint::prefill, AudioFailurePoint::prime,
+		AudioFailurePoint::start}) {
 		Harness harness;
 		const auto result = harness.coordinator->run(
 			fastRequest(), makeSource(), makeEndpoint(harness, point));
@@ -568,8 +569,8 @@ testResourceAndWatchdogGates()
 void
 testPostKeyFaultsAlwaysUnkey()
 {
-	for (const AudioFailurePoint point : {AudioFailurePoint::start,
-		AudioFailurePoint::requestStop, AudioFailurePoint::stop, AudioFailurePoint::close}) {
+	for (const AudioFailurePoint point : {AudioFailurePoint::requestStop,
+		AudioFailurePoint::stop, AudioFailurePoint::close}) {
 		Harness harness;
 		const auto result = harness.coordinator->run(
 			fastRequest(), makeSource(), makeEndpoint(harness, point));
@@ -598,6 +599,14 @@ testPostKeyFaultsAlwaysUnkey()
 	expect(sourceResult->error == sstv::app::TransmitErrorCode::sourceFailure,
 		"source failure is typed");
 	expect(sourceFailure.audio->gateCalled, "source failure gates signal");
+	Harness sourceAndCleanupFailure;
+	const auto combinedResult = sourceAndCleanupFailure.coordinator->run(
+		fastRequest(), makeSource(true),
+		makeEndpoint(sourceAndCleanupFailure, AudioFailurePoint::close));
+	expect(combinedResult->error == sstv::app::TransmitErrorCode::sourceFailure,
+		"cleanup failure replaced the primary source failure");
+	expect(!combinedResult->secondaryErrors.empty(),
+		"cleanup failure was not retained as a secondary diagnostic");
 }
 
 void
@@ -734,8 +743,10 @@ testCancellationMatrix()
 		const auto result = harness.coordinator->run(
 			fastRequest(), makeSource(), std::move(endpoint));
 		expect(result->outcome == sstv::app::TransmitOutcome::cancelled
-			&& hasState(result, sstv::app::TransmitState::preKeyDelay),
-			"pre-key cancellation unkeys before signal release");
+			&& hasState(result, sstv::app::TransmitState::primingAudio),
+			"audio-start cancellation prevents keying and signal release");
+		expect(!result->keyWasAttempted,
+			"audio-start cancellation occurs before the key request");
 		expect(!result->nonSilentAudioWasReleased, "pre-key cancellation releases no signal");
 	}
 	{

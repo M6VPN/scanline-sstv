@@ -382,6 +382,32 @@ suite in normal sanitizer and focused TSan runs. No external rigctld or flrig pr
 spawned, and no Hamlib library, serial device, physical audio device, radio, hardware PTT,
 or SSTV playback path is reachable.
 
+### M2G rendered-audio integration
+
+`scanline-sstv-m2g-rendered-transmit-tests` constructs all four accepted offline mode
+event streams with and without FSK ID, then compares every pulled float sample directly
+with `ToneRenderer`. A compact multi-event fixture repeats the comparison with pull sizes
+1, 7, 127, 480, 511, and 4096. Frame counts are exact and use the same renderer used by
+the offline WAV writer. Cancellation, mismatched duration, Nyquist rejection, and the
+coordinator maximum-frame bound are also covered.
+
+Injected AudioStream tests cover exact discovery generation and identity, negotiated
+float32/rate checks, silence prefill, partial and zero queue writes, retained offsets,
+ordered lifecycle, device removal, and one-way signal gating. The callback race permits
+only a callback already in progress to complete; every callback after the acquired gate
+boundary is silent and discards queued frames without allocation.
+
+The deterministic integration uses the production source and endpoint, a virtual
+scheduler, injected callback pumping, and mock PTT. It proves audio start precedes keying,
+all rendered frames drain exactly once, and query/key/unkey ordering is unchanged. The
+separate `scanline-sstv-m2g-null-transmit-test` opens only miniaudio's null playback
+backend for a 50 ms generated tone-event payload and uses an in-process mock PTT provider.
+The existing M2E and M2F tests remain the authoritative loopback-only rig-provider paths.
+
+No M2G test selects a real audio backend, contacts a non-loopback address, keys hardware,
+or exposes a GUI/CLI transmit action. Sanitizer runs cover source bounds, ring gating,
+partial queues, coordinator cleanup, and the existing concurrency labels.
+
 ### Impairment corpus
 
 Generated variants use recorded seeds and parameters:

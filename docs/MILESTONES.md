@@ -440,10 +440,35 @@ Acceptance:
 - M2D and M2E regressions remain unchanged. Minimal, audio-disabled, normal, GUI, and
   sanitizer builds preserve their existing boundaries.
 
-M2G is the next intended slice: adapt the accepted offline SSTV event renderer and M2B
-`AudioStream` into the M2D coordinator using only miniaudio null/mock audio and
-mock/loopback PTT providers. It will add no user-facing or real-radio transmit action.
-Direct libhamlib and real-radio enablement remain later work.
+### M2G - Safe rendered-audio integration
+
+Status: **complete**
+
+- Add a finite source over the canonical offline tone-event payload and accepted
+  continuous-phase renderer without WAV staging, PCM16 conversion, or callback rendering.
+- Add an exact-device playback-only endpoint over M2B `AudioStream`, preserving partial
+  queue offsets, bounded backpressure, negotiated format checks, and stream fault mapping.
+- Add a one-way callback-boundary signal gate that silences and discards queued signal
+  after a fault and can rearm only during a stopped ring reset.
+- Start silent audio before watchdog arming and keying, then retain the M2D pre-key delay,
+  drain, tail, mandatory unkey, hazard, and exact-provider rules.
+
+Acceptance:
+
+- Martin M1, Scottie S1, Robot 36, and PD120 with and without FSK ID produce exact
+  ToneRenderer float samples and frame counts through bounded source pulls.
+- Pull sizes from one frame through 4096 frames preserve sample order, phase, boundaries,
+  and exhaustion without duplication or omission.
+- Mock AudioStream tests cover stale identity, negotiation mismatch, partial/zero queue
+  acceptance, lifecycle order, device removal, and callback signal-gate races.
+- The deterministic coordinator path uses the production source and endpoint with mock
+  audio/PTT, and a bounded integration test opens only miniaudio's null playback backend.
+- Existing M2D, loopback flrig, and loopback rigctld fault suites retain mandatory unkey
+  behavior. No test opens real hardware or reaches a non-loopback rig endpoint.
+
+The next slice is separately gated, disabled-by-default hardware-in-loop and live-transmit
+enablement. It must require explicit device, provider, endpoint, arming, and radio-safety
+controls. Direct libhamlib remains optional and out of scope for M2G.
 
 The remaining M2 roadmap includes:
 

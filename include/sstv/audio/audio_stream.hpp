@@ -118,6 +118,7 @@ struct AudioStreamStatistics {
 	std::uint64_t playbackFramesRequested = 0;
 	std::uint64_t playbackFramesDelivered = 0;
 	std::uint64_t playbackFramesZeroFilled = 0;
+	std::uint64_t playbackFramesDiscardedByGate = 0;
 	std::uint64_t underrunCallbacks = 0;
 	std::uint64_t underrunFrames = 0;
 	std::uint64_t captureFramesReceived = 0;
@@ -135,6 +136,7 @@ struct AudioStreamStatistics {
 	std::uint64_t faultCount = 0;
 	StreamFaultReason faultReason = StreamFaultReason::none;
 	std::optional<NegotiatedStreamFacts> negotiated;
+	bool isPlaybackSignalGated = false;
 };
 
 struct AudioCallbackBinding {
@@ -176,6 +178,7 @@ public:
 	[[nodiscard]] StreamOperationResult stop();
 	[[nodiscard]] StreamOperationResult close();
 	[[nodiscard]] StreamOperationResult resetRings();
+	void gatePlaybackSignal() noexcept;
 	[[nodiscard]] std::size_t queuePlayback(std::span<const float> samples) noexcept;
 	[[nodiscard]] std::size_t readCapture(std::span<float> samples) noexcept;
 	[[nodiscard]] StreamState poll() noexcept;

@@ -140,6 +140,7 @@ public:
 	[[nodiscard]] virtual TransmitAudioResult prime() noexcept = 0;
 	[[nodiscard]] virtual TransmitAudioResult start() noexcept = 0;
 	[[nodiscard]] virtual std::size_t queue(std::span<const float> samples) noexcept = 0;
+	virtual void finishSignal() noexcept {}
 	virtual void gateSignal() noexcept = 0;
 	[[nodiscard]] virtual TransmitAudioStatus status() const noexcept = 0;
 	[[nodiscard]] virtual TransmitAudioResult requestStop() noexcept = 0;
@@ -177,6 +178,7 @@ struct TransmitSessionSnapshot {
 	TransmitOutcome outcome = TransmitOutcome::rejected;
 	TransmitErrorCode error = TransmitErrorCode::none;
 	std::string message;
+	std::vector<std::string> secondaryErrors;
 	std::uint64_t sourceFrames = 0;
 	std::uint64_t submittedFrames = 0;
 	bool keyWasAttempted = false;

@@ -24,7 +24,8 @@ calibration, and local loopback diagnostics without SSTV playback or PTT. M2D ad
 mock-only transmit orchestration, explicit PTT certainty, mandatory unkey cleanup, an
 RAII lease, and an independent watchdog without a real audio, radio, or PTT path. M2E
 adds a pinned, strict, loopback-only flrig XML-RPC provider and preflight PTT verification
-without real flrig, radio, or SSTV playback access. M1
+without real flrig, radio, or SSTV playback access. M2G adds safe rendered-float source
+and exact AudioStream endpoint integration under mock/null-only transmit tests. M1
 remains incomplete pending the M3 round-trip dependency, and M2 remains incomplete.
 
 ### Added
@@ -158,6 +159,12 @@ remains incomplete pending the M3 round-trip dependency, and M2 remains incomple
   and line-response framers.
 - Provider-neutral certainty and request-metadata conformance tests for mock, flrig, and
   rigctld providers plus an ephemeral rigctld TCP coordinator test.
+- A production finite sample source over immutable offline tone events and the accepted
+  continuous-phase renderer, with exact frame counts and no WAV or PCM16 staging.
+- An exact-device playback-only TransmitAudioEndpoint over M2B AudioStream with bounded
+  partial queue handling, negotiated format checks, drain state, and typed stream faults.
+- Deterministic rendered-source coordinator coverage plus a bounded miniaudio null-only
+  end-to-end lifecycle test using mock PTT.
 
 ### Changed
 
@@ -165,6 +172,10 @@ remains incomplete pending the M3 round-trip dependency, and M2 remains incomple
   independent `SSTV_BUILD_RIG` boundary.
 - Extended PTT operation results with provider error codes and operation IDs while
   preserving existing M2D and M2E behavior.
+- Start silently prefilled audio before watchdog arming and keying, retain cleanup errors
+  after the primary transmit fault, and mark source completion before bounded draining.
+- Added a one-way callback-boundary playback gate that discards queued signal and rearms
+  only during a stopped ring reset.
 
 - Completed the Scanline SSTV rename in current GUI and CMake identifiers.
 - Centralised the Qt QML module URI in the GUI build definition.

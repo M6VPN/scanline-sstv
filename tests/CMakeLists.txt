@@ -14,6 +14,31 @@ target_link_libraries(
 add_test(NAME scanline-sstv-core-smoke COMMAND scanline-sstv-core-smoke)
 
 if(SSTV_BUILD_AUDIO AND SSTV_BUILD_RIG)
+	add_executable(scanline-sstv-m2g-rendered-transmit-tests
+		m2g_rendered_transmit_tests.cpp)
+	target_link_libraries(
+		scanline-sstv-m2g-rendered-transmit-tests
+		PRIVATE sstv::app sstv_project_options sstv_project_warnings
+	)
+	add_test(NAME scanline-sstv-m2g-rendered-transmit-tests
+		COMMAND scanline-sstv-m2g-rendered-transmit-tests)
+	set_tests_properties(
+		scanline-sstv-m2g-rendered-transmit-tests
+		PROPERTIES LABELS "audio-concurrency" TIMEOUT 60
+	)
+	add_executable(scanline-sstv-m2g-null-transmit-test
+		m2g_null_transmit_test.cpp)
+	target_link_libraries(
+		scanline-sstv-m2g-null-transmit-test
+		PRIVATE sstv::app sstv_project_options sstv_project_warnings
+	)
+	add_test(NAME scanline-sstv-m2g-null-transmit-test
+		COMMAND scanline-sstv-m2g-null-transmit-test)
+	set_tests_properties(
+		scanline-sstv-m2g-null-transmit-test
+		PROPERTIES LABELS "audio-null" TIMEOUT 8
+	)
+
 	add_executable(scanline-sstv-m2e-flrig-tests m2e_flrig_tests.cpp)
 	target_include_directories(
 		scanline-sstv-m2e-flrig-tests

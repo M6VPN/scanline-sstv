@@ -56,6 +56,12 @@ public:
 		snapshot_.audioCloseWasAttempted = true;
 		const auto closed = endpoint_->close();
 		hasFailed_ = requested.has_value() || stopped.has_value() || closed.has_value();
+		if (requested) snapshot_.secondaryErrors.push_back(
+			"audio request-stop cleanup failed: " + requested->message);
+		if (stopped) snapshot_.secondaryErrors.push_back(
+			"audio stop cleanup failed: " + stopped->message);
+		if (closed) snapshot_.secondaryErrors.push_back(
+			"audio close cleanup failed: " + closed->message);
 		isOpen_ = false;
 	}
 	[[nodiscard]] bool hasFailed() const noexcept { return hasFailed_; }
@@ -194,7 +200,7 @@ TransmitCoordinator::run(const TransmitRequest& request,
 		publish(context);
 		return snapshot();
 	};
-	setState(TransmitState::preparing, "validating finite mock transmission");
+	setState(TransmitState::preparing, "validating finite prepared transmission");
 	if (context.source == nullptr || context.endpoint == nullptr) {
 		context.snapshot.error = TransmitErrorCode::invalidConfiguration;
 		context.snapshot.message = "source and audio endpoint are required";
@@ -248,6 +254,10 @@ TransmitCoordinator::run(const TransmitRequest& request,
 	}
 	std::vector<float> block(request.blockFrames);
 	auto fail = [&context, &setState](const TransmitErrorCode code, std::string message) {
+		if (context.hasFault) {
+			context.snapshot.secondaryErrors.push_back(std::move(message));
+			return;
+		}
 		context.hasFault = true;
 		context.snapshot.error = code;
 		context.snapshot.message = std::move(message);
@@ -284,7 +294,7 @@ TransmitCoordinator::run(const TransmitRequest& request,
 		}
 		return checkControl();
 	};
-	setState(TransmitState::openingAudio, "opening injected exact audio endpoint");
+	setState(TransmitState::openingAudio, "opening exact audio endpoint");
 	if (const auto error = context.endpoint->open()) {
 		fail(TransmitErrorCode::audioFailure, error->message);
 	} else {
@@ -293,11 +303,13 @@ TransmitCoordinator::run(const TransmitRequest& request,
 		(void)checkControl();
 	}
 	if (!context.hasFault) {
-		setState(TransmitState::primingAudio, "prefilling silence and priming audio");
+		setState(TransmitState::primingAudio, "prefilling, priming, and starting silent audio");
 		if (const auto error = context.endpoint->prefillSilence(request.prefillFrames))
 			fail(TransmitErrorCode::audioFailure, error->message);
 		else if (const auto primeError = context.endpoint->prime())
 			fail(TransmitErrorCode::audioFailure, primeError->message);
+		else if (const auto startError = context.endpoint->start())
+			fail(TransmitErrorCode::audioFailure, startError->message);
 		else
 			(void)checkControl();
 	}
@@ -322,7 +334,7 @@ TransmitCoordinator::run(const TransmitRequest& request,
 			(void)checkControl();
 	}
 	if (!context.hasFault) {
-		setState(TransmitState::keying, "requesting mock PTT key");
+		setState(TransmitState::keying, "requesting PTT key");
 		context.snapshot.keyWasAttempted = true;
 		context.lease->markKeyAttempt();
 		rig::PttOperationResult key = supervisor_->execute(rig::PttAction::key,
@@ -335,9 +347,7 @@ TransmitCoordinator::run(const TransmitRequest& request,
 	}
 	if (!context.hasFault) {
 		setState(TransmitState::preKeyDelay, "holding silence during pre-key delay");
-		if (const auto error = context.endpoint->start())
-			fail(TransmitErrorCode::audioFailure, error->message);
-		else if (!waitPhase(request.policy.preKeyDelay) && !context.hasFault)
+		if (!waitPhase(request.policy.preKeyDelay) && !context.hasFault)
 			fail(TransmitErrorCode::cancelled, "pre-key delay interrupted");
 	}
 	if (!context.hasFault) {
@@ -378,6 +388,7 @@ TransmitCoordinator::run(const TransmitRequest& request,
 					= context.snapshot.nonSilentAudioWasReleased || sourceFacts.containsNonSilence;
 			}
 		}
+		if (!context.hasFault) context.endpoint->finishSignal();
 	}
 	if (!context.hasFault) {
 		setState(TransmitState::draining, "waiting for bounded audio drain");
@@ -400,9 +411,14 @@ TransmitCoordinator::run(const TransmitRequest& request,
 		setState(TransmitState::unkeying, "performing mandatory PTT unkey cleanup");
 		const rig::PttCleanupResult cleanup = context.lease->release();
 		if (cleanup.hasHazard) {
-			context.hasFault = true;
-			context.snapshot.error = TransmitErrorCode::cleanupFailure;
-			context.snapshot.message = "PTT could not be confirmed unkeyed";
+			if (context.hasFault) {
+				context.snapshot.secondaryErrors.push_back(
+					"PTT could not be confirmed unkeyed");
+			} else {
+				context.hasFault = true;
+				context.snapshot.error = TransmitErrorCode::cleanupFailure;
+				context.snapshot.message = "PTT could not be confirmed unkeyed";
+			}
 		}
 	}
 	if (context.watchdog != nullptr) {
@@ -429,7 +445,7 @@ TransmitCoordinator::run(const TransmitRequest& request,
 		setState(TransmitState::faulted, context.snapshot.message);
 	} else {
 		context.snapshot.outcome = TransmitOutcome::completed;
-		setState(TransmitState::completed, "mock transmit orchestration completed safely");
+		setState(TransmitState::completed, "transmit orchestration completed safely");
 		setState(TransmitState::idle, "coordinator returned to idle");
 	}
 	return finishActive();

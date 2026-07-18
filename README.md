@@ -7,8 +7,8 @@ through flrig or Hamlib.
 
 ## Status
 
-M1 analogue TX work remains provisionally incomplete, and the loopback-only M2F rigctld
-safety slice is complete. M1a provides the
+M1 analogue TX work remains provisionally incomplete, and the M2G rendered-audio safety
+slice is complete. M1a provides the
 evidence-backed offline Martin M1 waveform path. M1B adds bounded native JPEG/PNG
 preparation for arbitrary source dimensions, exact-mode immutable RGB8 output, prepared
 PNG export, and offline Martin M1 image-to-WAV generation. M1C adds evidence-backed
@@ -61,6 +61,13 @@ loopback endpoints and requires `get_ptt` readback after every set. The flrig an
 providers share private bounded POSIX socket mechanics while retaining separate wire
 parsers. No rigctld process, libhamlib, serial device, real radio, CLI/GUI transmit action,
 or SSTV playback path is enabled.
+
+M2G connects the canonical offline tone-event renderer to the M2D coordinator through an
+exact-device M2B AudioStream adapter. Automated end-to-end tests use injected audio,
+miniaudio's null backend, mock PTT, and the existing loopback-only rig-provider suites.
+The callback has a one-way fault gate that silences and discards queued signal from the
+next callback boundary. No real device or radio endpoint is enabled, no mode advertises
+live TX, and there is still no CLI or GUI transmit action.
 
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
@@ -216,7 +223,7 @@ and results are not laboratory-grade frequency-response measurements. Silence, a
 peaks, missing samples, underruns, and drops are reported rather than automatically
 changing gain, periods, or channels.
 
-M2D's public PTT API is under `include/sstv/rig`; mock transmit orchestration is under
+M2D's public PTT API is under `include/sstv/rig`; transmit orchestration is under
 `include/sstv/app`. A provider result distinguishes definite keyed, definite unkeyed, and
 indeterminate state. Once keying may have begun, cancellation, failure, shutdown, and
 destruction all retain mandatory unkey ownership. Failed confirmation remains a visible
@@ -227,6 +234,9 @@ disconnected from miniaudio, offline SSTV encoders, CLI commands, and GUI contro
 M2F adds the second explicit provider through the same supervisor and coordinator, using
 only a test server bound to an ephemeral loopback port. It does not add automatic provider
 selection or a conventional rigctld endpoint.
+M2G adds the production finite tone-event source and exact AudioStream endpoint adapter to
+that application boundary. They are reachable only through tests in this slice and do not
+create a user-facing or real-radio transmit path.
 
 Hardware-in-loop testing is disabled by default. `SSTV_ENABLE_AUDIO_HARDWARE_TESTS=ON`
 does nothing audible unless `SSTV_ARM_AUDIO_HARDWARE_TESTS=ON` and explicit backend,
@@ -249,7 +259,7 @@ fresh arm warning. No GUI action accesses radio control or PTT.
 - `include/sstv/core` - stable, frontend-independent public interfaces.
 - `src/core` - shared core implementation.
 - `include/sstv/image` and `src/image` - bounded libvips raster preparation.
-- `include/sstv/app` and `src/app` - offline editor and mock transmit orchestration.
+- `include/sstv/app` and `src/app` - offline editor and safe transmit orchestration adapters.
 - `include/sstv/audio` and `src/audio` - discovery, bounded rings, streams, and diagnostics.
 - `include/sstv/rig` and `src/rig` - PTT safety plus bounded loopback flrig and rigctld providers.
 - `apps/cli` - offline and diagnostic command line.

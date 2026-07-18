@@ -400,6 +400,53 @@ testLifecycleAndFaults()
 }
 
 void
+testPlaybackSignalGate()
+{
+	AudioStreamConfiguration configuration = makeConfiguration(StreamDirection::playback);
+	configuration.playbackPrefillFrames = 0;
+	auto mock = makeMockState(configuration);
+	auto stream = makeStream(configuration, mock);
+	openPrimeStart(*stream, makeSnapshot(true, false), {});
+	require(stream->queuePlayback(std::vector<float>{0.5F, -0.5F, 0.25F, -0.25F}) == 4,
+	    "signal-gate fixture queue failed");
+	mock->pump(2);
+	require(mock->output == std::vector<float>({0.0F, 0.5F, 0.0F, -0.5F}),
+	    "pre-gate playback changed samples");
+	stream->gatePlaybackSignal();
+	require(stream->queuePlayback(std::vector<float>{1.0F}) == 0,
+	    "gated stream accepted new signal data");
+	mock->pump(2);
+	require(mock->output == std::vector<float>(4, 0.0F),
+	    "queued signal escaped after the callback observed the gate");
+	AudioStreamStatistics statistics = stream->statistics();
+	require(statistics.isPlaybackSignalGated
+	    && statistics.playbackFramesDiscardedByGate == 2,
+	    "signal gate state or discarded-frame count is incorrect");
+	require(!stream->stop(), "gated stream stop failed");
+	require(!stream->resetRings(), "stopped gate reset failed");
+	require(!stream->statistics().isPlaybackSignalGated,
+	    "stopped ring reset did not rearm the signal path");
+	require(stream->queuePlayback(std::vector<float>{0.75F}) == 1,
+	    "rearmed stopped stream rejected playback");
+	require(!stream->close(), "gated stream close failed");
+
+	configuration = makeConfiguration(StreamDirection::playback);
+	configuration.playbackPrefillFrames = 0;
+	mock = makeMockState(configuration);
+	stream = makeStream(configuration, mock);
+	openPrimeStart(*stream, makeSnapshot(true, false), {});
+	require(stream->queuePlayback(std::vector<float>{0.5F, 0.5F, 0.5F}) == 3,
+	    "callback-race fixture queue failed");
+	std::thread callback([&mock] { mock->pump(1); });
+	stream->gatePlaybackSignal();
+	callback.join();
+	mock->pump(2);
+	require(mock->output == std::vector<float>(4, 0.0F),
+	    "signal escaped after the gate/callback race boundary");
+	require(!stream->close(), "callback-race stream close failed");
+}
+
+void
 testCancellationIdentityAndFailures()
 {
 	AudioStreamConfiguration configuration = makeConfiguration(StreamDirection::playback);
@@ -492,6 +539,7 @@ main()
 	testRingBasics();
 	testRingThreads();
 	testPlaybackAndCaptureCallbacks();
+	testPlaybackSignalGate();
 	testLifecycleAndFaults();
 	testCancellationIdentityAndFailures();
 	return 0;
