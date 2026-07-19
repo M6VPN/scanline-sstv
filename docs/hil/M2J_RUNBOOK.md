@@ -33,13 +33,29 @@ with CTest.
 
 ## Stage 0
 
-M2J-B1 adds executable read-only stages. Stage 1 is invoked with
+M2J-B1/B2 adds executable read-only stages. Stage 1 is invoked with
 `scanline-sstv-cli hil-stage --stage discovery --evidence-dir DIR --backend BACKEND`
 and explicit `--playback-id`, manifest `--digest`, and a fresh
-`AUTHORIZE M2J discovery DIGEST` confirmation. It refreshes one backend, compares only
-the exact native identity, and never initializes or opens an audio endpoint. Stage 3 is
-available to the injected provider harness only; real flrig/rigctld execution remains
-pending human confirmation.
+`AUTHORIZE M2J discovery DIGEST` confirmation typed at the foreground prompt. It refreshes
+one backend, compares only the exact native identity, records enumeration facts separately
+from negotiated facts, and never initializes or opens an audio endpoint. Stage 3 is a
+separately build-gated flrig query/unkey-only command; it requires the Stage 1 result,
+daemon version, literal loopback endpoint, and a fresh
+`AUTHORIZE M2J ptt-unkey DIGEST` prompt. It never sends a key request.
+
+For the current G90 session the operator command is:
+
+    scanline-sstv-cli hil-stage --stage discovery \
+      --evidence-dir hil-evidence/g90-b2 --backend pulseaudio \
+      --playback-id pulseaudio:playback:616c73615f6f75747075742e7573622d432d4d656469615f456c656374726f6e6963735f496e632e5f5553425f417564696f5f4465766963652d30302e616e616c6f672d73746572656f \
+      --digest 2a67af7707ab7d5769f5dd6efae8ff9dbaccf6f063edaf4590f64e58ed120648
+
+The exact prompt phrase is `AUTHORIZE M2J discovery
+2a67af7707ab7d5769f5dd6efae8ff9dbaccf6f063edaf4590f64e58ed120648`. After completion,
+verify the JSON `discovery` object is `passed`, its measurements identify the exact
+identity and `negotiated_facts` is `not-measured`, and the Markdown row agrees. The
+discovery service only enumerates; its existing provider instrumentation and the absence
+of an AudioStream/device initialization prove no endpoint was opened.
 
 Use `scanline-sstv-cli hil-manifest` with the explicit metadata options shown by
 `--help`. Supply placeholders only when testing the schema. For a real session, replace
@@ -80,6 +96,13 @@ Before any keyed stage affirm and record:
 The application does not configure frequency, power, VOX, compression, or TOT.
 
 ## Calibration
+
+Before Stage 2, the operator must supply which playback channel (0 or 1) feeds the G90
+AUX input, current PipeWire/PulseAudio mute and volume state, the radio AUX input level,
+whether hardware attenuation is present, the cable-loopback or measurement arrangement,
+and the monitoring equipment. Stage 2 starts at `-60 dBFS`. The native PulseAudio S16
+format is an enumeration fact; later evidence records the negotiated float application
+format and backend conversion separately.
 
 Begin at the lowest permitted explicit software level. Record M2C peak, RMS, DC,
 clipping, underruns, gain, polarity, latency, correlation, and discontinuities without

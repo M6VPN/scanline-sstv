@@ -13,6 +13,10 @@ path constrained to injected and loopback tests. Linux discovery may attach auth
 USB metadata without changing native audio identities. Physical G90/flrig readiness
 remains pending human confirmation.
 
+M2J-B2 records native Stage 1 discovery facts atomically, retains unknown PulseAudio USB
+transport when no authoritative API-to-sysfs association exists, and adds a separately
+build-gated real flrig query/unkey-only Stage 3 path. Physical execution remains pending.
+
 M1a adds the first evidence-backed offline analogue waveform slice. M1B adds safe offline
 raster preparation and Martin M1 image-to-WAV generation. M1C adds evidence-backed
 Scottie S1 offline test-pattern and image-to-WAV generation through shared analogue

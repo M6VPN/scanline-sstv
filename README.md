@@ -96,6 +96,10 @@ M2J-B1 adds the digest-bound `hil-stage discovery` command and keeps PTT readine
 restricted to injected or loopback providers. It does not select a device or run a
 physical stage.
 
+M2J-B2 adds atomic native-fact recording for the manually confirmed Stage 1 discovery
+and a real-flrig Stage 3 query/unkey-only path behind all live/HIL build gates. It does
+not open audio, key PTT, or contact the installed flrig during automated verification.
+
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
 

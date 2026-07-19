@@ -481,6 +481,14 @@ belong to M2J. Do not run a manual physical stage for M2I verification.
 
 ### M2J-A staged HIL evidence framework
 
+M2J-B1/B2 hardware-free coverage also exercises `hil-stage` prerequisite, digest, and
+single-use confirmation rejection, exact one-backend identity matching, persistent versus
+session-only identity handling, and Linux USB metadata enrichment. Stage 1 publication is
+tested through injected discovery and records native enumeration facts separately from
+negotiated stream facts. The real Stage 3 command is compile-gated by live TX, hardware
+test, and hardware arm options; tests use only the existing mock and ephemeral-loopback
+flrig providers and assert that no key action is reachable.
+
 `scanline-sstv-m2j-hil-tests` and `scanline-sstv-cli-hil-test` are hardware-free. They
 cover evidence states and sources, explicit unknowns, deterministic JSON/Markdown and
 SHA-256, atomic publication and overwrite refusal, nonsymlink path policy, resource

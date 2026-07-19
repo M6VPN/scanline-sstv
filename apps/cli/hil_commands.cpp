@@ -23,6 +23,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <unistd.h>
 
 namespace {
 
@@ -31,7 +32,7 @@ using OptionMap = std::map<std::string, std::string>;
 [[nodiscard]] bool
 isKnownValueOption(const std::string_view argument) noexcept
 {
-	constexpr std::array<std::string_view, 48> names{
+	constexpr std::array<std::string_view, 49> names{
 		"--stage", "--evidence-dir", "--digest", "--confirm",
 		"--output-dir", "--utc-start", "--git-commit", "--compiler",
 		"--compiler-version", "--preset", "--cmake-options", "--worktree",
@@ -43,7 +44,8 @@ isKnownValueOption(const std::string_view argument) noexcept
 		"--radio-mode", "--frequency", "--power", "--vox", "--compressor",
 		"--tot", "--antenna", "--mode", "--fixture-sha256", "--flrig-path",
 		"--qt-version", "--radio-firmware", "--instrument",
-		"--calibration-method", "--identity-collision", "--fsk-id-enabled"};
+		"--calibration-method", "--identity-collision", "--fsk-id-enabled",
+		"--flrig-version"};
 	constexpr std::array<std::string_view, 5> numericNames{
 		"--duration-ns", "--frame-count", "--gain-dbfs", "--pre-key-ms",
 		"--post-audio-ms"};
@@ -166,8 +168,11 @@ makeManifest(const OptionMap& options)
 	configuration.selectedChannel = parseInteger<std::uint32_t>(options, "--channel");
 	configuration.channelCount = parseInteger<std::uint32_t>(options, "--channels");
 	configuration.pttProvider = requireOption(options, "--ptt-provider");
+	configuration.pttProviderVersion = optionalOption(options, "--flrig-version");
 	configuration.pttAddress = requireOption(options, "--ptt-address");
-	configuration.pttPort = parseInteger<std::uint16_t>(options, "--ptt-port");
+	if (options.contains("--ptt-port")) {
+		configuration.pttPort = parseInteger<std::uint16_t>(options, "--ptt-port");
+	}
 	configuration.flrigPath = optionalOption(options, "--flrig-path");
 	configuration.radioManufacturer = requireOption(options, "--radio-manufacturer");
 	configuration.radioModel = requireOption(options, "--radio-model");
@@ -233,14 +238,40 @@ printHilCommandHelp()
 		   "  scanline-sstv-cli hil-manifest --output-dir DIR [metadata options]\n"
 		   "  scanline-sstv-cli hil-stage --stage discovery --evidence-dir DIR\n"
 		   "      --backend BACKEND --playback-id ID --digest SHA256\n"
-		   "      --confirm 'AUTHORIZE M2J discovery SHA256'\n"
-		   "  scanline-sstv-cli hil-stage --stage ptt-unkey ...\n"
+		   "      (type the confirmation phrase at the interactive prompt)\n"
+		   "  scanline-sstv-cli hil-stage --stage ptt-unkey --evidence-dir DIR\n"
+		   "      --ptt-provider flrig --ptt-address 127.0.0.1 --ptt-port PORT\n"
+		   "      --flrig-path PATH --flrig-version VERSION --digest SHA256\n"
 		   "\n"
 		   "This hardware-free Stage 0 command creates no discovery, audio, PTT, or\n"
 		   "socket resource. Required groups: build/UTC/worktree, OS/session, exact\n"
 		   "audio identity/collision/channel, literal-loopback PTT, operator radio and\n"
 		   "safety observations, fixture/hash/timing/gain, and explicit output dir.\n"
 		   "See docs/hil/M2J_RUNBOOK.md and M2J_EVIDENCE_TEMPLATE.md.\n";
+}
+
+[[nodiscard]] bool
+confirmInteractive(const sstv::app::HilStage stage, const std::string_view digest)
+{
+	if (!::isatty(STDIN_FILENO)) {
+		throw std::invalid_argument("a foreground interactive terminal is required");
+	}
+	const std::string phrase = sstv::app::hilStageConfirmationPhrase(stage, digest);
+	std::cout << "Type exactly: " << phrase << "\n> " << std::flush;
+	std::string entered;
+	if (!std::getline(std::cin, entered) || entered != phrase) {
+		throw std::invalid_argument("confirmation phrase was rejected");
+	}
+	sstv::app::HilStageAuthorizer authorizer;
+	const auto permit = authorizer.authorize(stage, digest, entered, true);
+	if (const auto* error = std::get_if<sstv::app::HilError>(&permit)) {
+		throw std::invalid_argument(error->message);
+	}
+	if (const auto error = authorizer.consume(std::get<sstv::app::HilStagePermit>(permit),
+		stage, digest)) {
+		throw std::invalid_argument(error->message);
+	}
+	return true;
 }
 
 [[nodiscard]] std::string
@@ -284,6 +315,15 @@ runHilStage(const int argc, char* argv[])
 	if (json.find("\"stage\":\"manifest\",\"state\":\"passed\"") == std::string::npos) {
 		throw std::invalid_argument("a passed Stage 0 manifest is required");
 	}
+	if (json.find("\"stage\":\"" + stage + "\",\"state\":\"passed\"")
+			!= std::string::npos) {
+		throw std::invalid_argument("this HIL stage has already passed");
+	}
+	if (stage == "ptt-unkey"
+			&& json.find("\"stage\":\"discovery\",\"state\":\"passed\"")
+			== std::string::npos) {
+		throw std::invalid_argument("Stage 1 discovery must pass before Stage 3");
+	}
 	const std::string digest = requireOption(options, "--digest");
 	if (digest.size() != 64U || digest.find_first_not_of("0123456789abcdefABCDEF") != std::string::npos) {
 		throw std::invalid_argument("invalid configuration digest");
@@ -291,17 +331,21 @@ runHilStage(const int argc, char* argv[])
 	if (jsonString(json, "configuration_digest") != digest) {
 		throw std::invalid_argument("configuration digest does not match the evidence session");
 	}
-	const std::string confirmation = requireOption(options, "--confirm");
-	if (confirmation != sstv::app::hilStageConfirmationPhrase(
-		stage == "discovery" ? sstv::app::HilStage::discovery : sstv::app::HilStage::pttUnkey,
-		digest)) {
-		throw std::invalid_argument("confirmation phrase does not match the digest");
-	}
+	const sstv::app::HilStage requestedStage = stage == "discovery"
+		? sstv::app::HilStage::discovery : sstv::app::HilStage::pttUnkey;
+	(void)confirmInteractive(requestedStage, digest);
 	if (stage == "ptt-unkey") {
-#if !defined(SSTV_BUILD_AUDIO) || !defined(SSTV_BUILD_RIG)
+#if !defined(SSTV_ENABLE_LIVE_TX) || !defined(SSTV_ENABLE_TX_HARDWARE_TESTS) \
+		|| !defined(SSTV_ARM_TX_HARDWARE_TESTS)
 		throw std::runtime_error("Stage 3 is unavailable in this audio/rig-disabled build");
 #else
 		const std::string providerName = requireOption(options, "--ptt-provider");
+		if (providerName != "flrig") throw std::invalid_argument("Stage 3 requires flrig");
+		const std::string flrigVersion = requireOption(options, "--flrig-version");
+		if (json.find("\"ptt_provider_version\":\"" + flrigVersion + "\"")
+				== std::string::npos) {
+			throw std::invalid_argument("flrig version does not match the evidence session");
+		}
 		const std::string address = requireOption(options, "--ptt-address");
 		const auto port = parseInteger<std::uint16_t>(options, "--ptt-port");
 		const auto clock = sstv::rig::createSteadyMonotonicClock();
@@ -313,50 +357,107 @@ runHilStage(const int argc, char* argv[])
 				throw std::invalid_argument(error->message);
 			provider = std::make_shared<sstv::rig::FlrigPttProvider>(configuration, clock,
 				sstv::rig::createFlrigPosixTransport(configuration, clock));
-		} else if (providerName == "rigctld") {
-			sstv::rig::RigctldConfiguration configuration{address, port};
-			if (const auto error = sstv::rig::validateRigctldConfiguration(configuration))
-				throw std::invalid_argument(error->message);
-			provider = std::make_shared<sstv::rig::RigctldPttProvider>(configuration, clock,
-				sstv::rig::createRigctldPosixTransport(configuration, clock));
-		} else {
-			throw std::invalid_argument("unsupported PTT provider");
 		}
 		const sstv::rig::PttOperationResult query = provider->execute({
 			sstv::rig::PttAction::query, clock->now() + std::chrono::seconds(2), 1, 1});
 		std::cout << "Stage 3 query: " << (query.certainty == sstv::rig::PttCertainty::definitelyUnkeyed
 			? "definitely-unkeyed" : "not-definitely-unkeyed") << '\n';
-		if (query.certainty == sstv::rig::PttCertainty::definitelyUnkeyed) return 0;
-		const sstv::rig::PttOperationResult unkey = provider->execute({
-			sstv::rig::PttAction::unkey, clock->now() + std::chrono::seconds(2), 1, 2});
-		if (unkey.certainty != sstv::rig::PttCertainty::definitelyUnkeyed)
+		const auto measurements = std::map<std::string, std::optional<std::string>>{
+			{"provider", providerName}, {"provider_version", flrigVersion},
+			{"operation", "query-unkey-query"},
+			{"query_certainty", query.certainty == sstv::rig::PttCertainty::definitelyKeyed
+				? "definitely-keyed" : query.certainty == sstv::rig::PttCertainty::definitelyUnkeyed
+					? "definitely-unkeyed" : "indeterminate"}};
+		if (query.certainty == sstv::rig::PttCertainty::definitelyUnkeyed) {
+			const auto publication = sstv::app::publishHilStageResult(directory,
+				sstv::app::HilStage::pttUnkey, sstv::app::HilResultState::passed,
+				sstv::app::HilEvidenceSource::automaticallyMeasured, measurements,
+				std::nullopt, "definitely-unkeyed");
+			if (std::holds_alternative<sstv::app::HilError>(publication))
+				throw std::runtime_error(std::get<sstv::app::HilError>(publication).message);
+			std::cout << "Stage 3 passed: definitely-unkeyed (query only)\n";
+			return 0;
+		}
+		const auto scheduler = sstv::rig::createSteadyMonotonicScheduler(clock);
+		sstv::rig::PttSupervisor supervisor(provider, clock);
+		const sstv::rig::PttCleanupResult cleanup = supervisor.unkey(
+			{std::chrono::milliseconds(500), 3U, std::chrono::milliseconds(100)}, *scheduler);
+		if (cleanup.certainty != sstv::rig::PttCertainty::definitelyUnkeyed)
 			throw std::runtime_error("PTT state remains unresolved; later stages are blocked");
+		const auto publication = sstv::app::publishHilStageResult(directory,
+			sstv::app::HilStage::pttUnkey, sstv::app::HilResultState::passed,
+			sstv::app::HilEvidenceSource::automaticallyMeasured, measurements,
+			std::nullopt, "definitely-unkeyed");
+		if (std::holds_alternative<sstv::app::HilError>(publication))
+			throw std::runtime_error(std::get<sstv::app::HilError>(publication).message);
 		return 0;
 #endif
 	}
+	const auto failDiscovery = [&](const std::string& message) -> void {
+		const auto publication = sstv::app::publishHilStageResult(directory,
+			sstv::app::HilStage::discovery, sstv::app::HilResultState::failed,
+			sstv::app::HilEvidenceSource::automaticallyMeasured, {}, message);
+		if (std::holds_alternative<sstv::app::HilError>(publication))
+			throw std::runtime_error(std::get<sstv::app::HilError>(publication).message);
+		throw std::runtime_error(message);
+	};
 	const auto backend = sstv::audio::parseAudioBackend(requireOption(options, "--backend"));
-	if (!backend) throw std::invalid_argument("unknown audio backend");
+	if (!backend) failDiscovery("unknown audio backend");
 	const std::string requestedIdentity = requireOption(options, "--playback-id");
-	if (requestedIdentity.empty()) throw std::invalid_argument("playback identity is empty");
+	const std::string identityPrefix = std::string(sstv::audio::audioBackendApiName(*backend))
+		+ ":playback:";
+	if (!requestedIdentity.starts_with(identityPrefix)
+			|| requestedIdentity.size() == identityPrefix.size()) {
+		throw std::invalid_argument("playback identity must be the complete backend:direction:selector value");
+	}
+	const std::string requestedOpaque = requestedIdentity.substr(identityPrefix.size());
 	sstv::audio::AudioDiscoveryService service(
 		sstv::audio::createMiniaudioDiscoveryProvider(),
 		sstv::audio::createSystemAudioTransportClassifier());
 	const sstv::audio::DiscoveryResult result = service.refresh({{*backend}, false});
 	if (const auto* error = std::get_if<sstv::audio::DiscoveryError>(&result)) {
-		throw std::runtime_error(error->message);
+		failDiscovery(error->message);
 	}
 	const auto snapshot = std::get<std::shared_ptr<const sstv::audio::AudioDiscoverySnapshot>>(result);
 	const auto found = std::ranges::find_if(snapshot->backends.front().devices,
 		[&](const sstv::audio::AudioDevice& device) {
 			return device.identity.direction == sstv::audio::AudioDirection::playback
-				&& device.identity.opaque == requestedIdentity;
+				&& device.identity.opaque == requestedOpaque;
 		});
-	if (found == snapshot->backends.front().devices.end()) throw std::runtime_error("requested playback identity was not found");
+	if (found == snapshot->backends.front().devices.end()) failDiscovery("requested playback identity was not found");
+	if (found->identity.stability != sstv::audio::IdentityStability::persistent
+			|| found->isDefault || found->hasIdentityCollision) {
+		failDiscovery("requested identity is not one persistent, non-default, non-colliding match");
+	}
 	const auto second = std::ranges::find_if(std::next(found), snapshot->backends.front().devices.end(),
 		[&](const sstv::audio::AudioDevice& device) { return device.identity == found->identity; });
-	if (found->hasIdentityCollision || second != snapshot->backends.front().devices.end()) throw std::runtime_error("requested playback identity collides");
+	if (found->hasIdentityCollision || second != snapshot->backends.front().devices.end()) failDiscovery("requested playback identity collides");
+	std::string formats;
+	for (const auto& format : found->capabilities.nativeFormats) {
+		if (!formats.empty()) formats += ",";
+		formats += std::to_string(static_cast<int>(format.format));
+		formats += "/" + std::to_string(format.channels.value_or(0U)) + "ch/"
+			+ std::to_string(format.sampleRate.value_or(0U)) + "Hz";
+	}
+	const auto measurements = std::map<std::string, std::optional<std::string>>{
+		{"backend_api", std::string(snapshot->backends.front().apiName)},
+		{"backend_status", "available"}, {"device_name", found->name},
+		{"identity", requestedIdentity}, {"direction", "playback"},
+		{"identity_persistence", "persistent"}, {"is_default", "no"},
+		{"identity_collision", "no"}, {"transport", "unknown"},
+		{"native_formats", formats.empty() ? "unknown" : formats},
+		{"native_capabilities_known", found->capabilities.detailsKnown ? "yes" : "no"},
+		{"discovery_generation", std::to_string(snapshot->generation)},
+		{"negotiated_facts", "not-measured"}};
+	const auto publication = sstv::app::publishHilStageResult(directory,
+		sstv::app::HilStage::discovery, sstv::app::HilResultState::passed,
+		sstv::app::HilEvidenceSource::automaticallyMeasured, measurements,
+		std::nullopt);
+	if (std::holds_alternative<sstv::app::HilError>(publication))
+		throw std::runtime_error(std::get<sstv::app::HilError>(publication).message);
 	std::cout << "Stage 1 discovery passed for exact identity " << requestedIdentity
-		<< " (no audio device was opened)\n";
+		<< " (no audio device was opened)\n"
+		<< "Evidence updated: " << directory << "\n";
 	return 0;
 }
 

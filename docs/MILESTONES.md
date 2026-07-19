@@ -8,6 +8,19 @@ provider query/unkey behavior is constrained to injected and loopback tests. Phy
 Stage 1 and real G90/flrig execution remain pending human confirmation; no physical stage
 is marked passed.
 
+#### M2J-B2: real Stage 1 recording and gated flrig Stage 3
+
+Status: **implementation complete; physical execution pending**
+
+Stage 1 now records the exact backend result, native capabilities, persistence, collision,
+transport, discovery generation, and explicit not-measured negotiated facts atomically in
+the evidence JSON and Markdown. Stage 3 is a real flrig query/unkey-only path compiled
+only with all live/HIL build gates, requiring a fresh foreground confirmation and daemon
+version matching the evidence session. It never constructs audio and has no key action.
+
+Acceptance requires hardware-free tests plus later human-produced Stage 1 and Stage 3
+records. This milestone does not claim physical success, complete M2J, or complete M2.
+
 Each milestone is complete only when its acceptance criteria and relevant tests pass.
 Items may be prototyped early, but compatibility claims wait for their milestone gate.
 

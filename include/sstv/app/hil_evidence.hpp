@@ -124,7 +124,7 @@ struct HilConfiguration {
 	std::optional<std::uint32_t> negotiatedPeriodFrames;
 	std::string pttProvider;
 	std::string pttAddress;
-	std::uint16_t pttPort = 0U;
+	std::optional<std::uint16_t> pttPort;
 	std::optional<std::string> flrigPath;
 	std::string radioManufacturer;
 	std::string radioModel;
@@ -149,6 +149,7 @@ struct HilConfiguration {
 	std::uint64_t postAudioMilliseconds = 0U;
 	std::optional<std::string> instrumentDescription;
 	std::optional<std::string> calibrationMethod;
+	std::optional<std::string> pttProviderVersion;
 };
 
 struct HilEvidenceRecord {
@@ -226,5 +227,11 @@ private:
 [[nodiscard]] std::string calculateHilSha256(std::string_view);
 [[nodiscard]] HilPublicationResult publishHilEvidence(const HilEvidenceRecord&,
 	const std::filesystem::path&, bool);
+
+/** Atomically records one completed non-keyed stage in an existing evidence session. */
+[[nodiscard]] HilPublicationResult publishHilStageResult(
+	const std::filesystem::path&, HilStage, HilResultState, HilEvidenceSource,
+	const std::map<std::string, std::optional<std::string>>&, std::optional<std::string>,
+	std::optional<std::string> = std::nullopt);
 
 } // namespace sstv::app

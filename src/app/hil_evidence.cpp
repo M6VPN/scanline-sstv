@@ -16,6 +16,7 @@
 #include <cerrno>
 #include <cmath>
 #include <cstring>
+#include <fstream>
 #include <iomanip>
 #include <limits>
 #include <locale>
@@ -456,15 +457,14 @@ validateHilEvidence(const HilEvidenceRecord& record)
 		return makeError(HilErrorCode::invalidRecord, "ptt",
 			"PTT evidence endpoint must be literal loopback");
 	}
-	if (record.configuration.pttPort == 0U) {
+	if (record.configuration.pttPort.has_value() && *record.configuration.pttPort == 0U) {
 		return makeError(HilErrorCode::invalidRecord, "ptt",
-			"PTT evidence port must be explicit and nonzero");
+			"PTT evidence port must be explicit and nonzero, or explicitly unknown");
 	}
-	if (record.configuration.pttProvider == "flrig"
-			&& (!record.configuration.flrigPath.has_value()
-				|| !isBoundedText(*record.configuration.flrigPath))) {
+	if (record.configuration.flrigPath.has_value()
+			&& !isBoundedText(*record.configuration.flrigPath)) {
 		return makeError(HilErrorCode::invalidRecord, "ptt",
-			"flrig evidence requires an explicit XML-RPC path");
+			"flrig XML-RPC path is invalid");
 	}
 	if (record.configuration.gainDbfs < -60.0
 			|| record.configuration.gainDbfs > -6.0) {
@@ -648,8 +648,12 @@ serializeHilEvidenceJson(const HilEvidenceRecord& record)
 	if (value.negotiatedPeriodFrames) output << *value.negotiatedPeriodFrames;
 	else output << "null";
 	output << ",\"ptt_provider\":"; writeJsonString(output, value.pttProvider);
+	output << ",\"ptt_provider_version\":";
+	writeOptionalString(output, value.pttProviderVersion);
 	output << ",\"ptt_address\":"; writeJsonString(output, value.pttAddress);
-	output << ",\"ptt_port\":" << value.pttPort << ",\"flrig_path\":";
+	output << ",\"ptt_port\":";
+	if (value.pttPort) output << *value.pttPort; else output << "null";
+	output << ",\"flrig_path\":";
 	writeOptionalString(output, value.flrigPath);
 	output << ",\"radio_manufacturer\":";
 	writeJsonString(output, value.radioManufacturer);
@@ -755,8 +759,11 @@ serializeHilEvidenceMarkdown(const HilEvidenceRecord& record)
 		<< "- Channel: " << record.configuration.selectedChannel << " of "
 		<< record.configuration.channelCount << '\n'
 		<< "- PTT provider: " << record.configuration.pttProvider << '\n'
+		<< "- PTT provider version: "
+		<< (record.configuration.pttProviderVersion
+			? *record.configuration.pttProviderVersion : "unknown") << '\n'
 		<< "- PTT endpoint: " << record.configuration.pttAddress << ':'
-		<< record.configuration.pttPort << '\n'
+		<< (record.configuration.pttPort ? std::to_string(*record.configuration.pttPort) : "unknown") << '\n'
 		<< "- Radio: " << record.configuration.radioManufacturer << ' '
 		<< record.configuration.radioModel << '\n'
 		<< "- Test arrangement: " << record.configuration.testArrangement << "\n\n"
@@ -786,8 +793,10 @@ calculateHilConfigurationDigest(const HilConfiguration& configuration)
 		<< configuration.identityPersistence << '\0'
 		<< configuration.hasIdentityCollision << '\0'
 		<< configuration.selectedChannel << '\0' << configuration.channelCount << '\0'
-		<< configuration.pttProvider << '\0' << configuration.pttAddress << '\0'
-		<< configuration.pttPort << '\0'
+		<< configuration.pttProvider << '\0'
+		<< configuration.pttProviderVersion.value_or("") << '\0'
+		<< configuration.pttAddress << '\0'
+		<< (configuration.pttPort ? std::to_string(*configuration.pttPort) : "unknown") << '\0'
 		<< configuration.flrigPath.value_or("") << '\0'
 		<< configuration.sstvMode << '\0' << configuration.fixtureSha256 << '\0'
 		<< configuration.hasFskIdentifier << '\0'
@@ -842,6 +851,112 @@ publishHilEvidence(const HilEvidenceRecord& record,
 			calculateHilSha256(json), calculateHilSha256(markdown)};
 	} catch (const std::exception& error) {
 		return makeError(HilErrorCode::publicationFailure, "publish", error.what());
+	}
+}
+
+namespace {
+
+[[nodiscard]] std::string
+readEvidenceText(const std::filesystem::path& path)
+{
+	std::error_code error;
+	if (!std::filesystem::is_regular_file(path, error) || error
+			|| std::filesystem::file_size(path, error) > maximumEvidenceBytes || error) {
+		throw std::invalid_argument("evidence file is invalid or exceeds the configured limit");
+	}
+	std::ifstream input(path);
+	if (!input) throw std::runtime_error("cannot open evidence file");
+	return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+
+[[nodiscard]] std::size_t
+findJsonObjectEnd(const std::string& text, const std::size_t start)
+{
+	std::size_t depth = 0U;
+	bool quoted = false;
+	bool escaped = false;
+	for (std::size_t index = start; index < text.size(); ++index) {
+		const char character = text[index];
+		if (quoted) {
+			if (escaped) escaped = false;
+			else if (character == '\\') escaped = true;
+			else if (character == '"') quoted = false;
+			continue;
+		}
+		if (character == '"') quoted = true;
+		else if (character == '{') ++depth;
+		else if (character == '}' && --depth == 0U) return index + 1U;
+	}
+	throw std::invalid_argument("evidence JSON stage object is truncated");
+}
+
+[[nodiscard]] std::string
+serializeStagePatch(const HilStage stage, const HilResultState state,
+	const HilEvidenceSource source,
+	const std::map<std::string, std::optional<std::string>>& measurements,
+	const std::optional<std::string>& error,
+	const std::optional<std::string>& finalPttCertainty)
+{
+	std::ostringstream output;
+	output << "{\"stage\":"; writeJsonString(output, hilStageName(stage));
+	output << ",\"state\":"; writeJsonString(output, hilResultStateName(state));
+	output << ",\"source\":"; writeJsonString(output, hilEvidenceSourceName(source));
+	output << ",\"started_utc\":null,\"ended_utc\":null,\"skipped_reason\":null,\"primary_error\":";
+	writeOptionalString(output, error);
+	output << ",\"cleanup_errors\":[],\"final_ptt_certainty\":";
+	writeOptionalString(output, finalPttCertainty);
+	output << ",\"measurements\":";
+	writeOptionalStringMap(output, measurements);
+	output << ",\"operator_radio_state\":null}";
+	return output.str();
+}
+
+} // namespace
+
+HilPublicationResult
+publishHilStageResult(const std::filesystem::path& directory, const HilStage stage,
+	const HilResultState state, const HilEvidenceSource source,
+	const std::map<std::string, std::optional<std::string>>& measurements,
+	const std::optional<std::string> error,
+	const std::optional<std::string> finalPttCertainty)
+{
+	if (stage == HilStage::manifest || stage == HilStage::keyedSilence
+			|| stage == HilStage::fullSstv || stage == HilStage::controlledFault) {
+		return makeError(HilErrorCode::invalidStage, "publish-stage",
+			"this helper only records non-keyed readiness stages");
+	}
+	try {
+		const std::filesystem::path jsonPath = directory / "m2j-evidence-v1.json";
+		const std::filesystem::path markdownPath = directory / "m2j-evidence-v1.md";
+		std::string json = readEvidenceText(jsonPath);
+		const std::string marker = "{\"stage\":\"" + std::string(hilStageName(stage)) + "\"";
+		const std::size_t markerPosition = json.find(marker);
+		if (markerPosition == std::string::npos) {
+			return makeError(HilErrorCode::invalidRecord, "publish-stage", "stage is missing");
+		}
+		const std::size_t objectStart = json.rfind('{', markerPosition);
+		const std::size_t objectEnd = findJsonObjectEnd(json, objectStart);
+		json.replace(objectStart, objectEnd - objectStart,
+			serializeStagePatch(stage, state, source, measurements, error,
+				finalPttCertainty));
+		std::string markdown = readEvidenceText(markdownPath);
+		const std::string rowMarker = "| " + std::string(hilStageName(stage)) + " |";
+		const std::size_t rowStart = markdown.find(rowMarker);
+		if (rowStart == std::string::npos) {
+			return makeError(HilErrorCode::invalidRecord, "publish-stage", "stage row is missing");
+		}
+		const std::size_t rowEnd = markdown.find('\n', rowStart);
+		const std::string replacement = "| " + std::string(hilStageName(stage)) + " | "
+			+ std::string(hilResultStateName(state)) + " | "
+			+ std::string(hilEvidenceSourceName(source)) + " | unknown |";
+		markdown.replace(rowStart, rowEnd == std::string::npos ? markdown.size() - rowStart
+			: rowEnd - rowStart, replacement);
+		publishAtomicText(jsonPath, json, true);
+		publishAtomicText(markdownPath, markdown, true);
+		return HilPublication{jsonPath, markdownPath, calculateHilSha256(json),
+			calculateHilSha256(markdown)};
+	} catch (const std::exception& caught) {
+		return makeError(HilErrorCode::publicationFailure, "publish-stage", caught.what());
 	}
 }
 
