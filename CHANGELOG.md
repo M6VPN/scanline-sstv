@@ -8,6 +8,11 @@ stabilise.
 
 ## [Unreleased]
 
+M2J-B1 adds digest-bound executable read-only discovery and a Stage 3 provider readiness
+path constrained to injected and loopback tests. Linux discovery may attach authoritative
+USB metadata without changing native audio identities. Physical G90/flrig readiness
+remains pending human confirmation.
+
 M1a adds the first evidence-backed offline analogue waveform slice. M1B adds safe offline
 raster preparation and Martin M1 image-to-WAV generation. M1C adds evidence-backed
 Scottie S1 offline test-pattern and image-to-WAV generation through shared analogue

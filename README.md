@@ -92,6 +92,10 @@ and a frozen Robot 36 reference fixture. The old all-at-once manual target is re
 No physical stage was run, no physical evidence is included, and overall M2 remains in
 progress. See [the M2J runbook](docs/hil/M2J_RUNBOOK.md).
 
+M2J-B1 adds the digest-bound `hil-stage discovery` command and keeps PTT readiness
+restricted to injected or loopback providers. It does not select a device or run a
+physical stage.
+
 Martin M1, Scottie S1, Robot 36, and PD120 advertise `offline-test-pattern-tx`,
 `offline-image-tx`, and `optional-fsk-id`. Overall M1 is not complete.
 

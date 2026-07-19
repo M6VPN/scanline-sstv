@@ -154,6 +154,13 @@ printSnapshot(const sstv::audio::AudioDiscoverySnapshot& snapshot)
 			    << (device.identity.stability == sstv::audio::IdentityStability::persistent
 			            ? "persistent" : "session-only") << '\n'
 			    << "    Transport: " << transportName(device.transport) << '\n';
+			if (device.usb) {
+				std::cout << "    USB: " << device.usb->vendorId << ':'
+				    << device.usb->productId;
+				if (device.usb->topology) std::cout << " path=" << *device.usb->topology;
+				std::cout << " serial="
+				    << (device.usb->hasSerialNumber ? "present" : "absent") << '\n';
+			}
 			if (device.hasIdentityCollision) {
 				std::cout << "    Identity collision: yes\n";
 			}

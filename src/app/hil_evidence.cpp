@@ -725,6 +725,8 @@ serializeHilEvidenceJson(const HilEvidenceRecord& record)
 	}
 	output << "],\n  \"operator_notes\":";
 	writeOptionalString(output, record.operatorNotes);
+	output << ",\n  \"configuration_digest\":";
+	writeJsonString(output, calculateHilConfigurationDigest(record.configuration));
 	output << "\n}\n";
 	const std::string result = output.str();
 	if (result.size() > maximumEvidenceBytes) {

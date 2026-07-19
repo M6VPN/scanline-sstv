@@ -37,6 +37,12 @@ but is not required merely to share implementation between frontends.
 
 Dependencies point inward. Frontends receive snapshots and issue typed commands.
 
+M2J-B1 extends read-only discovery with optional Linux USB metadata. The classifier
+decodes only the native ALSA selector and walks bounded sysfs parent links for an
+authoritative `idVendor`/`idProduct` pair. USB metadata is descriptive and never replaces
+the miniaudio identity; missing, malformed, or ambiguous links remain unknown. Non-Linux
+builds retain the unknown transport value.
+
 ## 3. Thread model
 
 ### Audio callback

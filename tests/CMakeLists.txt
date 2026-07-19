@@ -148,6 +148,13 @@ if(SSTV_BUILD_AUDIO AND SSTV_BUILD_RIG)
 		PROPERTIES LABELS "hil-hardware-free" TIMEOUT 30
 	)
 
+	add_executable(scanline-sstv-m2j-b1-tests m2j_b1_tests.cpp)
+	target_link_libraries(scanline-sstv-m2j-b1-tests
+		PRIVATE sstv::app sstv::audio sstv_project_options sstv_project_warnings)
+	add_test(NAME scanline-sstv-m2j-b1-tests COMMAND scanline-sstv-m2j-b1-tests)
+	set_tests_properties(scanline-sstv-m2j-b1-tests PROPERTIES
+		LABELS "hil-hardware-free" TIMEOUT 5)
+
 endif()
 
 if(SSTV_BUILD_AUDIO)

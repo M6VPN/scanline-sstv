@@ -5,12 +5,17 @@
 #include "hil_commands.hpp"
 
 #include <sstv/app/hil_evidence.hpp>
+#include <sstv/audio/audio_discovery.hpp>
+#include <sstv/rig/flrig.hpp>
+#include <sstv/rig/rigctld.hpp>
 
 #include <algorithm>
 #include <charconv>
 #include <array>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <optional>
@@ -26,7 +31,8 @@ using OptionMap = std::map<std::string, std::string>;
 [[nodiscard]] bool
 isKnownValueOption(const std::string_view argument) noexcept
 {
-	constexpr std::array<std::string_view, 43> names{
+	constexpr std::array<std::string_view, 48> names{
+		"--stage", "--evidence-dir", "--digest", "--confirm",
 		"--output-dir", "--utc-start", "--git-commit", "--compiler",
 		"--compiler-version", "--preset", "--cmake-options", "--worktree",
 		"--miniaudio-version", "--os",
@@ -216,7 +222,7 @@ makeManifest(const OptionMap& options)
 bool
 isHilCommand(const std::string_view argument) noexcept
 {
-	return argument == "hil-manifest";
+	return argument == "hil-manifest" || argument == "hil-stage";
 }
 
 void
@@ -225,6 +231,10 @@ printHilCommandHelp()
 	std::cout
 		<< "\nM2J hardware-in-loop evidence preparation:\n"
 		   "  scanline-sstv-cli hil-manifest --output-dir DIR [metadata options]\n"
+		   "  scanline-sstv-cli hil-stage --stage discovery --evidence-dir DIR\n"
+		   "      --backend BACKEND --playback-id ID --digest SHA256\n"
+		   "      --confirm 'AUTHORIZE M2J discovery SHA256'\n"
+		   "  scanline-sstv-cli hil-stage --stage ptt-unkey ...\n"
 		   "\n"
 		   "This hardware-free Stage 0 command creates no discovery, audio, PTT, or\n"
 		   "socket resource. Required groups: build/UTC/worktree, OS/session, exact\n"
@@ -233,10 +243,128 @@ printHilCommandHelp()
 		   "See docs/hil/M2J_RUNBOOK.md and M2J_EVIDENCE_TEMPLATE.md.\n";
 }
 
+[[nodiscard]] std::string
+readBoundedFile(const std::filesystem::path& path)
+{
+	std::error_code error;
+	if (!std::filesystem::is_regular_file(path, error) || error) {
+		throw std::invalid_argument("evidence JSON is not a regular file");
+	}
+	if (std::filesystem::file_size(path, error) > 2U * 1024U * 1024U || error) {
+		throw std::invalid_argument("evidence JSON exceeds the configured limit");
+	}
+	std::ifstream input(path);
+	if (!input) throw std::runtime_error("cannot open evidence JSON");
+	return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+
+[[nodiscard]] std::string
+jsonString(const std::string& json, const std::string_view key)
+{
+	const std::string marker = "\"" + std::string(key) + "\":";
+	const std::size_t start = json.find(marker);
+	if (start == std::string::npos) throw std::invalid_argument("missing evidence field: " + std::string(key));
+	const std::size_t quote = json.find('"', start + marker.size());
+	const std::size_t end = json.find('"', quote + 1U);
+	if (quote == std::string::npos || end == std::string::npos) throw std::invalid_argument("invalid evidence field: " + std::string(key));
+	return json.substr(quote + 1U, end - quote - 1U);
+}
+
+[[nodiscard]] int
+runHilStage(const int argc, char* argv[])
+{
+	bool force = false;
+	const OptionMap options = parseOptions(argc, argv, force);
+	const std::string stage = requireOption(options, "--stage");
+	const std::filesystem::path directory = requireOption(options, "--evidence-dir");
+	if (stage != "discovery" && stage != "ptt-unkey") {
+		throw std::invalid_argument("unsupported executable HIL stage");
+	}
+	const std::string json = readBoundedFile(directory / "m2j-evidence-v1.json");
+	if (json.find("\"stage\":\"manifest\",\"state\":\"passed\"") == std::string::npos) {
+		throw std::invalid_argument("a passed Stage 0 manifest is required");
+	}
+	const std::string digest = requireOption(options, "--digest");
+	if (digest.size() != 64U || digest.find_first_not_of("0123456789abcdefABCDEF") != std::string::npos) {
+		throw std::invalid_argument("invalid configuration digest");
+	}
+	if (jsonString(json, "configuration_digest") != digest) {
+		throw std::invalid_argument("configuration digest does not match the evidence session");
+	}
+	const std::string confirmation = requireOption(options, "--confirm");
+	if (confirmation != sstv::app::hilStageConfirmationPhrase(
+		stage == "discovery" ? sstv::app::HilStage::discovery : sstv::app::HilStage::pttUnkey,
+		digest)) {
+		throw std::invalid_argument("confirmation phrase does not match the digest");
+	}
+	if (stage == "ptt-unkey") {
+#if !defined(SSTV_BUILD_AUDIO) || !defined(SSTV_BUILD_RIG)
+		throw std::runtime_error("Stage 3 is unavailable in this audio/rig-disabled build");
+#else
+		const std::string providerName = requireOption(options, "--ptt-provider");
+		const std::string address = requireOption(options, "--ptt-address");
+		const auto port = parseInteger<std::uint16_t>(options, "--ptt-port");
+		const auto clock = sstv::rig::createSteadyMonotonicClock();
+		std::shared_ptr<sstv::rig::PttProvider> provider;
+		if (providerName == "flrig") {
+			sstv::rig::FlrigConfiguration configuration{address, port,
+				requireOption(options, "--flrig-path")};
+			if (const auto error = sstv::rig::validateFlrigConfiguration(configuration))
+				throw std::invalid_argument(error->message);
+			provider = std::make_shared<sstv::rig::FlrigPttProvider>(configuration, clock,
+				sstv::rig::createFlrigPosixTransport(configuration, clock));
+		} else if (providerName == "rigctld") {
+			sstv::rig::RigctldConfiguration configuration{address, port};
+			if (const auto error = sstv::rig::validateRigctldConfiguration(configuration))
+				throw std::invalid_argument(error->message);
+			provider = std::make_shared<sstv::rig::RigctldPttProvider>(configuration, clock,
+				sstv::rig::createRigctldPosixTransport(configuration, clock));
+		} else {
+			throw std::invalid_argument("unsupported PTT provider");
+		}
+		const sstv::rig::PttOperationResult query = provider->execute({
+			sstv::rig::PttAction::query, clock->now() + std::chrono::seconds(2), 1, 1});
+		std::cout << "Stage 3 query: " << (query.certainty == sstv::rig::PttCertainty::definitelyUnkeyed
+			? "definitely-unkeyed" : "not-definitely-unkeyed") << '\n';
+		if (query.certainty == sstv::rig::PttCertainty::definitelyUnkeyed) return 0;
+		const sstv::rig::PttOperationResult unkey = provider->execute({
+			sstv::rig::PttAction::unkey, clock->now() + std::chrono::seconds(2), 1, 2});
+		if (unkey.certainty != sstv::rig::PttCertainty::definitelyUnkeyed)
+			throw std::runtime_error("PTT state remains unresolved; later stages are blocked");
+		return 0;
+#endif
+	}
+	const auto backend = sstv::audio::parseAudioBackend(requireOption(options, "--backend"));
+	if (!backend) throw std::invalid_argument("unknown audio backend");
+	const std::string requestedIdentity = requireOption(options, "--playback-id");
+	if (requestedIdentity.empty()) throw std::invalid_argument("playback identity is empty");
+	sstv::audio::AudioDiscoveryService service(
+		sstv::audio::createMiniaudioDiscoveryProvider(),
+		sstv::audio::createSystemAudioTransportClassifier());
+	const sstv::audio::DiscoveryResult result = service.refresh({{*backend}, false});
+	if (const auto* error = std::get_if<sstv::audio::DiscoveryError>(&result)) {
+		throw std::runtime_error(error->message);
+	}
+	const auto snapshot = std::get<std::shared_ptr<const sstv::audio::AudioDiscoverySnapshot>>(result);
+	const auto found = std::ranges::find_if(snapshot->backends.front().devices,
+		[&](const sstv::audio::AudioDevice& device) {
+			return device.identity.direction == sstv::audio::AudioDirection::playback
+				&& device.identity.opaque == requestedIdentity;
+		});
+	if (found == snapshot->backends.front().devices.end()) throw std::runtime_error("requested playback identity was not found");
+	const auto second = std::ranges::find_if(std::next(found), snapshot->backends.front().devices.end(),
+		[&](const sstv::audio::AudioDevice& device) { return device.identity == found->identity; });
+	if (found->hasIdentityCollision || second != snapshot->backends.front().devices.end()) throw std::runtime_error("requested playback identity collides");
+	std::cout << "Stage 1 discovery passed for exact identity " << requestedIdentity
+		<< " (no audio device was opened)\n";
+	return 0;
+}
+
 int
 runHilCommand(const int argc, char* argv[])
 {
 	try {
+		if (argc > 1 && std::string_view(argv[1]) == "hil-stage") return runHilStage(argc, argv);
 		bool force = false;
 		const OptionMap options = parseOptions(argc, argv, force);
 		const std::filesystem::path output

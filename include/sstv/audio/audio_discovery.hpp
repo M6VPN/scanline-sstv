@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -53,6 +54,17 @@ enum class AudioTransport {
 	builtIn,
 	virtualDevice,
 	unknown,
+};
+
+struct UsbMetadata {
+	std::string vendorId;
+	std::string productId;
+	std::optional<std::string> manufacturer;
+	std::optional<std::string> product;
+	std::optional<std::string> topology;
+	bool hasSerialNumber = false;
+
+	[[nodiscard]] bool operator==(const UsbMetadata&) const = default;
 };
 
 enum class IdentityStability {
@@ -104,6 +116,7 @@ struct AudioDevice {
 	DeviceCapabilities capabilities;
 	bool hasIdentityCollision = false;
 	std::string diagnostic;
+	std::optional<UsbMetadata> usb;
 
 	[[nodiscard]] bool operator==(const AudioDevice&) const = default;
 };
@@ -152,6 +165,7 @@ class AudioTransportClassifier {
 public:
 	virtual ~AudioTransportClassifier() = default;
 	[[nodiscard]] virtual AudioTransport classify(const AudioDevice& device) const = 0;
+	virtual void enrich(AudioDevice&) const {}
 };
 
 /** Serializes refreshes and atomically publishes complete immutable snapshots. */
@@ -178,6 +192,10 @@ private:
 [[nodiscard]] std::optional<AudioBackend> parseAudioBackend(std::string_view value);
 [[nodiscard]] std::string_view audioBackendApiName(AudioBackend backend);
 [[nodiscard]] std::string_view audioBackendDisplayName(AudioBackend backend);
+
+/** Creates the optional Linux sysfs USB metadata classifier. */
+[[nodiscard]] std::shared_ptr<const AudioTransportClassifier>
+createSystemAudioTransportClassifier();
 [[nodiscard]] bool isRealAudioBackend(AudioBackend backend);
 
 } // namespace sstv::audio

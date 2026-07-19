@@ -6,6 +6,9 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
+#include <fstream>
+#include <sstream>
 #include <set>
 #include <utility>
 
@@ -23,6 +26,63 @@ public:
 			return AudioTransport::virtualDevice;
 		}
 		return AudioTransport::unknown;
+	}
+
+	void enrich(AudioDevice& device) const override
+	{
+#if defined(__linux__)
+		if (device.identity.backend != AudioBackend::alsa) return;
+		std::string native;
+		if ((device.identity.opaque.size() % 2U) != 0U) return;
+		for (std::size_t index = 0; index < device.identity.opaque.size(); index += 2U) {
+			const std::string byte = device.identity.opaque.substr(index, 2U);
+			unsigned value = 0U;
+			const auto parsed = std::from_chars(byte.data(), byte.data() + byte.size(), value, 16);
+			if (parsed.ec != std::errc{} || parsed.ptr != byte.data() + byte.size()) return;
+			if (value == 0U || value < 0x20U || value > 0x7eU) return;
+			native.push_back(static_cast<char>(value));
+		}
+		const std::size_t comma = native.find(',');
+		if (comma == std::string::npos || native.front() != ':') return;
+		const std::string card = "card" + native.substr(1, comma - 1U);
+		const std::filesystem::path devicePath = std::filesystem::path("/sys/class/sound") / card / "device";
+		std::error_code error;
+		const auto resolved = std::filesystem::weakly_canonical(devicePath, error);
+		if (error || resolved.empty()) return;
+		std::filesystem::path cursor = resolved;
+		for (std::size_t depth = 0; depth < 8 && !cursor.empty(); ++depth) {
+			const auto vendor = readFile(cursor / "idVendor");
+			const auto product = readFile(cursor / "idProduct");
+			if (vendor && product) {
+				UsbMetadata metadata;
+				metadata.vendorId = *vendor;
+				metadata.productId = *product;
+				metadata.manufacturer = readFile(cursor / "manufacturer");
+				metadata.product = readFile(cursor / "product");
+				metadata.topology = cursor.filename().string();
+				metadata.hasSerialNumber = readFile(cursor / "serial").has_value();
+				device.usb = std::move(metadata);
+				device.transport = AudioTransport::usb;
+				return;
+			}
+			if (cursor == cursor.root_path()) break;
+			cursor = cursor.parent_path();
+		}
+#else
+		(void)device;
+#endif
+	}
+
+private:
+	[[nodiscard]] static std::optional<std::string>
+	readFile(const std::filesystem::path& path)
+	{
+		std::ifstream input(path);
+		if (!input) return std::nullopt;
+		std::string value;
+		std::getline(input, value);
+		if (value.empty() || value.size() > 256U) return std::nullopt;
+		return value;
 	}
 };
 
@@ -61,7 +121,7 @@ AudioDiscoveryService::AudioDiscoveryService(
 	  snapshot_(std::make_shared<const AudioDiscoverySnapshot>())
 {
 	if (!classifier_) {
-		classifier_ = std::make_shared<const UnknownTransportClassifier>();
+		classifier_ = createSystemAudioTransportClassifier();
 	}
 }
 
@@ -104,6 +164,7 @@ AudioDiscoveryService::refresh(
 		}
 		for (AudioDevice& device : result.devices) {
 			device.transport = classifier_->classify(device);
+			classifier_->enrich(device);
 		}
 		markIdentityCollisions(result.devices);
 		if (isRealAudioBackend(backend) && result.status == BackendStatus::available) {
@@ -191,6 +252,12 @@ audioBackendDisplayName(const AudioBackend backend)
 	case AudioBackend::nullDiagnostic: return "Null diagnostic";
 	}
 	return "Unknown";
+}
+
+std::shared_ptr<const AudioTransportClassifier>
+createSystemAudioTransportClassifier()
+{
+	return std::make_shared<const UnknownTransportClassifier>();
 }
 
 bool

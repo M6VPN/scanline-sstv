@@ -1,5 +1,13 @@
 # Milestones
 
+## M2J-B1: executable read-only HIL readiness
+
+Complete for hardware-free implementation: Stage 1 performs one explicitly requested
+backend refresh after a digest-bound confirmation and exact identity comparison. Stage 3
+provider query/unkey behavior is constrained to injected and loopback tests. Physical
+Stage 1 and real G90/flrig execution remain pending human confirmation; no physical stage
+is marked passed.
+
 Each milestone is complete only when its acceptance criteria and relevant tests pass.
 Items may be prototyped early, but compatibility claims wait for their milestone gate.
 

@@ -33,6 +33,14 @@ with CTest.
 
 ## Stage 0
 
+M2J-B1 adds executable read-only stages. Stage 1 is invoked with
+`scanline-sstv-cli hil-stage --stage discovery --evidence-dir DIR --backend BACKEND`
+and explicit `--playback-id`, manifest `--digest`, and a fresh
+`AUTHORIZE M2J discovery DIGEST` confirmation. It refreshes one backend, compares only
+the exact native identity, and never initializes or opens an audio endpoint. Stage 3 is
+available to the injected provider harness only; real flrig/rigctld execution remains
+pending human confirmation.
+
 Use `scanline-sstv-cli hil-manifest` with the explicit metadata options shown by
 `--help`. Supply placeholders only when testing the schema. For a real session, replace
 each placeholder with an operator-verified value. The command creates no discovery,
